@@ -1,2 +1,1 @@
-# samshodhanam
-Open-source Sanskrit digital library, Paninian computational linguistics, and AI-powered exploration suite.
+> **संशोधनम्** (*Critical inquiry, research, and refinement*) is an open-source platform bridging traditional Sanskrit scholarship with modern computational intelligence. It combines page-accurate OCR digitization, deep Paninian linguistics, AI-assisted semantic search, and interactive learning modules in a single unified architecture.
