@@ -2,7 +2,6 @@
 
 > **Sanskrit Computational Linguistics, AI-Powered Digital Library, and Manuscript Preservation Suite**
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Live Deployment](https://img.shields.io/badge/Live%20Platform-samshodhanamandiram.in-success.svg)](https://samshodhanamandiram.in)
 [![Status: Active](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
