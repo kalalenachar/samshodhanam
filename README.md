@@ -202,9 +202,3 @@ We warmly welcome contributions from everyone! Whether you are:
 - A **designer or educator** wanting to create new learning games.
 
 Feel free to open an [Issue](https://github.com/kalalenachar/samshodhanam/issues) or submit a [Pull Request](https://github.com/kalalenachar/samshodhanam/pulls).
-
----
-
-## 📜 License
-
-This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for details.
