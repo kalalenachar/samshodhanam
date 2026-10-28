@@ -18,8 +18,8 @@ Whether you are a **scholar, student, language enthusiast, or software developer
 
 ```
                               ┌───────────────────────────────────────────────┐
-                              │            संशोधनम् (Samshodhanam)            │
-                              │           https://samshodhanamandiram.in      │
+                              |             Samshodhana Mandiram              |
+                              |        https://samshodhanamandiram.in         |
                               └──────────────────────┬────────────────────────┘
                                                      │
          ┌──────────────────────────┬────────────────┴──────────┬─────────────────────────┐
