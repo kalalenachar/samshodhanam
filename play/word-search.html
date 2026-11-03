@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search / शब्दान्वेषणम् - Sanskrit Play</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=100">
+    <link rel="stylesheet" href="style.css?v=100">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+    <style>
+        .search-grid {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <a href="/play/" class="navbar-home-btn" title="Back to Games">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <h1 class="navbar-title">शब्दान्वेषणम्</h1>
+        </div>
+        <div id="timer-display" class="timer-display" style="display: none;">
+            <span>⏱️</span> <span id="timer-val">00:00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="game-container">
+        
+        <!-- Screen 1: Set Selection -->
+        <div id="screen-selection" class="screen active">
+            <h2 class="screen-title">Choose a Level / क्रीडा-स्तरं चिनोतु</h2>
+            
+
+
+            <!-- Sets Grid -->
+            <div id="sets-grid" class="sets-grid">
+                <div class="no-sets">Loading game levels...</div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Gameplay -->
+        <div id="screen-gameplay" class="screen">
+            <div class="game-info-bar">
+                <div class="info-item" id="info-level-title">Level / स्तरः</div>
+                <div class="info-item" id="info-score">Words / शब्दाः: 0/0</div>
+            </div>
+
+            <div class="hint-bar" id="search-hint">
+                Find 0 hidden words in the grid below!
+            </div>
+
+            <!-- Trace Bar (Current Traced Word) -->
+            <div class="word-bar-container">
+                <div id="word-bar" class="word-bar">
+                    <span style="color: var(--t-text-muted); font-weight: 600;">Tracing Word / अन्वेषणम्</span>
+                </div>
+                
+                <div class="builder-controls">
+                    <button class="builder-btn btn-clear" onclick="clearTrace()">Clear / शोधनम्</button>
+                    <button class="builder-btn btn-submit" onclick="submitTracedWord()">Submit / पुष्टिः</button>
+                </div>
+            </div>
+
+            <!-- Word Search Grid -->
+            <div class="search-grid-container">
+                <div id="search-grid" class="search-grid"></div>
+            </div>
+
+            <!-- Found Words Tracker -->
+            <div class="found-items-container">
+                <div class="found-items-title">
+                    <span>Found Words / प्राप्त-शब्दाः:</span>
+                    <span id="found-words-count">0</span>
+                </div>
+                <div id="found-words-list" class="found-words-list"></div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Results -->
+        <div id="screen-results" class="screen">
+            <div class="results-header">
+                <div class="score-circle">
+                    <span id="result-score-num" class="score-num">0%</span>
+                    <span class="score-label">Score / क्रीडा-अङ्काः</span>
+                </div>
+                <h2 id="result-msg" class="screen-title">Excellent! / अतिसुन्दरम्!</h2>
+            </div>
+
+            <div class="result-stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-correct">0/0</div>
+                    <div class="stat-lbl">प्राप्त-शब्दाः / Found Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-time">0s</div>
+                    <div class="stat-lbl">समयः / Time Taken</div>
+                </div>
+            </div>
+
+            <div class="items-breakdown">
+                <h3 class="breakdown-title">शब्द-विवरणम् / Word Details</h3>
+                <div id="breakdown-list" class="breakdown-list"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action btn-action-primary" onclick="restartGame()">
+                    <span>🔄</span> क्रीडतु / Play Again
+                </button>
+                <button class="btn-action btn-action-secondary" onclick="location.href='/play/'">
+                    <span>🏠</span> Games
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- API JS Helpers -->
+    <script src="play-db.js"></script>
+
+    <!-- Game Logic JS -->
+    <script>
+        let searchSets = [];
+        let currentSet = null;
+        let selectedTimerSeconds = 300;
+        let timerInterval = null;
+        let timeRemaining = null;
+        let timeElapsed = 0;
+        let gameActive = false;
+
+        let targetWords = [];
+        let foundWords = [];
+        
+        let gridSize = 4;
+        let gridMatrix = []; // 2D array of syllables
+        let cellStates = []; // 2D array of 'empty', 'found'
+        let tracedCells = []; // Array of { r, c }
+
+        // Sanskrit syllable pool for filling gaps
+        const SANSKRIT_SYLLABLES = [
+            'अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ', 'क', 'का', 'कि', 'की', 'कु', 'कू', 'के', 'कै', 'को', 'कौ', 
+            'ख', 'ग', 'गा', 'गि', 'गी', 'गु', 'गे', 'गो', 'घ', 'ङ', 'च', 'चा', 'चि', 'ची', 'चु', 'चे', 'चो', 'छ', 'ज', 'जा', 
+            'जि', 'जी', 'जु', 'जे', 'जो', 'झ', 'ञ', 'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'ता', 'ति', 'ती', 'तु', 'तू', 'ते', 'तै', 
+            'तो', 'तौ', 'थ', 'द', 'दा', 'दि', 'दी', 'दु', 'दू', 'दे', 'दै', 'दो', 'दौ', 'ध', 'न', 'ना', 'नि', 'नी', 'नु', 'ने', 
+            'नो', 'प', 'पा', 'पि', 'पी', 'पु', 'पू', 'पे', 'पो', 'फ', 'ब', 'भ', 'भा', 'भि', 'भी', 'भु', 'भे', 'भो', 'म', 'मा', 
+            'मि', 'मी', 'मु', 'मे', 'मो', 'य', 'या', 'यि', 'यु', 'ये', 'यो', 'र', 'रा', 'रि', 'री', 'रु', 'रे', 'रो', 'ल', 'ला', 
+            'लि', 'लु', 'ले', 'लो', 'व', 'वा', 'वि', 'वी', 'वु', 'वे', 'वो', 'श', 'शा', 'शि', 'शी', 'शु', 'शे', 'शो', 'ष', 'षा', 
+            'षि', 'षु', 'षे', 'षो', 'स', 'सा', 'सि', 'सी', 'सु', 'सू', 'से', 'सो', 'ह', 'हा', 'हि', 'ही', 'हु', 'हे', 'हो', 'ः', 
+            'म्', 'न्', 'त्', 'द्', 'कः', 'मः', 'तः', 'दः', 'नः', 'मम्', 'तम्', 'दम्', 'नम्', 'धः', 'राः', 'तीः', 'तुः', 'हाः'
+        ];
+
+        window.addEventListener('load', async () => {
+            await loadSetsList();
+        });
+
+        async function loadSetsList() {
+            const grid = document.getElementById('sets-grid');
+            const res = await getWordSearchSets();
+            if (res.success && res.sets.length > 0) {
+                searchSets = res.sets;
+                grid.innerHTML = '';
+                res.sets.forEach(set => {
+                    const card = document.createElement('div');
+                    card.className = 'set-card';
+                    card.onclick = () => startGame(set.id);
+                    card.innerHTML = `
+                        <img class="set-card-logo" src="/static/images/game_word_search.png" alt="Icon">
+                        <div class="set-card-title">${set.title}</div>
+                        <div class="set-card-meta">${set.grid_size}×${set.grid_size} Grid • ${set.target_words.length} Words</div>
+                        <div class="set-card-play">आरम्भः / Play</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = `
+                    <div class="no-sets">
+                        <p>No word search sets found.</p>
+                        <p>Go to Admin Panel to import or add sets.</p>
+                    </div>
+                `;
+            }
+        }
+
+
+
+        async function startGame(setId) {
+            const res = await getWordSearchSet(setId);
+            if (!res.success || !res.set) {
+                alert("Failed to load level data.");
+                return;
+            }
+
+            currentSet = res.set;
+            if (currentSet.time_limit === null || currentSet.time_limit === 0) {
+                selectedTimerSeconds = null;
+            } else {
+                selectedTimerSeconds = currentSet.time_limit || 300;
+            }
+            targetWords = currentSet.target_words.map(w => w.trim());
+            gridSize = parseInt(currentSet.grid_size) || 4;
+            foundWords = [];
+            tracedCells = [];
+            timeElapsed = 0;
+
+            // Generate Grid
+            generateGrid();
+
+            // Render UI
+            document.getElementById('info-level-title').textContent = currentSet.title;
+            document.getElementById('search-hint').textContent = `Find ${targetWords.length} hidden words in the grid!`;
+            updateScoreUI();
+
+            // Clear trackers
+            document.getElementById('found-words-list').innerHTML = '';
+            document.getElementById('found-words-count').textContent = '0';
+            clearTrace();
+
+            renderGridHTML();
+
+            switchScreen('screen-gameplay');
+            initTimer();
+            gameActive = true;
+        }
+
+        // Split word into Devanagari syllables
+        function splitToSyllables(word) {
+            const syllables = [];
+            // Regex to match a Sanskrit syllable: consonant + optional halant + optional vowels + visarga/anusvara
+            // Since this is for child gameplay, a simpler approximation is split by character clusters
+            const matches = word.match(/.[्]?[ािीुूृेैोौ]?[ःं]?/g) || [];
+            
+            // Further refine to join half letters to next syllables
+            const result = [];
+            for (let i = 0; i < matches.length; i++) {
+                let syl = matches[i];
+                // If it ends with a virama (halant) and there is a next cluster, merge them
+                if (syl.endsWith('्') && i + 1 < matches.length) {
+                    syl += matches[i+1];
+                    i++;
+                }
+                result.push(syl);
+            }
+            return result;
+        }
+
+        function generateGrid() {
+            // Initialize Grid Matrix
+            gridMatrix = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));
+            cellStates = Array(gridSize).fill(null).map(() => Array(gridSize).fill('empty'));
+
+            // Sort words by length descending so longer words are placed first
+            const sortedWords = [...targetWords].sort((a, b) => b.length - a.length);
+
+            sortedWords.forEach(word => {
+                const syllables = splitToSyllables(word);
+                const len = syllables.length;
+                if (len > gridSize) {
+                    console.warn(`Word "${word}" is too long for the grid size ${gridSize}.`);
+                    return;
+                }
+
+                let placed = false;
+                let retries = 100;
+
+                while (!placed && retries > 0) {
+                    retries--;
+                    
+                    // Choose random direction: 0 = Horizontal, 1 = Vertical
+                    const dir = Math.floor(Math.random() * 2);
+                    let r, c;
+
+                    if (dir === 0) { // Horizontal
+                        r = Math.floor(Math.random() * gridSize);
+                        c = Math.floor(Math.random() * (gridSize - len + 1));
+                    } else { // Vertical
+                        r = Math.floor(Math.random() * (gridSize - len + 1));
+                        c = Math.floor(Math.random() * gridSize);
+                    }
+
+                    // Check if placement fits
+                    let possible = true;
+                    for (let i = 0; i < len; i++) {
+                        const currR = dir === 0 ? r : r + i;
+                        const currC = dir === 0 ? c + i : c;
+                        
+                        if (gridMatrix[currR][currC] !== null && gridMatrix[currR][currC] !== syllables[i]) {
+                            possible = false;
+                            break;
+                        }
+                    }
+
+                    if (possible) {
+                        for (let i = 0; i < len; i++) {
+                            const currR = dir === 0 ? r : r + i;
+                            const currC = dir === 0 ? c + i : c;
+                            gridMatrix[currR][currC] = syllables[i];
+                        }
+                        placed = true;
+                    }
+                }
+            });
+
+            // Fill empty cells with random Sanskrit syllables
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    if (gridMatrix[r][c] === null) {
+                        gridMatrix[r][c] = SANSKRIT_SYLLABLES[Math.floor(Math.random() * SANSKRIT_SYLLABLES.length)];
+                    }
+                }
+            }
+        }
+
+        function renderGridHTML() {
+            const gridEl = document.getElementById('search-grid');
+            gridEl.innerHTML = '';
+            
+            // Set grid styles
+            gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${gridSize}, 1fr)`;
+
+            // Define cell sizes based on grid dimensions for mobile responsiveness
+            const cellSize = gridSize === 4 ? '70px' : (gridSize === 5 ? '60px' : '50px');
+
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'search-cell';
+                    cell.id = `cell-${r}-${c}`;
+                    cell.style.width = cellSize;
+                    cell.style.height = cellSize;
+                    cell.textContent = gridMatrix[r][c];
+                    
+                    // Closure to capture row and col
+                    const row = r;
+                    const col = c;
+                    cell.onclick = () => selectCell(row, col);
+
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function selectCell(r, c) {
+            if (!gameActive) return;
+
+            const cellId = `cell-${r}-${c}`;
+            const cellEl = document.getElementById(cellId);
+
+            // Find index if already traced
+            const traceIdx = tracedCells.findIndex(cell => cell.r === r && cell.c === c);
+
+            if (traceIdx !== -1) {
+                // If it is the last cell in trace, allow backtracking
+                if (traceIdx === tracedCells.length - 1) {
+                    tracedCells.pop();
+                    cellEl.classList.remove('traced');
+                }
+                renderTracedWord();
+                return;
+            }
+
+            // If trace is empty, let them select any cell
+            if (tracedCells.length === 0) {
+                tracedCells.push({ r, c });
+                cellEl.classList.add('traced');
+            } else {
+                // Check adjacency to the last cell
+                const last = tracedCells[tracedCells.length - 1];
+                const isAdjacent = Math.abs(r - last.r) <= 1 && Math.abs(c - last.c) <= 1;
+
+                if (isAdjacent) {
+                    tracedCells.push({ r, c });
+                    cellEl.classList.add('traced');
+                } else {
+                    // Flash red or ignore
+                    cellEl.style.borderColor = 'var(--danger-color)';
+                    setTimeout(() => {
+                        cellEl.style.borderColor = 'var(--tile-border)';
+                    }, 300);
+                }
+            }
+
+            renderTracedWord();
+        }
+
+        function clearTrace() {
+            tracedCells.forEach(cell => {
+                const el = document.getElementById(`cell-${cell.r}-${cell.c}`);
+                if (el) el.classList.remove('traced');
+            });
+            tracedCells = [];
+            renderTracedWord();
+        }
+
+        function renderTracedWord() {
+            const wordBar = document.getElementById('word-bar');
+            if (tracedCells.length === 0) {
+                wordBar.innerHTML = '<span style="color: var(--t-text-muted); font-weight: 600;">अन्वेषणम् / Tracing Word</span>';
+                return;
+            }
+
+            wordBar.innerHTML = '';
+            tracedCells.forEach(cell => {
+                const span = document.createElement('span');
+                span.className = 'word-bar-tile';
+                span.textContent = gridMatrix[cell.r][cell.c];
+                wordBar.appendChild(span);
+            });
+        }
+
+        function submitTracedWord() {
+            if (!gameActive || tracedCells.length === 0) return;
+
+            const word = tracedCells.map(cell => gridMatrix[cell.r][cell.c]).join('').trim();
+            const wordBar = document.getElementById('word-bar');
+
+            // Check if already found
+            if (foundWords.includes(word)) {
+                alert("Already found!");
+                clearTrace();
+                return;
+            }
+
+            // Check if matches target words
+            if (targetWords.includes(word)) {
+                // Correct word search match!
+                foundWords.push(word);
+                updateScoreUI();
+
+                // Mark grid cells permanently green
+                tracedCells.forEach(cell => {
+                    cellStates[cell.r][cell.c] = 'found';
+                    const cellEl = document.getElementById(`cell-${cell.r}-${cell.c}`);
+                    if (cellEl) {
+                        cellEl.classList.remove('traced');
+                        cellEl.classList.add('found');
+                    }
+                });
+
+                // Add to found words list
+                const listEl = document.getElementById('found-words-list');
+                const badge = document.createElement('span');
+                badge.className = 'found-word-badge';
+                badge.textContent = `✓ ${word}`;
+                listEl.appendChild(badge);
+                document.getElementById('found-words-count').textContent = foundWords.length;
+
+                // Animate correct word bar
+                wordBar.style.borderColor = 'var(--success-color)';
+                setTimeout(() => {
+                wordBar.style.borderColor = 'var(--t-border)';
+                }, 500);
+
+                tracedCells = [];
+                renderTracedWord();
+
+                // Check win condition
+                if (foundWords.length === targetWords.length) {
+                    endGame();
+                }
+            } else {
+                // Incorrect word trace
+                wordBar.classList.add('shake');
+                wordBar.style.borderColor = 'var(--danger-color)';
+                
+                tracedCells.forEach(cell => {
+                    const el = document.getElementById(`cell-${cell.r}-${cell.c}`);
+                    if (el) el.classList.add('error-flash');
+                });
+
+                setTimeout(() => {
+                    wordBar.classList.remove('shake');
+                    wordBar.style.borderColor = 'var(--t-border)';
+                    
+                    tracedCells.forEach(cell => {
+                        const el = document.getElementById(`cell-${cell.r}-${cell.c}`);
+                        if (el) el.classList.remove('error-flash', 'traced');
+                    });
+                    tracedCells = [];
+                    renderTracedWord();
+                }, 500);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('info-score').innerHTML = `शब्दाः / Words: <b style="color:var(--primary-color)">${foundWords.length}/${targetWords.length}</b>`;
+        }
+
+        function initTimer() {
+            const timerBar = document.getElementById('timer-display');
+            const timerVal = document.getElementById('timer-val');
+            
+            clearInterval(timerInterval);
+            timerBar.classList.remove('timer-low');
+
+            if (selectedTimerSeconds === null) {
+                timerBar.style.display = 'none';
+                timeRemaining = null;
+                timerInterval = setInterval(() => {
+                    timeElapsed++;
+                }, 1000);
+            } else {
+                timerBar.style.display = 'flex';
+                timeRemaining = selectedTimerSeconds;
+                timerVal.textContent = formatTime(timeRemaining);
+                
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    timeElapsed++;
+                    timerVal.textContent = formatTime(timeRemaining);
+
+                    if (timeRemaining <= 10) {
+                        timerBar.classList.add('timer-low');
+                    }
+
+                    if (timeRemaining <= 0) {
+                        endGame(); // Time's up
+                    }
+                }, 1000);
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        async function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-display').style.display = 'none';
+
+            const percentage = targetWords.length > 0 ? Math.round((foundWords.length / targetWords.length) * 100) : 0;
+            
+            // Set Results UI
+            document.getElementById('result-score-num').textContent = `${percentage}%`;
+            document.getElementById('stat-correct').textContent = `${foundWords.length}/${targetWords.length}`;
+            document.getElementById('stat-time').textContent = `${timeElapsed}s`;
+
+            // Message feedback
+            const msgEl = document.getElementById('result-msg');
+            if (percentage === 100) {
+                msgEl.textContent = "अतिसुन्दरम्! / Excellent!";
+                spawnConfetti();
+            } else if (percentage >= 70) {
+                msgEl.textContent = "सुन्दरम्! / Very Good!";
+                spawnConfetti(20);
+            } else {
+                msgEl.textContent = "पुनः क्रीडतु! / Try Again!";
+            }
+
+            // Generate breakdown detail
+            const listEl = document.getElementById('breakdown-list');
+            listEl.innerHTML = '';
+            targetWords.forEach(w => {
+                const item = document.createElement('div');
+                const isFound = foundWords.includes(w);
+                
+                item.className = `breakdown-item ${isFound ? 'correct' : 'incorrect'}`;
+                item.innerHTML = `
+                    <span>${w}</span>
+                    <span class="item-status ${isFound ? 'correct' : 'incorrect'}">
+                        ${isFound ? '✓ Found' : '✗ Missed'}
+                    </span>
+                `;
+                listEl.appendChild(item);
+            });
+
+            switchScreen('screen-results');
+
+            // Save results to Database
+            await saveGameResult('word_search', currentSet.id, currentSet.title, foundWords.length, targetWords.length, percentage, timeElapsed);
+        }
+
+        function restartGame() {
+            if (currentSet) {
+                startGame(currentSet.id);
+            } else {
+                switchScreen('screen-selection');
+            }
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => {
+                scr.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Confetti Generator
+        function spawnConfetti(count = 60) {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', 'var(--t-accent)', '#ec4899', '#f472b6'];
+            
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.left = `${Math.random() * 100}vw`;
+                piece.style.top = `${-Math.random() * 20}px`;
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                piece.style.animationDelay = `${Math.random() * 0.8}s`;
+                piece.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+                container.appendChild(piece);
+            }
+        }
+    </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+  <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+  <script>
+    (function () {
+      var t = localStorage.getItem('smsdl-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>कथा Admin — Dashboard</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+  <link rel="stylesheet" href="style.css?v=100">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    /* Export Dropdown */
+    .export-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .export-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--t-bg-overlay);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 6px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      min-width: 180px;
+      z-index: 100;
+      padding: 0.35rem 0;
+      margin-top: 4px;
+      animation: dropdownFadeIn 0.15s ease;
+    }
+
+    @keyframes dropdownFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .export-dropdown-menu.show {
+      display: block;
+    }
+
+    .export-dropdown-menu button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 1rem;
+      border: none;
+      background: transparent;
+      font-size: 0.84rem;
+      color: var(--text-primary, var(--t-text-primary));
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+
+    .export-dropdown-menu button:hover {
+      background: var(--accent-light, rgba(129, 140, 248, 0.15));
+      color: #fff;
+    }
+
+    .export-dropdown-menu .dropdown-divider {
+      height: 1px;
+      background: var(--border, var(--t-border));
+      margin: 0.25rem 0;
+    }
+
+    .status-toggle {
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+
+    .status-toggle.published {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-toggle.draft {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-toggle:hover {
+      filter: brightness(1.2);
+      transform: scale(1.03);
+    }
+
+    .preview-toggle {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .preview-toggle button {
+      padding: 5px 14px;
+      border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preview-toggle button.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Filter Popup Trigger */
+    .filter-trigger-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .filter-trigger-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-trigger-btn:hover {
+      border-color: var(--accent);
+      background: rgba(129, 140, 248, 0.08);
+    }
+
+    .filter-trigger-btn.has-filters {
+      border-color: var(--accent);
+      background: rgba(129, 140, 248, 0.1);
+    }
+
+    .filter-badge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      background: var(--accent);
+      color: white;
+      border-radius: 9px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .filter-badge.visible {
+      display: inline-flex;
+    }
+
+    /* Filter Popup Panel */
+    .filter-popup-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+    }
+
+    .filter-popup-backdrop.active {
+      display: block;
+    }
+
+    .filter-popup {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 100;
+      min-width: 420px;
+      max-width: 520px;
+      background: var(--t-bg-overlay);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+      padding: 0;
+      animation: filterPopIn 0.18s ease;
+    }
+
+    .filter-popup.active {
+      display: block;
+    }
+
+    @keyframes filterPopIn {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .filter-popup-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-popup-header h3 {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--text-primary);
+    }
+
+    .filter-popup-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .filter-popup-close:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .filter-popup-body {
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+    }
+
+    .filter-popup-body .fp-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .filter-popup-body .fp-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .filter-popup-body .fp-label {
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .filter-select {
+      padding: 6px 10px;
+      background: var(--t-bg-header);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+      width: 100%;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filter-search-input {
+      padding: 6px 10px 6px 30px;
+      background: var(--t-bg-header);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.82rem;
+      width: 100%;
+      transition: border-color 0.2s ease;
+      box-sizing: border-box;
+    }
+
+    .filter-search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filter-search-wrap {
+      position: relative;
+    }
+
+    .filter-search-wrap .search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .filter-date-input {
+      padding: 6px 8px;
+      background: var(--t-bg-header);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .filter-date-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .fp-date-range {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fp-date-range .date-sep {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+
+    .filter-popup-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Sortable table headers */
+    thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    thead th.sortable:hover {
+      color: var(--accent);
+      background: rgba(129, 140, 248, 0.08);
+    }
+
+    thead th.sortable.sort-active {
+      color: var(--accent);
+      background: rgba(129, 140, 248, 0.12);
+    }
+
+    thead th.sortable .sort-icon {
+      display: inline-block;
+      margin-left: 5px;
+      font-size: 0.7rem;
+      opacity: 0.4;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      vertical-align: middle;
+    }
+
+    thead th.sortable.sort-active .sort-icon {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    /* Editor Toolbar */
+    .editor-toolbar {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--t-bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .editor-toolbar button {
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: var(--radius-xs);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .editor-toolbar button:hover {
+      background: rgba(129, 140, 248, 0.15);
+      color: white;
+      border-color: rgba(129, 140, 248, 0.3);
+    }
+
+    .editor-toolbar .divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .editor-toolbar.preview-active button:not(.toggle-btn) {
+      display: none;
+    }
+
+    .editor-toolbar.preview-active .divider {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="index.html" class="navbar-brand"><img src="/static/images/app_katha.png" class="navbar-logo"
+          alt="Katha Logo">कथा<span class="highlight">संग्रहः</span></a>
+    </div>
+    <div class="navbar-links">
+      <a href="/admin/hub">🏠 Admin Hub</a>
+      <a href="index.html">कथाः</a>
+      <a href="admin-dashboard.html" class="active">Dashboard</a>
+      <a href="#" id="logoutBtn" style="color: #fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container container-lg">
+    <div class="admin-header">
+      <h1>📋 कथा Dashboard</h1>
+      <div class="btn-group" style="display: flex; gap: 8px;">
+        <button class="btn btn-primary btn-sm" id="addStoryBtn">➕ Add Story</button>
+        <button class="btn btn-success btn-sm" id="manageFoldersBtn">📂 Manage Folders</button>
+        <button class="btn btn-secondary btn-sm" id="importStoriesBtn">📤 Import</button>
+        <div class="export-dropdown">
+          <button class="btn btn-secondary btn-sm" id="exportStoriesBtn">📥 Export All ▾</button>
+          <div class="export-dropdown-menu" id="exportAllMenu">
+            <button id="exportAllJsonBtn">📄 Export as JSON</button>
+            <button id="exportAllExcelBtn">📊 Export as Excel (.xlsx)</button>
+            <button id="exportAllZipBtn">📦 Export as ZIP (.zip)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="totalCount">...</div>
+        <div class="stat-label">Total Stories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="publishedCount">...</div>
+        <div class="stat-label">Published</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="draftCount">...</div>
+        <div class="stat-label">Drafts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="categoryCount">...</div>
+        <div class="stat-label">Categories</div>
+      </div>
+    </div>
+
+    <!-- Filter & Sort -->
+    <div class="filter-trigger-row">
+      <div style="position: relative;">
+        <button class="filter-trigger-btn" id="filterTriggerBtn" type="button">
+          🔍 Filter & Sort
+          <span class="filter-badge" id="activeFiltersCount"></span>
+        </button>
+        <div class="filter-popup-backdrop" id="filterBackdrop"></div>
+        <div class="filter-popup" id="filterPopup">
+          <div class="filter-popup-header">
+            <h3>🔍 Filter & Sort</h3>
+            <button class="filter-popup-close" id="filterPopupClose" type="button">✕</button>
+          </div>
+          <div class="filter-popup-body">
+
+            <!-- Search -->
+            <div class="fp-field full">
+              <span class="fp-label">Search</span>
+              <div class="filter-search-wrap">
+                <span class="search-icon">🔎</span>
+                <input type="text" id="filterSearch" class="filter-search-input" placeholder="Search title or content…">
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="fp-field">
+              <span class="fp-label">Status</span>
+              <select id="filterStatus" class="filter-select">
+                <option value="">All</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+
+            <!-- Category -->
+            <div class="fp-field">
+              <span class="fp-label">Category</span>
+              <select id="filterCategory" class="filter-select">
+                <option value="">All</option>
+              </select>
+            </div>
+
+            <!-- Author -->
+            <div class="fp-field">
+              <span class="fp-label">Author</span>
+              <select id="filterAuthor" class="filter-select">
+                <option value="">All</option>
+              </select>
+            </div>
+
+            <!-- Sort -->
+            <div class="fp-field">
+              <span class="fp-label">Sort By</span>
+              <select id="sortBySelect" class="filter-select">
+                <option value="id-desc">ID ↓</option>
+                <option value="id-asc">ID ↑</option>
+                <option value="title-asc">Title A–Z</option>
+                <option value="title-desc">Title Z–A</option>
+                <option value="category-asc">Category A–Z</option>
+                <option value="category-desc">Category Z–A</option>
+                <option value="author-asc">Author A–Z</option>
+                <option value="author-desc">Author Z–A</option>
+                <option value="status-asc">Status ↑</option>
+                <option value="status-desc">Status ↓</option>
+                <option value="votes-desc">Votes ↓</option>
+                <option value="votes-asc">Votes ↑</option>
+                <option value="date-desc">Date ↓</option>
+                <option value="date-asc">Date ↑</option>
+                <option value="reading_time-asc">Read Time ↑</option>
+                <option value="reading_time-desc">Read Time ↓</option>
+              </select>
+            </div>
+
+            <!-- Date Range -->
+            <div class="fp-field full">
+              <span class="fp-label">Published Date</span>
+              <div class="fp-date-range">
+                <input type="date" id="filterDateFrom" class="filter-date-input" title="From date">
+                <span class="date-sep">–</span>
+                <input type="date" id="filterDateTo" class="filter-date-input" title="To date">
+              </div>
+            </div>
+
+            <!-- Reading Time -->
+            <div class="fp-field">
+              <span class="fp-label">Reading Time</span>
+              <select id="filterReadingTime" class="filter-select">
+                <option value="">Any</option>
+                <option value="short">&lt; 5 min</option>
+                <option value="medium">5–10 min</option>
+                <option value="long">&gt; 10 min</option>
+              </select>
+            </div>
+
+            <!-- Votes -->
+            <div class="fp-field">
+              <span class="fp-label">Min Upvotes</span>
+              <select id="filterVotes" class="filter-select">
+                <option value="">Any</option>
+                <option value="5">≥ 5</option>
+                <option value="10">≥ 10</option>
+                <option value="25">≥ 25</option>
+                <option value="50">≥ 50</option>
+              </select>
+            </div>
+
+          </div>
+          <div class="filter-popup-footer">
+            <button class="btn btn-sm" id="clearFilterBtn" type="button"
+              style="color: var(--text-muted); font-size: 0.8rem;">✕ Clear All</button>
+            <button class="btn btn-primary btn-sm" id="filterPopupDone" type="button">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selection Action Bar -->
+    <div class="selection-bar" id="selectionBar" style="display: none; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span id="selectedCount" style="font-weight: 600; font-size: 0.88rem;">0 selected</span>
+        <div class="export-dropdown">
+          <button class="btn btn-secondary btn-sm" id="exportSelectedBtn">📥 Export Selected ▾</button>
+          <div class="export-dropdown-menu" id="exportSelectedMenu">
+            <button id="exportSelectedJsonBtn">📄 Export as JSON</button>
+            <button id="exportSelectedExcelBtn">📊 Export as Excel (.xlsx)</button>
+            <button id="exportSelectedZipBtn">📦 Export as ZIP (.zip)</button>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" id="deleteSelectedBtn">🗑️ Delete Selected</button>
+        <button class="btn btn-sm" id="clearSelectionBtn" style="color: var(--text-muted);">✕ Clear</button>
+      </div>
+    </div>
+
+    <!-- Stories Table -->
+    <div class="table-wrapper" id="tableWrapper">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;"><input type="checkbox" id="selectAll" title="Select all"></th>
+            <th class="sortable" data-sort="id" id="thId">ID <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="title" id="thTitle">Title <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="category" id="thCategory">Category <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="author" id="thAuthor">Author <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="status" id="thStatus">Status <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="votes" id="thVotes">Votes <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="date" id="thDate">Date <span class="sort-icon">↕</span></th>
+            <th class="sortable" data-sort="reading_time" id="thReadingTime">Read Time <span class="sort-icon">↕</span>
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="storiesBody">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem;"></div>
+              <div>Loading data...</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <span class="icon">📭</span>
+      <h3>No stories found</h3>
+      <p class="mt-1" style="color: var(--text-secondary);">Create your first story or adjust filters.</p>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-quote">"कथा किल मनोरमा"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull;
+      <a href="/library">Sanskrit Digital Library</a> &bull;
+      <a href="index.html">कथाः</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com"
+        style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer"
+        style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="m22 2-7 20-4-9-9-4Z" />
+          <path d="M22 2 11 13" />
+        </svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer"
+        style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+        </svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <!-- Import Modal -->
+  <div class="modal-overlay" id="importModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>📤 Import Stories</h2>
+        <button class="modal-close" id="importModalClose">✕</button>
+      </div>
+      <div
+        style="background: var(--accent-light); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; font-size: 0.88rem; border: 1px solid rgba(129, 140, 248, 0.2);">
+        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent);">📝 File Instruction</h3>
+        <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem;">
+          <strong>JSON format:</strong> An array of story objects. Each object must have <code>title</code> and
+          <code>content_html</code>. The <code>cover_image_url</code> is required only for published stories. Optional
+          fields: <code>summary</code>, <code>category</code>, <code>cover_image_url</code> (for drafts),
+          <code>author</code>, <code>reading_time</code>, <code>status</code>, and <code>published_at</code>.
+        </p>
+        <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+          <strong>Excel format:</strong> A spreadsheet with columns: <code>title</code>, <code>summary</code>,
+          <code>content_html</code>, <code>category</code>, <code>cover_image_url</code> (required only if status is
+          'published'), <code>author</code>, <code>reading_time</code>, <code>status</code>, <code>published_at</code>.
+          Download the sample for the exact format.
+        </p>
+        <p style="color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem;">
+          <strong>ZIP format:</strong> An archive containing text files named like <code>XX StoryTitle.txt</code> and
+          cover images named like <code>XX.png</code> (matching the leading number of the text file). Missing covers
+          import as drafts.
+        </p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" id="downloadSampleExcelBtn">
+            📊 Download Sample Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" accept=".json,.xlsx,.xls,.zip" id="fileInput">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📁</div>
+        <div style="font-size: 0.9rem; color: var(--text-secondary);">
+          <strong>Click to browse</strong> or drag &amp; drop a JSON, Excel, or ZIP file<br>
+          <small>Max 4GB</small>
+        </div>
+      </div>
+
+      <!-- ZIP Import Metadata Form -->
+      <div id="zipMetadataArea"
+        style="display: none; background: var(--t-bg-surface); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; margin-top: 1rem;">
+        <h4 style="margin-top: 0; margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.95rem;">📦 ZIP
+          Archive Settings</h4>
+        <div class="form-group" style="margin-bottom: 12px;">
+          <label for="zipCategory" style="margin-bottom: 4px; font-weight: normal; font-size: 0.8rem;">वर्गः / सम्पुढः
+            (Category / Album) *</label>
+          <input type="text" id="zipCategory" class="form-input" style="padding: 6px 10px; font-size: 0.85rem;"
+            placeholder="e.g. रामायणम्">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="zipAuthor" style="margin-bottom: 4px; font-weight: normal; font-size: 0.8rem;">लेखकः
+            (Author)</label>
+          <input type="text" id="zipAuthor" class="form-input" style="padding: 6px 10px; font-size: 0.85rem;"
+            placeholder="e.g. वाल्मीकिः">
+        </div>
+      </div>
+
+      <!-- Preview & Confirmation Area -->
+      <div id="uploadPreviewArea" style="display: none; margin-bottom: 1.25rem; margin-top: 1rem;">
+        <div
+          style="background: var(--t-bg-surface); border: 1px solid var(--border); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem;">
+          <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.95rem;">📊 File
+            Summary</h4>
+          <p style="margin: 0.25rem 0; color: var(--text-secondary);">Total Stories: <strong id="previewTotalCount"
+              style="color: var(--text-primary);">0</strong></p>
+          <div id="previewMetadataDetails"
+            style="margin-top: 0.75rem; max-height: 150px; overflow-y: auto; color: var(--text-muted); font-size: 0.82rem;">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button id="confirmImportBtn" class="btn btn-primary" style="flex: 1;">🚀 Confirm Import</button>
+          <button id="cancelImportBtn" class="btn btn-secondary">✕ Cancel</button>
+        </div>
+      </div>
+
+      <div id="uploadResult" style="display: none; margin-top: 1rem;"></div>
+    </div>
+  </div>
+
+  <!-- Export Progress Modal -->
+  <div class="modal-overlay" id="exportProgressModal">
+    <div class="modal" style="max-width: 400px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; margin-bottom: 8px;">
+        <h2 id="exportModalTitle" style="font-size: 1.25rem;">📦 Exporting ZIP</h2>
+      </div>
+      <div style="padding: 1rem 0;">
+        <div class="spinner" id="exportSpinner" style="margin: 0 auto 1.5rem auto;"></div>
+        <div id="exportProgressContainer" style="display: none; margin-bottom: 1rem;">
+          <div class="progress-bar-container" style="width: 100%; background: var(--border); border-radius: var(--radius-sm); height: 10px; overflow: hidden; margin-bottom: 0.5rem;">
+            <div id="exportProgressBarFill" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.1s ease-out;"></div>
+          </div>
+          <div id="exportProgressPercent" style="font-size: 0.85rem; font-weight: 500; color: var(--accent); text-align: right;">0%</div>
+        </div>
+        <p id="exportProgressMsg" style="color: var(--text-secondary); font-size: 0.88rem; margin: 0; line-height: 1.5;">Preparing export...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Comments Modal -->
+  <div class="modal-overlay" id="feedbackCommentsModal">
+    <div class="modal" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 id="feedbackCommentsModalTitle">Story Feedback Comments</h2>
+        <button class="modal-close" onclick="closeFeedbackCommentsModal()">✕</button>
+      </div>
+      <div style="padding: 1rem 0;">
+        <div id="feedbackCommentsSpinner" class="spinner" style="margin: 20px auto;"></div>
+        <div id="feedbackCommentsContent" style="display: none;">
+          <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border); color: var(--text-secondary); font-size: 0.88rem;">
+                <th style="text-align: left; padding: 10px 8px;">Type</th>
+                <th style="text-align: left; padding: 10px 8px;">Comment</th>
+                <th style="text-align: left; padding: 10px 8px; width: 120px;">Date</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackCommentsTableBody" style="font-size: 0.88rem;">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+          <div id="feedbackCommentsEmptyState" style="text-align: center; color: var(--text-secondary); padding: 2.5rem 1.5rem; display: none;">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+            No comments submitted yet.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folders Management Modal -->
+  <div class="modal-overlay" id="foldersModal">
+    <div class="modal" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>📂 Folders / Albums Management</h2>
+        <button class="modal-close" id="foldersModalClose">✕</button>
+      </div>
+
+      <!-- Folders list container -->
+      <div id="foldersListContainer" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+        <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading folders...</div>
+      </div>
+
+      <!-- Action Panel: Rename Form -->
+      <div id="folderRenamePanel"
+        style="display: none; background: var(--t-bg-surface); border: 1px solid var(--border); padding: 18px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--accent);">✏️ Rename Folder</h3>
+        <form id="folderRenameForm">
+          <input type="hidden" id="renameOldName">
+          <div class="form-group">
+            <label for="renameNewName">New Folder Name *</label>
+            <input type="text" id="renameNewName" class="form-input" required placeholder="Enter new folder name...">
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary btn-sm" style="flex: 1;">💾 Save Name</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelFolderAction()">✕ Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Action Panel: Delete/Move Form -->
+      <div id="folderDeletePanel"
+        style="display: none; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 18px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; margin-bottom: 12px; color: #fca5a5;">🗑️ Delete Folder: <span
+            id="deleteFolderNameLabel" style="font-weight: 700;">Folder</span></h3>
+        <form id="folderDeleteForm">
+          <input type="hidden" id="deleteTargetFolderName">
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="margin-bottom: 8px;">What should be done with the stories in this folder?</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="radio" name="deleteAction" value="delete" checked
+                  onclick="toggleDeleteActionView('delete')">
+                <span>🗑️ Delete all stories inside this folder</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; font-weight: normal; cursor: pointer;">
+                <input type="radio" name="deleteAction" value="move" onclick="toggleDeleteActionView('move')">
+                <span>📦 Move all stories inside to another folder</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Move Target Selection -->
+          <div id="deleteMoveTargetGroup" class="form-group" style="display: none;">
+            <label for="deleteMoveTargetSelect">Select Target Folder *</label>
+            <select id="deleteMoveTargetSelect" class="form-select"></select>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button type="submit" class="btn btn-danger btn-sm" style="flex: 1;">🗑️ Confirm Delete</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelFolderAction()">✕ Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div style="text-align: right;">
+        <button class="btn btn-secondary btn-sm" id="foldersModalCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="storyModal">
+    <div class="modal" style="max-width: 850px;">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Story</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <form id="storyForm">
+        <input type="hidden" id="editId">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="sTitle">शीर्षकम् (Title) *</label>
+            <input type="text" id="sTitle" class="form-input" placeholder="कथायाः शीर्षकम्..." required>
+          </div>
+          <div class="form-group">
+            <label for="sCategory">वर्गः / सम्पुढः (Category / Album) *</label>
+            <input type="text" id="sCategory" class="form-input" list="categorySuggestions"
+              placeholder="पुराणम्, इतिहासः, नीतिकथा..." required>
+            <datalist id="categorySuggestions"></datalist>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="form-group">
+            <label for="sAuthor">लेखकः (Author)</label>
+            <input type="text" id="sAuthor" class="form-input" placeholder="Author name...">
+          </div>
+          <div class="form-group">
+            <label for="sReadingTime">पठनसमयः (Reading Time, min)</label>
+            <input type="number" id="sReadingTime" class="form-input" value="5" min="1" max="120">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sPublishedAt">प्रकाशनदिनाङ्कः (Published Date)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="date" id="sPublishedAt" class="form-input" style="flex: 1;">
+            <button type="button" class="btn btn-secondary btn-sm" id="setTodayBtn" style="white-space: nowrap;">📅
+              Today</button>
+          </div>
+          <small style="color: var(--text-muted); font-size: 0.76rem; display: block; margin-top: 4px;">Leave blank to
+            auto-set to current date when publishing.</small>
+        </div>
+
+        <div class="form-group">
+          <label>चित्रसम्पर्कः (Cover Image) *</label>
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+            <input type="text" id="sCoverUrl" class="form-input" placeholder="https://example.com/image.jpg" required
+              style="flex: 1;">
+            <input type="file" id="coverFileInput" accept="image/*" style="display: none;"
+              onchange="uploadCoverImage(this)">
+            <button type="button" class="btn btn-secondary btn-sm"
+              onclick="document.getElementById('coverFileInput').click()" id="uploadBtn" style="white-space: nowrap;">
+              📤 Upload
+            </button>
+          </div>
+          <div id="coverPreview"></div>
+        </div>
+
+        <div class="form-group" style="display: none;">
+          <label for="sSummary">सारांशः (Summary)</label>
+          <textarea id="sSummary" class="form-textarea" style="min-height: 80px;"
+            placeholder="Brief summary of the story..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>कथावस्तु (Story Content — HTML) *</label>
+          <div class="editor-toolbar" id="editorToolbar">
+            <button type="button" onclick="insertTag('<strong>', '</strong>')" title="Bold"><strong>B</strong></button>
+            <button type="button" onclick="insertTag('<em>', '</em>')" title="Italic"><em>I</em></button>
+            <button type="button" onclick="insertTag('<u>', '</u>')" title="Underline"><u>U</u></button>
+            <span class="divider"></span>
+            <button type="button" onclick="insertTag('<p>', '</p>')" title="Paragraph">¶ Para</button>
+            <button type="button" onclick="insertTag('<br>\n')" title="Line Break">↵ Break</button>
+            <button type="button" onclick="insertTag('&amp;emsp;')" title="Tab Space">⇥ Tab</button>
+            <button type="button" onclick="insertTag('<p style=\'text-align: center;\'>', '</p>')"
+              title="Align Center">↔ Center</button>
+            <span class="divider"></span>
+            <button type="button" onclick="insertLink()" title="Hyperlink">🔗 Link</button>
+            <button type="button" onclick="insertImage()" title="Insert Image">🖼️ Image</button>
+            <span class="divider" style="margin-left: auto;"></span>
+            <button type="button" class="toggle-btn active" id="btnEditMode" onclick="togglePreview('edit')"
+              style="background: var(--t-accent-alpha-20); border: 1px solid var(--t-accent-alpha-40); color: white;">✏️
+              Edit</button>
+            <button type="button" class="toggle-btn" id="btnPreviewMode" onclick="togglePreview('preview')">👁️
+              Preview</button>
+          </div>
+          <textarea id="sContent" class="form-textarea"
+            style="min-height: 280px; font-family: 'Courier New', monospace; font-size: 0.88rem; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm);"
+            placeholder="Write your story here in HTML..."></textarea>
+          <div id="contentPreview" class="preview-panel"
+            style="display: none; border-top: none; border-radius: 0 0 var(--radius-sm) var(--radius-sm); min-height: 280px;">
+          </div>
+        </div>
+
+
+        <div style="display: flex; gap: 12px; margin-top: 20px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;" id="saveBtn">💾 Save as Draft</button>
+          <button type="button" class="btn btn-success" id="savePublishBtn" onclick="saveStory('published')">🚀 Save &
+            Publish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/sdl/api/v1';
+
+    // ── Get Thumbnail URL ──
+    function getThumbnailUrl(url) {
+      if (!url) return '';
+      if (url.startsWith('/katha/uploads/cov_')) {
+        return url.replace('/uploads/cov_', '/uploads/thumb_cov_');
+      }
+      return url;
+    }
+
+    let allStories = [];
+    let stories = [];
+    let categories = [];
+    const selectedIds = new Set();
+
+    // ── Sort State ──
+    let currentSortField = 'title';
+    let currentSortDir = 'asc'; // 'asc' | 'desc'
+
+    // ── Auth Check ──
+    if (sessionStorage.getItem('isKathaAdmin') !== 'true') {
+      window.location.href = 'admin-login.html';
+    }
+
+    // ── Folders Management ──
+    const foldersModal = document.getElementById('foldersModal');
+    const manageFoldersBtn = document.getElementById('manageFoldersBtn');
+
+    if (manageFoldersBtn) {
+      manageFoldersBtn.addEventListener('click', openFoldersModal);
+    }
+
+    document.getElementById('foldersModalClose').addEventListener('click', closeFoldersModal);
+    document.getElementById('foldersModalCloseBtn').addEventListener('click', closeFoldersModal);
+
+    function openFoldersModal() {
+      foldersModal.classList.add('active');
+      loadFoldersList();
+      cancelFolderAction();
+    }
+
+    function closeFoldersModal() {
+      foldersModal.classList.remove('active');
+    }
+
+    async function loadFoldersList() {
+      const container = document.getElementById('foldersListContainer');
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading folders...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/folders`);
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        const folders = data.folders || [];
+        if (folders.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">No folders found.</div>';
+          return;
+        }
+
+        // Populate select list for moving
+        const moveSelect = document.getElementById('deleteMoveTargetSelect');
+        moveSelect.innerHTML = '';
+
+        let html = '';
+        folders.forEach(f => {
+          moveSelect.innerHTML += `<option value="${escapeHtml(f.category)}">${escapeHtml(f.category)}</option>`;
+
+          html += `
+            <div class="folder-list-item">
+              <div class="folder-item-info">
+                <span class="folder-item-icon">📁</span>
+                <div>
+                  <span class="folder-item-name">${escapeHtml(f.category)}</span>
+                  <div class="folder-item-count">
+                    <span>🟢 Published: ${f.published}</span>
+                    <span>•</span>
+                    <span>🟡 Draft: ${f.drafts}</span>
+                    <span>•</span>
+                    <span>Total: ${f.total}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="folder-actions">
+                <button type="button" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 0.78rem;" onclick="showRenameFolder('${escapeHtml(f.category)}')">✏️ Rename</button>
+                <button type="button" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 0.78rem;" onclick="showDeleteFolder('${escapeHtml(f.category)}')">🗑️</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        console.error('Error loading folders:', err);
+        container.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--danger);">Error: ${err.message}</div>`;
+      }
+    }
+
+    function cancelFolderAction() {
+      document.getElementById('folderRenamePanel').style.display = 'none';
+      document.getElementById('folderDeletePanel').style.display = 'none';
+      document.getElementById('folderRenameForm').reset();
+      document.getElementById('folderDeleteForm').reset();
+    }
+
+    function showRenameFolder(name) {
+      cancelFolderAction();
+      document.getElementById('renameOldName').value = name;
+      document.getElementById('renameNewName').value = name;
+      document.getElementById('folderRenamePanel').style.display = 'block';
+      document.getElementById('renameNewName').focus();
+    }
+
+    document.getElementById('folderRenameForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const old_name = document.getElementById('renameOldName').value;
+      const new_name = document.getElementById('renameNewName').value.trim();
+
+      if (!new_name) return;
+      if (old_name === new_name) {
+        cancelFolderAction();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/folders/rename`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ old_name, new_name })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadFoldersList();
+          loadStories();
+          cancelFolderAction();
+        } else {
+          showToast(data.error || 'Rename failed', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error', 'error');
+      }
+    });
+
+    function showDeleteFolder(name) {
+      cancelFolderAction();
+      document.getElementById('deleteTargetFolderName').value = name;
+      document.getElementById('deleteFolderNameLabel').textContent = name;
+      document.getElementById('folderDeletePanel').style.display = 'block';
+
+      const select = document.getElementById('deleteMoveTargetSelect');
+      const options = select.options;
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].value === name) {
+          options[i].disabled = true;
+          if (select.value === name) {
+            select.selectedIndex = (i + 1) % options.length;
+          }
+        } else {
+          options[i].disabled = false;
+        }
+      }
+
+      toggleDeleteActionView('delete');
+    }
+
+    function toggleDeleteActionView(action) {
+      const moveGroup = document.getElementById('deleteMoveTargetGroup');
+      if (action === 'move') {
+        moveGroup.style.display = 'block';
+      } else {
+        moveGroup.style.display = 'none';
+      }
+    }
+
+    document.getElementById('folderDeleteForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const folder_name = document.getElementById('deleteTargetFolderName').value;
+      const action = document.querySelector('input[name="deleteAction"]:checked').value;
+      const move_to = document.getElementById('deleteMoveTargetSelect').value;
+
+      if (action === 'move' && (!move_to || move_to === folder_name)) {
+        showToast('Please select a valid folder to move stories to.', 'error');
+        return;
+      }
+
+      const confirmMsg = action === 'delete'
+        ? `Are you absolutely sure you want to delete folder "${folder_name}" and ALL stories inside it? This cannot be undone.`
+        : `Are you sure you want to delete folder "${folder_name}" and move its stories to "${move_to}"?`;
+
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/folders/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder_name, action, move_to })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadFoldersList();
+          loadStories();
+          cancelFolderAction();
+        } else {
+          showToast(data.error || 'Delete failed', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error', 'error');
+      }
+    });
+
+    // ── Helpers ──
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    async function downloadZipWithProgress(ids, downloadName) {
+      const modal = document.getElementById('exportProgressModal');
+      const progressContainer = document.getElementById('exportProgressContainer');
+      const progressBarFill = document.getElementById('exportProgressBarFill');
+      const progressPercent = document.getElementById('exportProgressPercent');
+      const progressMsg = document.getElementById('exportProgressMsg');
+      const spinner = document.getElementById('exportSpinner');
+
+      // Reset & Show Modal
+      spinner.style.display = 'block';
+      progressContainer.style.display = 'none';
+      progressBarFill.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressMsg.textContent = 'Contacting server to build ZIP archive...';
+      modal.classList.add('active');
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories/export-zip`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids })
+        });
+
+        if (!res.ok) {
+          let errMsg = 'Export failed';
+          try {
+            const errJson = await res.json();
+            errMsg = errJson.error || errMsg;
+          } catch {}
+          throw new Error(errMsg);
+        }
+
+        // Show progress bar
+        progressContainer.style.display = 'block';
+        progressMsg.textContent = 'Downloading ZIP archive...';
+
+        const contentLength = res.headers.get('content-length');
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        
+        const reader = res.body.getReader();
+        const chunks = [];
+        let loaded = 0;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          loaded += value.length;
+
+          if (total) {
+            const percent = Math.round((loaded / total) * 100);
+            progressBarFill.style.width = percent + '%';
+            progressPercent.textContent = percent + '%';
+            progressMsg.textContent = `Downloading ZIP archive: ${(loaded / (1024 * 1024)).toFixed(2)} MB of ${(total / (1024 * 1024)).toFixed(2)} MB...`;
+          } else {
+            progressMsg.textContent = `Downloading ZIP archive: ${(loaded / (1024 * 1024)).toFixed(2)} MB...`;
+          }
+        }
+
+        progressMsg.textContent = 'Saving file...';
+        const blob = new Blob(chunks, { type: 'application/zip' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = downloadName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        showToast('ZIP exported successfully!', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Failed to export ZIP', 'error');
+      } finally {
+        // Hide Modal
+        modal.classList.remove('active');
+      }
+    }
+
+    function openModal() { document.getElementById('storyModal').classList.add('active'); }
+    function closeModal() { document.getElementById('storyModal').classList.remove('active'); }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function truncate(s, n = 50) {
+      if (!s) return '';
+      return s.length > n ? s.substring(0, n) + '…' : s;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch { return dateStr; }
+    }
+
+    // ── Cover preview ──
+    document.getElementById('sCoverUrl').addEventListener('input', (e) => {
+      const url = e.target.value.trim();
+      const preview = document.getElementById('coverPreview');
+      if (url) {
+        preview.innerHTML = `<img src="${escapeHtml(getThumbnailUrl(url))}" style="max-height: 120px; border-radius: var(--radius-sm); border: 1px solid var(--border);"
+          onerror="this.parentElement.innerHTML='<span style=\\'color: var(--danger); font-size: 0.82rem;\\'>⚠️ Image failed to load</span>'">`;
+      } else {
+        preview.innerHTML = '';
+      }
+    });
+
+    // ── Content Preview Toggle ──
+    function togglePreview(mode) {
+      const textarea = document.getElementById('sContent');
+      const preview = document.getElementById('contentPreview');
+      const toolbar = document.getElementById('editorToolbar');
+      const btnEdit = document.getElementById('btnEditMode');
+      const btnPreview = document.getElementById('btnPreviewMode');
+
+      btnEdit.classList.remove('active');
+      btnPreview.classList.remove('active');
+      btnEdit.style.background = 'transparent';
+      btnEdit.style.borderColor = 'transparent';
+      btnEdit.style.color = 'var(--text-secondary)';
+      btnPreview.style.background = 'transparent';
+      btnPreview.style.borderColor = 'transparent';
+      btnPreview.style.color = 'var(--text-secondary)';
+
+      if (mode === 'preview') {
+        textarea.style.display = 'none';
+        preview.style.display = 'block';
+        preview.innerHTML = textarea.value || '<em style="color: var(--text-muted);">No content yet...</em>';
+        btnPreview.classList.add('active');
+        btnPreview.style.background = 'var(--t-accent-alpha-20)';
+        btnPreview.style.borderColor = 'var(--t-accent-alpha-40)';
+        btnPreview.style.color = 'white';
+        toolbar.classList.add('preview-active');
+      } else {
+        textarea.style.display = 'block';
+        preview.style.display = 'none';
+        btnEdit.classList.add('active');
+        btnEdit.style.background = 'var(--t-accent-alpha-20)';
+        btnEdit.style.borderColor = 'var(--t-accent-alpha-40)';
+        btnEdit.style.color = 'white';
+        toolbar.classList.remove('preview-active');
+      }
+    }
+
+    // ── HTML Editor Helpers ──
+    function insertTag(tagOpen, tagClose = '') {
+      const textarea = document.getElementById('sContent');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const selectedText = text.substring(start, end);
+
+      let replacement;
+      if (tagClose && selectedText.startsWith(tagOpen) && selectedText.endsWith(tagClose)) {
+        // Toggle OFF: selection contains the tags -> strip them
+        replacement = selectedText.substring(tagOpen.length, selectedText.length - tagClose.length);
+        textarea.value = text.substring(0, start) + replacement + text.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start;
+        textarea.selectionEnd = start + replacement.length;
+      } else if (tagClose && start >= tagOpen.length && text.substring(start - tagOpen.length, start) === tagOpen &&
+        end <= text.length - tagClose.length && text.substring(end, end + tagClose.length) === tagClose) {
+        // Toggle OFF: tags are just outside selection -> strip them
+        replacement = selectedText;
+        textarea.value = text.substring(0, start - tagOpen.length) + replacement + text.substring(end + tagClose.length);
+        textarea.focus();
+        textarea.selectionStart = start - tagOpen.length;
+        textarea.selectionEnd = start - tagOpen.length + replacement.length;
+      } else {
+        // Toggle ON: wrap the selection
+        replacement = tagOpen + selectedText + tagClose;
+        textarea.value = text.substring(0, start) + replacement + text.substring(end);
+        textarea.focus();
+        textarea.selectionStart = start + tagOpen.length;
+        textarea.selectionEnd = start + tagOpen.length + selectedText.length;
+      }
+    }
+
+    function insertLink() {
+      const url = prompt("Enter the URL:");
+      if (url) {
+        insertTag(`<a href="${url}" target="_blank">`, '</a>');
+      }
+    }
+
+    function insertImage() {
+      const url = prompt("Enter Image URL:");
+      if (url) {
+        insertTag(`<img src="${url}" style="max-width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--border);">\n`);
+      }
+    }
+
+    async function uploadCoverImage(input) {
+      if (!input.files || input.files.length === 0) return;
+
+      const file = input.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const btn = document.getElementById('uploadBtn');
+      const prevText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Uploading...';
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/upload-image`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Image uploaded successfully!', 'success');
+          const coverUrlInput = document.getElementById('sCoverUrl');
+          coverUrlInput.value = data.url;
+          // Trigger input event to update preview
+          coverUrlInput.dispatchEvent(new Event('input'));
+        } else {
+          showToast(data.error || 'Upload failed', 'error');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('Network error during upload', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = prevText;
+        input.value = ''; // Reset file input
+      }
+    }
+
+
+    // ── Load Stories ──
+    async function loadStories() {
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        allStories = data.stories;
+        categories = data.categories || [];
+
+        // Stats
+        document.getElementById('totalCount').textContent = allStories.length;
+        document.getElementById('publishedCount').textContent = allStories.filter(s => s.status === 'published').length;
+        document.getElementById('draftCount').textContent = allStories.filter(s => s.status === 'draft').length;
+        document.getElementById('categoryCount').textContent = categories.length;
+
+        // Category filter dropdown
+        const catFilter = document.getElementById('filterCategory');
+        const prevCat = catFilter.value;
+        catFilter.innerHTML = '<option value="">All</option>';
+        categories.forEach(c => {
+          catFilter.innerHTML += `<option value="${escapeHtml(c)}" ${c === prevCat ? 'selected' : ''}>${escapeHtml(c)}</option>`;
+        });
+
+        // Author filter dropdown
+        const authorFilter = document.getElementById('filterAuthor');
+        const prevAuthor = authorFilter.value;
+        const authors = [...new Set(allStories.map(s => s.author).filter(Boolean))].sort();
+        authorFilter.innerHTML = '<option value="">All</option>';
+        authors.forEach(a => {
+          authorFilter.innerHTML += `<option value="${escapeHtml(a)}" ${a === prevAuthor ? 'selected' : ''}>${escapeHtml(a)}</option>`;
+        });
+
+        // Category suggestions for form
+        const catSugg = document.getElementById('categorySuggestions');
+        catSugg.innerHTML = '';
+        categories.forEach(c => { catSugg.innerHTML += `<option value="${escapeHtml(c)}">`; });
+
+        selectedIds.clear();
+        applyFilters();
+      } catch (err) {
+        console.error('Error loading stories:', err);
+        showToast('Failed to load stories', 'error');
+      }
+    }
+
+    // ── Apply Filters + Sort ──
+    function applyFilters() {
+      const statusFilter = document.getElementById('filterStatus').value;
+      const catFilter = document.getElementById('filterCategory').value;
+      const authorFilter = document.getElementById('filterAuthor').value;
+      const searchFilter = (document.getElementById('filterSearch').value || '').trim().toLowerCase();
+      const dateFrom = document.getElementById('filterDateFrom').value;  // 'YYYY-MM-DD' or ''
+      const dateTo = document.getElementById('filterDateTo').value;
+      const readTimeFilter = document.getElementById('filterReadingTime').value;
+      const votesFilter = parseInt(document.getElementById('filterVotes').value) || 0;
+
+      stories = allStories.filter(s => {
+        if (statusFilter && s.status !== statusFilter) return false;
+        if (catFilter && s.category !== catFilter) return false;
+        if (authorFilter && s.author !== authorFilter) return false;
+        if (searchFilter) {
+          const inTitle = (s.title || '').toLowerCase().includes(searchFilter);
+          const inContent = (s.content_html || '').toLowerCase().includes(searchFilter);
+          if (!inTitle && !inContent) return false;
+        }
+        if (dateFrom) {
+          const pub = (s.published_at || '').substring(0, 10);
+          if (!pub || pub < dateFrom) return false;
+        }
+        if (dateTo) {
+          const pub = (s.published_at || '').substring(0, 10);
+          if (!pub || pub > dateTo) return false;
+        }
+        if (readTimeFilter) {
+          const rt = s.reading_time || 0;
+          if (readTimeFilter === 'short' && rt >= 5) return false;
+          if (readTimeFilter === 'medium' && (rt < 5 || rt > 10)) return false;
+          if (readTimeFilter === 'long' && rt <= 10) return false;
+        }
+        if (votesFilter > 0 && (s.upvotes || 0) < votesFilter) return false;
+        return true;
+      });
+
+      sortTable();
+      updateActiveFiltersCount();
+    }
+
+    // ── Sort Stories Array ──
+    function sortTable() {
+      const field = currentSortField;
+      const dir = currentSortDir === 'asc' ? 1 : -1;
+
+      stories.sort((a, b) => {
+        let va, vb;
+        switch (field) {
+          case 'id': va = a.id || 0; vb = b.id || 0; break;
+          case 'title': va = (a.title || '').toLowerCase(); vb = (b.title || '').toLowerCase(); break;
+          case 'category': va = (a.category || '').toLowerCase(); vb = (b.category || '').toLowerCase(); break;
+          case 'author': va = (a.author || '').toLowerCase(); vb = (b.author || '').toLowerCase(); break;
+          case 'status': va = a.status || ''; vb = b.status || ''; break;
+          case 'votes': va = (a.upvotes || 0); vb = (b.upvotes || 0); break;
+          case 'date': va = (a.published_at || ''); vb = (b.published_at || ''); break;
+          case 'reading_time': va = (a.reading_time || 0); vb = (b.reading_time || 0); break;
+          default: va = a.id; vb = b.id;
+        }
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+      });
+
+      updateSortHeaders();
+      renderTable();
+    }
+
+    // ── Update Column Header Visuals ──
+    function updateSortHeaders() {
+      const sortMap = {
+        id: 'thId', title: 'thTitle', category: 'thCategory', author: 'thAuthor',
+        status: 'thStatus', votes: 'thVotes', date: 'thDate', reading_time: 'thReadingTime'
+      };
+      Object.entries(sortMap).forEach(([field, thId]) => {
+        const th = document.getElementById(thId);
+        if (!th) return;
+        const icon = th.querySelector('.sort-icon');
+        if (field === currentSortField) {
+          th.classList.add('sort-active');
+          if (icon) icon.textContent = currentSortDir === 'asc' ? '▲' : '▼';
+        } else {
+          th.classList.remove('sort-active');
+          if (icon) icon.textContent = '↕';
+        }
+      });
+
+      // Sync dropdown
+      const combo = `${currentSortField === 'date' ? 'date' : currentSortField}-${currentSortDir}`;
+      const sel = document.getElementById('sortBySelect');
+      if (sel) {
+        // Map special case votes to votes
+        const opt = sel.querySelector(`option[value="${combo}"]`);
+        if (opt) sel.value = combo;
+      }
+    }
+
+    // ── Count Active Filters ──
+    function updateActiveFiltersCount() {
+      const badge = document.getElementById('activeFiltersCount');
+      const triggerBtn = document.getElementById('filterTriggerBtn');
+      const fields = ['filterStatus', 'filterCategory', 'filterAuthor', 'filterSearch',
+        'filterDateFrom', 'filterDateTo', 'filterReadingTime', 'filterVotes'];
+      const active = fields.filter(id => {
+        const el = document.getElementById(id);
+        return el && el.value && el.value !== '';
+      }).length;
+      if (active > 0) {
+        badge.textContent = active;
+        badge.classList.add('visible');
+        triggerBtn.classList.add('has-filters');
+      } else {
+        badge.classList.remove('visible');
+        triggerBtn.classList.remove('has-filters');
+      }
+    }
+
+    // ── Update Selection Bar ──
+    function updateSelectionBar() {
+      const bar = document.getElementById('selectionBar');
+      const selectAllCb = document.getElementById('selectAll');
+      const count = selectedIds.size;
+
+      bar.style.display = count > 0 ? 'block' : 'none';
+      if (count > 0) document.getElementById('selectedCount').textContent = `${count} selected`;
+
+      if (stories.length > 0 && count === stories.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+      } else if (count > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+      } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+      }
+    }
+
+    // ── Render Table ──
+    function renderTable() {
+      const body = document.getElementById('storiesBody');
+      const empty = document.getElementById('emptyState');
+      const tableW = document.getElementById('tableWrapper');
+
+      if (stories.length === 0) {
+        tableW.style.display = 'none';
+        empty.style.display = 'block';
+        updateSelectionBar();
+        return;
+      }
+
+      tableW.style.display = 'block';
+      empty.style.display = 'none';
+
+      body.innerHTML = stories.map(s => `
+        <tr class="${selectedIds.has(s.id) ? 'row-selected' : ''}">
+          <td><input type="checkbox" class="row-checkbox" data-id="${s.id}" ${selectedIds.has(s.id) ? 'checked' : ''}></td>
+          <td><strong>#${s.id}</strong></td>
+          <td title="${escapeHtml(s.title)}">${escapeHtml(truncate(s.title, 40))}</td>
+          <td><span class="badge badge-category" style="font-size: 0.75rem;">${escapeHtml(s.category)}</span></td>
+          <td style="font-size: 0.84rem; color: var(--text-secondary);">${escapeHtml(s.author || '—')}</td>
+          <td>
+            <button class="status-toggle ${s.status}" onclick="toggleStatus(${s.id})">
+              ${s.status === 'published' ? '🟢 Published' : '🟡 Draft'}
+            </button>
+          </td>
+          <td style="font-size: 0.84rem; cursor: pointer; color: var(--accent);" onclick="viewStoryFeedback(${s.id})" title="Click to view feedback comments">
+            👍 ${s.upvotes || 0} / 👎 ${s.downvotes || 0}
+            ${s.downvotes > 0 ? `<br><small style="color: var(--text-muted); text-decoration: underline;">💬 View comments</small>` : ''}
+          </td>
+          <td style="font-size: 0.82rem; color: var(--text-secondary);">${formatDate(s.published_at)}</td>
+          <td style="font-size: 0.82rem; color: var(--text-secondary);">${s.reading_time ? s.reading_time + ' min' : '—'}</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="editStory(${s.id})">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteStory(${s.id})">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      body.querySelectorAll('.row-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = parseInt(e.target.dataset.id);
+          if (e.target.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          e.target.closest('tr').classList.toggle('row-selected', e.target.checked);
+          updateSelectionBar();
+        });
+      });
+
+      updateSelectionBar();
+    }
+
+    // ── Open Add Modal ──
+    document.getElementById('addStoryBtn').addEventListener('click', () => {
+      document.getElementById('storyForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('modalTitle').textContent = 'Add Story';
+      document.getElementById('coverPreview').innerHTML = '';
+      togglePreview('edit');
+      openModal();
+    });
+
+    // ── Edit Story ──
+    async function editStory(id) {
+      const story = allStories.find(s => s.id === id);
+      if (!story) return;
+
+      document.getElementById('editId').value = story.id;
+      document.getElementById('modalTitle').textContent = 'Edit Story #' + story.id;
+      document.getElementById('sTitle').value = story.title || '';
+      document.getElementById('sCategory').value = story.category || '';
+      document.getElementById('sAuthor').value = story.author || '';
+      document.getElementById('sReadingTime').value = story.reading_time || 5;
+      document.getElementById('sPublishedAt').value = story.published_at ? story.published_at.substring(0, 10) : '';
+      document.getElementById('sCoverUrl').value = story.cover_image_url || '';
+      document.getElementById('sSummary').value = story.summary || '';
+      document.getElementById('sContent').value = story.content_html || '';
+
+      // Cover preview
+      const coverUrl = story.cover_image_url;
+      if (coverUrl) {
+        document.getElementById('coverPreview').innerHTML =
+          `<img src="${escapeHtml(getThumbnailUrl(coverUrl))}" style="max-height: 120px; border-radius: var(--radius-sm); border: 1px solid var(--border);">`;
+      }
+
+      togglePreview('edit');
+      openModal();
+    }
+
+    // ── Save Story ──
+    document.getElementById('storyForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveStory('draft');
+    });
+
+    async function saveStory(status) {
+      const editId = document.getElementById('editId').value;
+      const title = document.getElementById('sTitle').value.trim();
+      const category = document.getElementById('sCategory').value.trim() || 'सामान्य';
+      const author = document.getElementById('sAuthor').value.trim();
+      const readingTime = parseInt(document.getElementById('sReadingTime').value) || 5;
+      const coverUrl = document.getElementById('sCoverUrl').value.trim();
+      const summary = document.getElementById('sSummary').value.trim();
+      const contentHtml = document.getElementById('sContent').value.trim();
+      const publishedAt = document.getElementById('sPublishedAt').value || null;
+
+      if (!title) { showToast('Title is required', 'error'); return; }
+      if (!contentHtml) { showToast('Story content is required', 'error'); return; }
+
+      if (status === 'published') {
+        if (!coverUrl) {
+          showToast('Cover image URL is required when publishing', 'error');
+          return;
+        }
+        showToast('Validating cover image link...', 'info');
+        const isImageOk = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = coverUrl;
+        });
+        if (!isImageOk) {
+          showToast('Cover image link is broken or could not be loaded.', 'error');
+          return;
+        }
+      }
+
+      const payload = {
+        title, category, author, reading_time: readingTime,
+        cover_image_url: coverUrl, summary, content_html: contentHtml,
+        status, published_at: publishedAt
+      };
+
+      try {
+        let url, method;
+        if (editId) {
+          url = `${API_BASE}/katha/admin/stories/${editId}`;
+          method = 'PUT';
+        } else {
+          url = `${API_BASE}/katha/admin/stories`;
+          method = 'POST';
+        }
+
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(editId ? 'Story updated!' : 'Story created!', 'success');
+          closeModal();
+          loadStories();
+        } else {
+          showToast(data.error || 'Failed to save', 'error');
+        }
+      } catch (err) {
+        console.error('Save error:', err);
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ── Toggle Status ──
+    async function toggleStatus(id) {
+      const story = allStories.find(s => s.id === id);
+      if (!story) return;
+
+      if (story.status === 'draft') {
+        const coverUrl = (story.cover_image_url || '').trim();
+        if (!coverUrl) {
+          showToast('Cover image URL is required to publish', 'error');
+          return;
+        }
+        showToast('Validating cover image link...', 'info');
+        const isImageOk = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = coverUrl;
+        });
+        if (!isImageOk) {
+          showToast('Cover image link is broken or could not be loaded.', 'error');
+          return;
+        }
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories/${id}/toggle-status`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Story is now ${data.status}`, 'success');
+          loadStories();
+        } else {
+          showToast(data.error || 'Failed', 'error');
+        }
+      } catch (err) {
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ── Delete Story ──
+    async function deleteStory(id) {
+      if (!confirm('Are you sure you want to delete this story? This cannot be undone.')) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Story deleted', 'success');
+          loadStories();
+        } else {
+          showToast(data.error || 'Failed', 'error');
+        }
+      } catch (err) {
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ── Filter Events (live) ──
+    const filterIds = ['filterStatus', 'filterCategory', 'filterAuthor',
+      'filterDateFrom', 'filterDateTo', 'filterReadingTime', 'filterVotes'];
+    filterIds.forEach(id => {
+      document.getElementById(id).addEventListener('change', () => {
+        selectedIds.clear();
+        applyFilters();
+      });
+    });
+
+    let searchDebounce;
+    document.getElementById('filterSearch').addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        selectedIds.clear();
+        applyFilters();
+      }, 250);
+    });
+
+    document.getElementById('clearFilterBtn').addEventListener('click', () => {
+      filterIds.forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('filterSearch').value = '';
+      currentSortField = 'title';
+      currentSortDir = 'asc';
+      document.getElementById('sortBySelect').value = 'title-asc';
+      selectedIds.clear();
+      applyFilters();
+    });
+
+    // ── Sort Dropdown ──
+    document.getElementById('sortBySelect').addEventListener('change', (e) => {
+      const val = e.target.value;
+      const lastDash = val.lastIndexOf('-');
+      currentSortField = val.substring(0, lastDash);
+      currentSortDir = val.substring(lastDash + 1);
+      sortTable();
+    });
+
+    // ── Sortable Column Headers ──
+    document.querySelectorAll('thead th.sortable').forEach(th => {
+      th.addEventListener('click', () => {
+        const field = th.dataset.sort;
+        if (currentSortField === field) {
+          currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSortField = field;
+          currentSortDir = field === 'id' ? 'desc' : 'asc';
+        }
+        sortTable();
+      });
+    });
+
+    // ── Filter Popup Toggle ──
+    function openFilterPopup() {
+      document.getElementById('filterPopup').classList.add('active');
+      document.getElementById('filterBackdrop').classList.add('active');
+    }
+    function closeFilterPopup() {
+      document.getElementById('filterPopup').classList.remove('active');
+      document.getElementById('filterBackdrop').classList.remove('active');
+    }
+    document.getElementById('filterTriggerBtn').addEventListener('click', () => {
+      const popup = document.getElementById('filterPopup');
+      if (popup.classList.contains('active')) {
+        closeFilterPopup();
+      } else {
+        openFilterPopup();
+      }
+    });
+    document.getElementById('filterPopupClose').addEventListener('click', closeFilterPopup);
+    document.getElementById('filterPopupDone').addEventListener('click', closeFilterPopup);
+    document.getElementById('filterBackdrop').addEventListener('click', closeFilterPopup);
+
+    // ── Selection Events ──
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      if (e.target.checked) stories.forEach(s => selectedIds.add(s.id));
+      else selectedIds.clear();
+      renderTable();
+    });
+
+    document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+      selectedIds.clear();
+      renderTable();
+    });
+
+    // ── Export Dropdown Toggle ──
+    function toggleDropdown(menuId) {
+      // Close all other dropdowns first
+      document.querySelectorAll('.export-dropdown-menu').forEach(m => {
+        if (m.id !== menuId) m.classList.remove('show');
+      });
+      const menu = document.getElementById(menuId);
+      if (menu) menu.classList.toggle('show');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.export-dropdown')) {
+        document.querySelectorAll('.export-dropdown-menu').forEach(m => m.classList.remove('show'));
+      }
+    });
+
+    document.getElementById('exportStoriesBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown('exportAllMenu');
+    });
+
+    document.getElementById('exportSelectedBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown('exportSelectedMenu');
+    });
+
+    // ── Export Selected ──
+    document.getElementById('exportSelectedJsonBtn').addEventListener('click', () => {
+      const menu = document.getElementById('exportSelectedMenu');
+      if (menu) menu.classList.remove('show');
+      if (selectedIds.size === 0) { showToast('No stories selected', 'error'); return; }
+      const selected = stories.filter(s => selectedIds.has(s.id));
+      const storiesList = selected.map(s => ({
+        title: s.title,
+        summary: s.summary || '',
+        content_html: s.content_html,
+        category: s.category || 'सामान्य',
+        cover_image_url: s.cover_image_url,
+        author: s.author || '',
+        reading_time: s.reading_time || 5,
+        status: s.status || 'draft',
+        published_at: s.published_at || null
+      }));
+
+      const blob = new Blob([JSON.stringify(storiesList, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `katha_stories_selected_${new Date().toISOString().substring(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      showToast(`Exported ${storiesList.length} stories successfully as JSON`, 'success');
+    });
+
+    document.getElementById('exportSelectedExcelBtn').addEventListener('click', () => {
+      const menu = document.getElementById('exportSelectedMenu');
+      if (menu) menu.classList.remove('show');
+      if (selectedIds.size === 0) { showToast('No stories selected', 'error'); return; }
+      const selected = stories.filter(s => selectedIds.has(s.id));
+      downloadExcel(selected, `katha_stories_selected_${new Date().toISOString().substring(0, 10)}.xlsx`);
+      showToast(`Exported ${selected.length} stories successfully as Excel`, 'success');
+    });
+
+    document.getElementById('exportSelectedZipBtn').addEventListener('click', async () => {
+      const menu = document.getElementById('exportSelectedMenu');
+      if (menu) menu.classList.remove('show');
+      if (selectedIds.size === 0) { showToast('No stories selected', 'error'); return; }
+
+      const filename = `katha_selected_export_${new Date().toISOString().substring(0, 10)}.zip`;
+      await downloadZipWithProgress(Array.from(selectedIds), filename);
+    });
+
+    document.getElementById('deleteSelectedBtn').addEventListener('click', async () => {
+      const count = selectedIds.size;
+      if (count === 0) return;
+      if (!confirm(`Are you sure you want to delete ${count} selected stories? This cannot be undone.`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedIds) })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        showToast(`Deleted ${data.deleted} stories successfully`, 'success');
+        selectedIds.clear();
+        loadStories();
+      } catch (err) {
+        showToast('Failed to delete stories', 'error');
+      }
+    });
+
+    // ── Modal Close ──
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+
+    // ── Bulk Import & Export ──
+    const importModal = document.getElementById('importModal');
+    let currentUploadedStories = null;
+
+    function openImportModal() {
+      resetUploadModal();
+      importModal.classList.add('active');
+    }
+
+    function closeImportModal() {
+      importModal.classList.remove('active');
+    }
+
+    function resetUploadModal() {
+      document.getElementById('uploadResult').style.display = 'none';
+      document.getElementById('uploadResult').innerHTML = '';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('uploadZone').style.display = 'block';
+      document.getElementById('uploadPreviewArea').style.display = 'none';
+      document.getElementById('zipMetadataArea').style.display = 'none';
+      document.getElementById('zipCategory').value = '';
+      document.getElementById('zipAuthor').value = '';
+      currentUploadedStories = null;
+    }
+
+    // Modal listeners
+    document.getElementById('importStoriesBtn').addEventListener('click', openImportModal);
+    document.getElementById('importModalClose').addEventListener('click', closeImportModal);
+    importModal.addEventListener('click', (e) => {
+      if (e.target === importModal) closeImportModal();
+    });
+
+    // Drag and drop events
+    const uploadZone = document.getElementById('uploadZone');
+    ['dragover', 'dragenter'].forEach(evt => {
+      uploadZone.addEventListener(evt, (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      uploadZone.addEventListener(evt, () => { uploadZone.classList.remove('dragover'); });
+    });
+    uploadZone.addEventListener('drop', (e) => { e.preventDefault(); handleImportFile(e.dataTransfer.files[0]); });
+    document.getElementById('fileInput').addEventListener('change', (e) => { if (e.target.files[0]) handleImportFile(e.target.files[0]); });
+
+    async function handleImportFile(file) {
+      if (!file) return;
+      const resultDiv = document.getElementById('uploadResult');
+      resultDiv.style.display = 'none';
+      resultDiv.innerHTML = '';
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'json') {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          try {
+            let rawText = event.target.result.trim();
+            if (rawText.startsWith("```")) {
+              rawText = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+            }
+            const uploaded = JSON.parse(rawText);
+            const storiesList = Array.isArray(uploaded) ? uploaded : (uploaded.stories ? (Array.isArray(uploaded.stories) ? uploaded.stories : [uploaded.stories]) : [uploaded]);
+            if (!Array.isArray(storiesList) || storiesList.length === 0) {
+              resultDiv.style.display = 'block';
+              resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ JSON file must contain a non-empty array of stories.</div>`;
+              return;
+            }
+            currentUploadedStories = storiesList;
+            showUploadPreview(storiesList);
+          } catch (err) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Invalid JSON: ${err.message}</div>`;
+          }
+        };
+        reader.readAsText(file);
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          try {
+            const data = new Uint8Array(event.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+            if (!rows || rows.length === 0) {
+              resultDiv.style.display = 'block';
+              resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Excel file is empty or has no data rows.</div>`;
+              return;
+            }
+
+            const storiesList = excelRowsToStories(rows);
+            if (storiesList.length === 0) {
+              resultDiv.style.display = 'block';
+              resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ No valid stories found in the Excel file.</div>`;
+              return;
+            }
+            currentUploadedStories = storiesList;
+            showUploadPreview(storiesList);
+          } catch (err) {
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Failed to parse Excel: ${err.message}</div>`;
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (ext === 'zip') {
+        currentUploadedStories = file;
+        showZipUploadPreview(file);
+      } else {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Unsupported file type. Please upload a .json, .xlsx, or .zip file.</div>`;
+      }
+    }
+
+    function showUploadPreview(storiesList) {
+      document.getElementById('uploadZone').style.display = 'none';
+      document.getElementById('uploadPreviewArea').style.display = 'block';
+      document.getElementById('zipMetadataArea').style.display = 'none';
+      document.getElementById('previewTotalCount').textContent = storiesList.length;
+
+      const detailsDiv = document.getElementById('previewMetadataDetails');
+      detailsDiv.innerHTML = '<strong>Titles to import:</strong><br>' + storiesList.map(s => {
+        const title = s.title || 'Untitled';
+        const category = s.category || 'General';
+        return `• ${escapeHtml(title)} [${escapeHtml(category)}]`;
+      }).join('<br>');
+    }
+
+    function showZipUploadPreview(file) {
+      document.getElementById('uploadZone').style.display = 'none';
+      document.getElementById('uploadPreviewArea').style.display = 'block';
+      document.getElementById('zipMetadataArea').style.display = 'block';
+      document.getElementById('previewTotalCount').textContent = '— (Scanned on Import)';
+
+      // Auto-extract category from zip filename
+      const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      const cleanCategory = baseName.replace(/[\-_\s]+/g, ' ').trim();
+      document.getElementById('zipCategory').value = cleanCategory;
+
+      const detailsDiv = document.getElementById('previewMetadataDetails');
+      detailsDiv.innerHTML = `
+        <strong>Selected Archive:</strong> ${escapeHtml(file.name)} (${(file.size / (1024 * 1024)).toFixed(2)} MB)<br>
+        <strong>Instructions:</strong> Click 'Confirm Import' to start processing. The server will extract the text chapters and images, perform automatic compression and thumbnailing, and insert the stories.
+      `;
+    }
+
+    document.getElementById('cancelImportBtn').addEventListener('click', resetUploadModal);
+
+    document.getElementById('confirmImportBtn').addEventListener('click', async () => {
+      if (!currentUploadedStories) return;
+
+      const resultDiv = document.getElementById('uploadResult');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div class="spinner" style="margin: 20px auto;"></div><div id="uploadProgressMsg" style="text-align: center; font-size: 0.84rem; color: var(--text-secondary);">Preparing upload...</div>';
+
+      const progressMsg = document.getElementById('uploadProgressMsg');
+      const confirmBtn = document.getElementById('confirmImportBtn');
+      const cancelBtn = document.getElementById('cancelImportBtn');
+      confirmBtn.disabled = true;
+      cancelBtn.disabled = true;
+
+      try {
+        let data;
+        if (currentUploadedStories instanceof File) {
+          const formData = new FormData();
+          formData.append('file', currentUploadedStories);
+          formData.append('category', document.getElementById('zipCategory').value.trim());
+          formData.append('author', document.getElementById('zipAuthor').value.trim());
+
+          data = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${API_BASE}/katha/admin/stories/import-zip`);
+
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                if (percent < 100) {
+                  progressMsg.textContent = `Uploading ZIP archive: ${percent}%...`;
+                } else {
+                  progressMsg.textContent = `Uploading ZIP archive: 100% (Processing and optimizing stories, please wait...)`;
+                }
+              } else {
+                progressMsg.textContent = 'Uploading ZIP archive...';
+              }
+            };
+
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                  resolve(JSON.parse(xhr.responseText));
+                } catch (err) {
+                  reject(new Error('Invalid response format from server'));
+                }
+              } else {
+                try {
+                  const errJson = JSON.parse(xhr.responseText);
+                  reject(new Error(errJson.error || `Server returned status ${xhr.status}`));
+                } catch (err) {
+                  reject(new Error(`Server returned status ${xhr.status}`));
+                }
+              }
+            };
+
+            xhr.onerror = () => {
+              reject(new Error('Network error during upload'));
+            };
+
+            xhr.send(formData);
+          });
+        } else {
+          const res = await fetch(`${API_BASE}/katha/admin/stories/import`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ stories: currentUploadedStories })
+          });
+          data = await res.json();
+        }
+
+        if (data.success) {
+          let html = `<div class="toast success" style="position: static; animation: none; margin-bottom: 0.5rem;">✅ Successfully imported ${data.added} stories. (Total in DB: ${data.total})</div>`;
+          if (data.skipped && data.skipped.length > 0) {
+            html += `<div class="toast info" style="position: static; animation: none; background: var(--t-bg-surface); text-align: left; margin-bottom: 0.5rem;">`;
+            html += `<strong>ℹ️ Skipped ${data.skipped.length} existing stories:</strong><br>`;
+            html += data.skipped.map(s => `• ${escapeHtml(s.title || s.reason)}`).join('<br>');
+            html += `</div>`;
+          }
+          if (data.errors && data.errors.length > 0) {
+            html += `<div class="toast error" style="position: static; animation: none; text-align: left; max-height: 150px; overflow-y: auto;">❌ Warnings & Errors:<br>${data.errors.join('<br>')}</div>`;
+          }
+
+          resultDiv.innerHTML = html;
+          currentUploadedStories = null;
+          document.getElementById('uploadPreviewArea').style.display = 'none';
+          document.getElementById('zipMetadataArea').style.display = 'none';
+
+          const uploadAnotherBtn = document.createElement('button');
+          uploadAnotherBtn.className = 'btn btn-secondary btn-block';
+          uploadAnotherBtn.style.marginTop = '12px';
+          uploadAnotherBtn.textContent = 'Upload Another File';
+          uploadAnotherBtn.onclick = resetUploadModal;
+          resultDiv.appendChild(uploadAnotherBtn);
+
+          loadStories();
+        } else {
+          resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Import failed: ${escapeHtml(data.error)}</div>`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Network error: ${escapeHtml(err.message)}</div>`;
+      } finally {
+        confirmBtn.disabled = false;
+        cancelBtn.disabled = false;
+      }
+    });
+
+    // ── Export Stories ──
+    document.getElementById('exportAllJsonBtn').addEventListener('click', async () => {
+      const menu = document.getElementById('exportAllMenu');
+      if (menu) menu.classList.remove('show');
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        const storiesList = data.stories.map(s => ({
+          title: s.title,
+          summary: s.summary || '',
+          content_html: s.content_html,
+          category: s.category || 'सामान्य',
+          cover_image_url: s.cover_image_url,
+          author: s.author || '',
+          reading_time: s.reading_time || 5,
+          status: s.status || 'draft',
+          published_at: s.published_at || null
+        }));
+
+        const blob = new Blob([JSON.stringify(storiesList, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `katha_stories_backup_${new Date().toISOString().substring(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast(`Exported ${storiesList.length} stories successfully as JSON`, 'success');
+      } catch (err) {
+        console.error('Export error:', err);
+        showToast('Failed to export stories', 'error');
+      }
+    });
+
+    document.getElementById('exportAllExcelBtn').addEventListener('click', async () => {
+      const menu = document.getElementById('exportAllMenu');
+      if (menu) menu.classList.remove('show');
+      try {
+        const res = await fetch(`${API_BASE}/katha/admin/stories`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        downloadExcel(data.stories, `katha_stories_backup_${new Date().toISOString().substring(0, 10)}.xlsx`);
+        showToast(`Exported ${data.stories.length} stories successfully as Excel`, 'success');
+      } catch (err) {
+        console.error('Export error:', err);
+        showToast('Failed to export stories', 'error');
+      }
+    });
+
+    document.getElementById('exportAllZipBtn').addEventListener('click', async () => {
+      const menu = document.getElementById('exportAllMenu');
+      if (menu) menu.classList.remove('show');
+
+      const ids = stories.map(s => s.id);
+      if (ids.length === 0) { showToast('No stories to export', 'error'); return; }
+
+      const filename = `katha_all_export_${new Date().toISOString().substring(0, 10)}.zip`;
+      await downloadZipWithProgress(ids, filename);
+    });
+
+    // ── Sample Excel Download ──
+    document.getElementById('downloadSampleExcelBtn').addEventListener('click', () => {
+      const sampleData = [{
+        title: 'सत्यवादी हरिश्चन्द्रः',
+        summary: 'राजा हरिश्चन्द्रस्य सत्यनिष्ठायाः कथा।',
+        content_html: '<p>एकदा विश्वामित्रः राजा हरिश्चन्द्रस्य सत्यपरीक्षां कर्तुं निश्चितवान्...</p>',
+        category: 'नीतिकथा',
+        cover_image_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2',
+        author: 'व्यासः',
+        reading_time: 10,
+        status: 'draft',
+        published_at: ''
+      }];
+      downloadExcel(sampleData, 'sample_stories.xlsx');
+      showToast('Sample Excel downloaded!', 'success');
+    });
+
+    // ── Excel Helpers ──
+    const EXCEL_COLUMNS = [
+      'title', 'summary', 'content_html', 'category',
+      'cover_image_url', 'author', 'reading_time', 'status', 'published_at'
+    ];
+
+    function storiesToRows(data) {
+      return data.map(s => ({
+        title: s.title || '',
+        summary: s.summary || '',
+        content_html: s.content_html || '',
+        category: s.category || 'सामान्य',
+        cover_image_url: s.cover_image_url || '',
+        author: s.author || '',
+        reading_time: s.reading_time || 5,
+        status: s.status || 'draft',
+        published_at: s.published_at || ''
+      }));
+    }
+
+    function downloadExcel(data, filename) {
+      const rows = storiesToRows(data);
+      const ws = XLSX.utils.json_to_sheet(rows, { header: EXCEL_COLUMNS });
+
+      // Auto-width columns
+      const colWidths = EXCEL_COLUMNS.map(col => {
+        let maxLen = col.length;
+        rows.forEach(r => {
+          const val = String(r[col] || '');
+          if (val.length > maxLen) maxLen = Math.min(val.length, 50);
+        });
+        return { wch: maxLen + 2 };
+      });
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Stories');
+      XLSX.writeFile(wb, filename);
+    }
+
+    function excelRowsToStories(rows) {
+      return rows.map(row => ({
+        title: String(row['title'] || '').trim(),
+        summary: String(row['summary'] || '').trim(),
+        content_html: String(row['content_html'] || '').trim(),
+        category: String(row['category'] || '').trim() || 'सामान्य',
+        cover_image_url: String(row['cover_image_url'] || '').trim(),
+        author: String(row['author'] || '').trim(),
+        reading_time: parseInt(row['reading_time']) || 5,
+        status: String(row['status'] || 'draft').trim().toLowerCase(),
+        published_at: String(row['published_at'] || '').trim() || null
+      }));
+    }
+
+    // ── Set Today Date ──
+    document.getElementById('setTodayBtn').addEventListener('click', () => {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('sPublishedAt').value = `${yyyy}-${mm}-${dd}`;
+    });
+
+    // ── View Story Feedback Comments ──
+    async function viewStoryFeedback(id) {
+      const story = allStories.find(s => s.id === id);
+      if (!story) return;
+      
+      document.getElementById('feedbackCommentsModalTitle').textContent = `Feedback Comments: ${story.title || ''}`;
+      const modal = document.getElementById('feedbackCommentsModal');
+      const spinner = document.getElementById('feedbackCommentsSpinner');
+      const content = document.getElementById('feedbackCommentsContent');
+      const tableBody = document.getElementById('feedbackCommentsTableBody');
+      const emptyState = document.getElementById('feedbackCommentsEmptyState');
+
+      tableBody.innerHTML = '';
+      emptyState.style.display = 'none';
+      content.style.display = 'none';
+      spinner.style.display = 'block';
+      modal.classList.add('active');
+
+      try {
+        const token = localStorage.getItem('user_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(`${API_BASE}/katha/stories/${id}/feedback-comments`, { headers });
+        const data = await res.json();
+        
+        spinner.style.display = 'none';
+        content.style.display = 'block';
+
+        if (data.success && data.comments && data.comments.length > 0) {
+          tableBody.innerHTML = data.comments.map(c => `
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 10px 8px;">
+                ${c.vote === 'up' ? '🟢 Upvote' : '🔴 Downvote'}
+              </td>
+              <td style="padding: 10px 8px; color: var(--text-primary); white-space: pre-wrap;">
+                ${escapeHtml(c.comments || '')}
+              </td>
+              <td style="padding: 10px 8px; color: var(--text-muted); font-size: 0.8rem;">
+                ${formatDate(c.created_at)}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          emptyState.style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Error fetching feedback comments:', err);
+        spinner.style.display = 'none';
+        emptyState.textContent = 'Failed to load comments';
+        emptyState.style.display = 'block';
+      }
+    }
+
+    function closeFeedbackCommentsModal() {
+      document.getElementById('feedbackCommentsModal').classList.remove('active');
+    }
+
+    // Close feedback comments modal on overlay click
+    document.getElementById('feedbackCommentsModal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('feedbackCommentsModal')) {
+        closeFeedbackCommentsModal();
+      }
+    });
+
+    // ── Logout ──
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('isKathaAdmin');
+      window.location.href = '/logout?redirect=/katha/admin-login.html';
+    });
+
+    // ── Init ──
+    loadStories();
+  </script>
+
+  <script src="/sdl/static/js/theme.js?v=35"></script>
+</body>
+
+</html>

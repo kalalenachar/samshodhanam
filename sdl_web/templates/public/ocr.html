@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=36">
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('smsdl-theme');
+                if (!t) {
+                    var match = document.cookie.match(new RegExp('(^| )smsdl-theme=([^;]+)'));
+                    if (match) t = match[2];
+                }
+                t = t || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanskrit Digital Library — OCR Studio</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=38">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            background-attachment: fixed;
+            color: var(--t-text-primary);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 12px 24px;
+            background: var(--t-bg-surface);
+            border-bottom: 1px solid var(--t-border-alpha-15, rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--t-border-light, rgba(255, 255, 255, 0.08));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.15));
+            color: var(--t-text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: var(--t-accent-alpha-20, rgba(56, 189, 248, 0.15));
+            border-color: var(--t-accent, #38bdf8);
+            transform: translateX(-2px);
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            color: var(--t-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .engine-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .engine-badge.engine-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        /* Container Layouts */
+        .workspace-container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cards & Glassmorphism */
+        .card {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--t-border);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-primary);
+        }
+
+        /* Phase 1: Pre-Upload Hero & Landing View */
+        .pre-upload-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .landing-hero-card {
+            padding: 32px;
+        }
+
+        .hero-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--t-border);
+        }
+
+        .hero-icon-wrapper {
+            font-size: 40px;
+            background: var(--t-accent-alpha-15, rgba(56, 189, 248, 0.15));
+            border: 1px solid var(--t-accent-alpha-30, rgba(56, 189, 248, 0.3));
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .hero-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            color: var(--t-text-primary);
+        }
+
+        .hero-subtitle {
+            font-size: 14px;
+            color: var(--t-text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .landing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 900px) {
+            .landing-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dropzone */
+        .file-drop-area {
+            border: 2px dashed var(--t-border-hover);
+            border-radius: 14px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: var(--t-border-light);
+        }
+
+        .file-drop-area:hover,
+        .file-drop-area.dragover {
+            border-color: var(--t-accent);
+            background: var(--t-accent-alpha-15);
+            box-shadow: 0 0 25px var(--t-accent-alpha-25);
+        }
+
+        .file-drop-area p {
+            margin: 10px 0 0 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--t-text-primary);
+        }
+
+        .file-drop-area small {
+            color: var(--t-text-muted);
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* File List Queue */
+        .file-queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 14px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--t-bg-elevated, rgba(255, 255, 255, 0.04));
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .file-item-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow: hidden;
+        }
+
+        .file-item-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
+        }
+
+        .file-item-remove {
+            color: #ef4444;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .file-item-remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Features Cards Grid */
+        .features-box-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px;
+            background: var(--t-bg-elevated, rgba(255, 255, 255, 0.03));
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--t-accent-alpha-30);
+            transform: translateY(-2px);
+            background: var(--t-accent-alpha-15);
+        }
+
+        .feature-icon {
+            font-size: 22px;
+            background: var(--t-bg-surface);
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid var(--t-border);
+        }
+
+        .feature-card h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+        }
+
+        .feature-card p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--t-text-muted);
+            line-height: 1.5;
+        }
+
+        /* Phase 2: Loading & Scanning Screen */
+        .loading-container {
+            max-width: 620px;
+            margin: 40px auto;
+            width: 100%;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .loading-card {
+            padding: 36px 32px;
+            text-align: center;
+        }
+
+        .scanning-animation-container {
+            width: 130px;
+            height: 150px;
+            margin: 0 auto 24px auto;
+            position: relative;
+            background: var(--t-bg-elevated, rgba(255, 255, 255, 0.03));
+            border: 2px solid var(--t-border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .manuscript-scan-graphic {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            padding: 18px 16px;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--t-accent, #38bdf8), transparent);
+            box-shadow: 0 0 15px var(--t-accent, #38bdf8);
+            animation: scanAnimation 2s infinite ease-in-out;
+            z-index: 10;
+        }
+
+        @keyframes scanAnimation {
+            0% { top: 0%; }
+            50% { top: 96%; }
+            100% { top: 0%; }
+        }
+
+        .scan-text-lines {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .scan-line-dummy {
+            height: 8px;
+            background: var(--t-border-hover);
+            border-radius: 4px;
+            width: 100%;
+            animation: pulseGlow 1.8s infinite ease-in-out;
+        }
+
+        .scan-line-dummy.short { width: 55%; }
+        .scan-line-dummy.medium { width: 75%; }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+        }
+
+        .loading-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            color: var(--t-text-primary);
+        }
+
+        .loading-sub {
+            font-size: 13px;
+            color: var(--t-text-muted);
+            margin: 0;
+        }
+
+        /* Progress Card Elements */
+        .progress-bar-bg {
+            height: 10px;
+            background: var(--t-border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #10b981);
+            transition: width 0.3s ease;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .metric-box {
+            background: var(--t-bg-surface);
+            padding: 10px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--t-border);
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--t-accent);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--t-text-muted);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .page-status-list {
+            margin-top: 8px;
+            max-height: 160px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .page-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+        }
+
+        .status-badge-mini {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        .status-processing {
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .status-queued {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94a3b8;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Phase 3: Full-Width Studio Workspace */
+        .studio-phase-container {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            animation: fadeIn 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .studio-mini-progress {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .studio-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 680px;
+            flex: 1;
+        }
+
+        .studio-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 12px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .studio-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: var(--t-text-muted);
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .studio-tab:hover {
+            color: var(--t-text-primary);
+            background: var(--t-border-light);
+        }
+
+        .studio-tab.active {
+            color: var(--t-accent);
+            background: var(--t-accent-alpha-15);
+            border-color: var(--t-accent-alpha-30);
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        /* Form Controls & Buttons */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--t-label-text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            background: var(--t-bg-surface);
+            color: var(--t-input-text);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--t-accent);
+            box-shadow: 0 0 10px var(--t-accent-alpha-25);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--t-accent, #38bdf8), #0284c7);
+            color: #ffffff;
+            box-shadow: 0 4px 14px var(--t-accent-alpha-30);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--t-accent-alpha-50);
+        }
+
+        .btn-primary:disabled {
+            background: var(--t-border);
+            color: rgba(255, 255, 255, 0.4);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--t-border-light);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--t-border);
+            border-color: var(--t-border-hover);
+        }
+
+        /* Text Editor Area */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            position: relative;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--t-bg-elevated);
+            border: 1px solid var(--t-border);
+            border-radius: 10px 10px 0 0;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 520px;
+            padding: 18px;
+            border: 1px solid var(--t-border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            background: var(--t-bg-surface);
+            color: var(--t-input-text);
+            font-family: 'Fira Code', 'Noto Sans Devanagari', monospace;
+            font-size: 15px;
+            line-height: 1.8;
+            resize: vertical;
+            outline: none;
+        }
+
+        .editor-textarea:focus {
+            border-color: var(--t-accent);
+        }
+
+        /* Side-by-Side Manuscript Viewer */
+        .split-viewer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            flex: 1;
+            min-height: 520px;
+        }
+
+        @media (max-width: 900px) {
+            .split-viewer {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .viewer-box {
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 16px;
+            background: var(--t-bg-surface);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--t-text-secondary);
+        }
+
+        .image-preview-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 420px;
+            position: relative;
+        }
+
+        .image-preview-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* Proofreading Tool Items */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .tool-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: var(--t-bg-elevated);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--t-text-primary);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tool-btn:hover {
+            border-color: var(--t-accent);
+            background: var(--t-accent-alpha-15);
+            transform: translateY(-2px);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: #10b981;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .d-none { display: none !important; }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-brand">
+            <a href="javascript:void(0)" onclick="handleBack()" class="back-button">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+            </a>
+            <h1 class="navbar-title">
+                Sanskrit Digital Library — OCR Studio
+                <span id="engineBadge" class="engine-badge">Checking engine...</span>
+            </h1>
+            <div style="width: 80px;"></div>
+        </div>
+    </header>
+
+    <div class="workspace-container">
+        <!-- PHASE 1: PRE-UPLOAD LANDING HERO VIEW -->
+        <div id="preUploadPhase" class="pre-upload-container">
+            <div class="card landing-hero-card">
+                <div class="hero-header">
+                    <div class="hero-icon-wrapper">📜</div>
+                    <div>
+                        <h2 class="hero-title">Sanskrit Digital Library — OCR Studio</h2>
+                        <p class="hero-subtitle">High-precision optical character recognition for Sanskrit manuscripts, printed books & Devanagari texts.</p>
+                    </div>
+                </div>
+
+                <div class="landing-grid">
+                    <!-- UPLOAD BOX & SETTINGS -->
+                    <div class="upload-box-wrapper">
+                        <div class="card-header" style="margin-bottom: 12px;">
+                            <h3 class="card-title">📁 Upload Documents & Images</h3>
+                        </div>
+
+                        <div class="file-drop-area" id="dropArea">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin: 0 auto; color: var(--t-accent);">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <p>Drag & Drop files here or click to browse</p>
+                            <small>Supports PDF, JPG, PNG, TIFF, BMP</small>
+                            <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png,.tiff,.tif,.bmp">
+                        </div>
+
+                        <div id="fileQueue" class="file-queue-list"></div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px;">
+                            <div class="form-group" style="margin: 0;">
+                                <label for="outputFormat">Export Format:</label>
+                                <select id="outputFormat" class="form-control">
+                                    <option value="text">Text File (.txt)</option>
+                                    <option value="word">Word Document (.docx)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label for="pageMarkerFormat">Page Marker:</label>
+                                <input type="text" id="pageMarkerFormat" class="form-control" value="{[({page})]}" placeholder="{[({page})]}">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 12px; display: flex; align-items: center; justify-content: space-between;">
+                            <label for="insertPageBreaks" style="margin: 0; cursor: pointer;">Page Break Markers</label>
+                            <input type="checkbox" id="insertPageBreaks" checked style="accent-color: var(--t-accent); width: 18px; height: 18px; cursor: pointer;">
+                        </div>
+
+                        <button class="btn btn-primary" id="startBtn" style="margin-top: 14px; width: 100%;">🚀 Start OCR Processing</button>
+                    </div>
+
+                    <!-- FEATURES & HOW IT WORKS -->
+                    <div class="features-box-wrapper">
+                        <div class="feature-card">
+                            <div class="feature-icon">✨</div>
+                            <div>
+                                <h4>High Accuracy Devanagari OCR</h4>
+                                <p>Engine tuned specifically for Sanskrit shlokas, ligatures, conjunct consonants, and historical scripts.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">🖼️</div>
+                            <div>
+                                <h4>Side-by-Side Manuscript Viewer</h4>
+                                <p>Verify extracted text page-by-page directly alongside original high-res manuscript scans.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">🪄</div>
+                            <div>
+                                <h4>1-Click Devanagari Utilities</h4>
+                                <p>Instant clean-up for Danda (। / ॥) normalization, broken hyphens, and whitespace spacing.</p>
+                            </div>
+                        </div>
+
+                        <div class="feature-card">
+                            <div class="feature-icon">📥</div>
+                            <div>
+                                <h4>Real-Time Streaming & Export</h4>
+                                <p>Live text streaming as pages finish. Instant download for formatted Word (.docx) or Text (.txt).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 2: PROCESSING & LOADING SCREEN -->
+        <div id="loadingPhase" class="loading-container d-none">
+            <div class="card loading-card">
+                <div class="scanning-animation-container">
+                    <div class="manuscript-scan-graphic">
+                        <div class="scan-line"></div>
+                        <div class="scan-text-lines">
+                            <div class="scan-line-dummy"></div>
+                            <div class="scan-line-dummy short"></div>
+                            <div class="scan-line-dummy"></div>
+                            <div class="scan-line-dummy medium"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="loading-title">Processing Sanskrit Document...</h3>
+                <p class="loading-sub">Analyzing manuscript pages & running Devanagari OCR recognition...</p>
+
+                <div class="progress-bar-bg" style="height: 12px; margin: 20px 0 10px 0;">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 16px;">
+                    <span id="progressStatusText">Preparing engine...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+
+                <div class="metrics-grid" style="margin-bottom: 20px;">
+                    <div class="metric-box">
+                        <div class="metric-value" id="pagesMetric">0 / 0</div>
+                        <div class="metric-label">Pages</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="etaMetric">--</div>
+                        <div class="metric-label">ETA</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="speedMetric">--</div>
+                        <div class="metric-label">Speed</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 12px; font-weight: 700; color: var(--t-text-secondary); margin-bottom: 8px; text-align: left;">Real-Time Page Extraction Progress</div>
+                <div id="pageStatusList" class="page-status-list" style="margin-bottom: 20px;"></div>
+
+                <button class="btn btn-danger" id="cancelBtn" style="width: 100%;">🛑 Stop Processing</button>
+            </div>
+        </div>
+
+        <!-- PHASE 3: FULL-WIDTH INTERACTIVE OCR STUDIO -->
+        <div id="studioPhase" class="studio-phase-container d-none">
+            <!-- Compact top banner when processing is still ongoing live in studio -->
+            <div id="studioMiniProgress" class="studio-mini-progress d-none">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600;">
+                    <span style="display: flex; align-items: center; gap: 8px;">
+                        <span class="status-badge-mini status-processing">Processing ⏳</span>
+                        <span id="miniProgressText">Extracting page text...</span>
+                    </span>
+                    <span id="miniProgressMetrics" style="color: var(--t-accent);">0 / 0 pages</span>
+                </div>
+                <div class="progress-bar-bg" style="height: 6px; margin-top: 8px;">
+                    <div class="progress-bar-fill" id="miniProgressBar"></div>
+                </div>
+            </div>
+
+            <div class="card studio-card">
+                <div class="studio-tabs">
+                    <button class="studio-tab active" data-tab="editorTab">📝 Text Editor</button>
+                    <button class="studio-tab" data-tab="splitTab">🖼️ Side-by-Side Viewer</button>
+                    <button class="studio-tab" data-tab="toolsTab">🪄 Proofreading Tools</button>
+
+                    <div style="margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" style="padding: 7px 14px; font-size: 13px;" id="newDocumentBtn">📁 Process New Document</button>
+                        <button class="btn btn-secondary" style="padding: 7px 14px; font-size: 13px;" id="copyBtn">📋 Copy Text</button>
+                        <a id="downloadBtn" class="btn btn-primary d-none" style="padding: 7px 14px; font-size: 13px; width: auto;" target="_blank">⬇️ Download File</a>
+                        <button class="btn btn-success d-none" style="padding: 7px 14px; font-size: 13px; background: #10b981; border: none; color: #fff; cursor: pointer;" id="publishOcrBtn" onclick="openPublishOcrModal()">📚 Publish to Library</button>
+                    </div>
+                </div>
+
+                <!-- TAB 1: TEXT EDITOR -->
+                <div class="tab-content active" id="editorTab">
+                    <div class="editor-container">
+                        <div class="editor-toolbar">
+                            <span>Sanskrit Devanagari OCR Output</span>
+                            <div style="display: flex; gap: 16px; font-weight: 600; color: var(--t-accent);">
+                                <span id="wordCount">Words: 0</span>
+                                <span id="charCount">Chars: 0</span>
+                                <span id="lineCount">Lines: 0</span>
+                            </div>
+                        </div>
+                        <textarea id="ocrTextEditor" class="editor-textarea" placeholder="OCR extracted Sanskrit text will appear here live..."></textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SIDE-BY-SIDE MANUSCRIPT VIEWER -->
+                <div class="tab-content" id="splitTab">
+                    <div class="split-viewer">
+                        <div class="viewer-box">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span class="viewer-box-title">📄 Original Manuscript Page</span>
+                                <select id="pageSelect" class="form-control" style="width: auto; padding: 4px 10px; font-size: 12px;">
+                                    <option value="">Select page...</option>
+                                </select>
+                            </div>
+                            <div class="image-preview-wrapper" id="imageContainer">
+                                <span style="color: var(--t-text-muted); font-size: 13px;">Select a page above to view manuscript image side-by-side.</span>
+                            </div>
+                        </div>
+
+                        <div class="viewer-box">
+                            <span class="viewer-box-title">📝 Extracted Page Text</span>
+                            <textarea id="singlePageEditor" class="editor-textarea" style="min-height: 420px; border-radius: 8px;" placeholder="Extracted text for the selected page..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PROOFREADING TOOLS -->
+                <div class="tab-content" id="toolsTab">
+                    <div style="font-size: 15px; font-weight: 700; margin-bottom: 6px;">Devanagari & Sanskrit Correction Utilities</div>
+                    <p style="font-size: 13px; color: var(--t-text-muted); margin-bottom: 20px;">One-click quick tools to clean up OCR artifacts, normalize punctuation, and fix spacing in extracted Sanskrit text.</p>
+
+                    <div class="tools-grid">
+                        <button class="tool-btn" id="toolCleanSpaces">
+                            <span>🧹</span> Clean Extra Whitespace & Lines
+                        </button>
+                        <button class="tool-btn" id="toolNormalizeDanda">
+                            <span>🔀</span> Normalize Danda (। / ॥)
+                        </button>
+                        <button class="tool-btn" id="toolFixHyphens">
+                            <span>✂️</span> Fix Broken Linebreaks
+                        </button>
+                        <button class="tool-btn" id="toolCopy">
+                            <span>📋</span> Copy Entire Clean Text
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Text copied to clipboard!</div>
+
+    <script>
+        // DOM Elements
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileQueue = document.getElementById('fileQueue');
+        const startBtn = document.getElementById('startBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const newDocumentBtn = document.getElementById('newDocumentBtn');
+
+        const progressBar = document.getElementById('progressBar');
+        const progressStatusText = document.getElementById('progressStatusText');
+        const progressPercent = document.getElementById('progressPercent');
+        const pagesMetric = document.getElementById('pagesMetric');
+        const etaMetric = document.getElementById('etaMetric');
+        const speedMetric = document.getElementById('speedMetric');
+        const pageStatusList = document.getElementById('pageStatusList');
+
+        const studioMiniProgress = document.getElementById('studioMiniProgress');
+        const miniProgressBar = document.getElementById('miniProgressBar');
+        const miniProgressText = document.getElementById('miniProgressText');
+        const miniProgressMetrics = document.getElementById('miniProgressMetrics');
+
+        const ocrTextEditor = document.getElementById('ocrTextEditor');
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        const lineCount = document.getElementById('lineCount');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const engineBadge = document.getElementById('engineBadge');
+        const toast = document.getElementById('toast');
+
+        const pageSelect = document.getElementById('pageSelect');
+        const imageContainer = document.getElementById('imageContainer');
+        const singlePageEditor = document.getElementById('singlePageEditor');
+
+        let selectedFiles = [];
+        let currentTaskId = null;
+        let pollInterval = null;
+        let taskPageDetails = [];
+
+        // Phase switching: 'preUpload' | 'loading' | 'studio'
+        function switchPhase(phase) {
+            const preUpload = document.getElementById('preUploadPhase');
+            const loading = document.getElementById('loadingPhase');
+            const studio = document.getElementById('studioPhase');
+
+            preUpload.classList.add('d-none');
+            loading.classList.add('d-none');
+            studio.classList.add('d-none');
+
+            if (phase === 'preUpload') {
+                preUpload.classList.remove('d-none');
+            } else if (phase === 'loading') {
+                loading.classList.remove('d-none');
+            } else if (phase === 'studio') {
+                studio.classList.remove('d-none');
+            }
+        }
+
+        // Check Engine Token Status
+        async function checkEngineStatus() {
+            try {
+                const res = await fetch('/api/ocr/tokens/status');
+                const data = await res.json();
+                if (data.has_tokens) {
+                    engineBadge.className = 'engine-badge';
+                    engineBadge.innerHTML = `🟢 High-Accuracy OCR Active (${data.workers} Workers)`;
+                } else {
+                    engineBadge.className = 'engine-badge engine-warning';
+                    engineBadge.innerHTML = `🟡 Standard Token Mode`;
+                }
+            } catch (e) {
+                engineBadge.className = 'engine-badge engine-warning';
+                engineBadge.innerHTML = `🟡 Standard Mode`;
+            }
+        }
+        checkEngineStatus();
+
+        // Drag & Drop Handling
+        dropArea.addEventListener('click', () => fileInput.click());
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+        dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            const newFiles = Array.from(files);
+            selectedFiles = selectedFiles.concat(newFiles);
+            renderFileQueue();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileQueue();
+        }
+
+        function renderFileQueue() {
+            if (selectedFiles.length === 0) {
+                fileQueue.innerHTML = '';
+                return;
+            }
+            fileQueue.innerHTML = selectedFiles.map((f, i) => `
+                <div class="file-item">
+                    <div class="file-item-info">
+                        <span>📄</span>
+                        <span class="file-item-name">${f.name}</span>
+                        <span style="color: var(--t-text-muted); font-size: 11px;">(${(f.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    </div>
+                    <span class="file-item-remove" onclick="removeFile(${i})">✕</span>
+                </div>
+            `).join('');
+        }
+
+        // Tab Switching
+        document.querySelectorAll('.studio-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.studio-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Editor Stats Counter
+        ocrTextEditor.addEventListener('input', updateTextStats);
+        function updateTextStats() {
+            const text = ocrTextEditor.value;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            const chars = text.length;
+            const lines = text.trim() ? text.split('\n').length : 0;
+            wordCount.textContent = `Words: ${words.toLocaleString()}`;
+            charCount.textContent = `Chars: ${chars.toLocaleString()}`;
+            lineCount.textContent = `Lines: ${lines.toLocaleString()}`;
+        }
+
+        // Copy Text
+        copyBtn.addEventListener('click', () => copyToClipboard(ocrTextEditor.value));
+        document.getElementById('toolCopy').addEventListener('click', () => copyToClipboard(ocrTextEditor.value));
+
+        function copyToClipboard(text) {
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                toast.style.display = 'block';
+                setTimeout(() => toast.style.display = 'none', 2500);
+            });
+        }
+
+        // Text Utilities
+        document.getElementById('toolCleanSpaces').addEventListener('click', () => {
+            let val = ocrTextEditor.value;
+            val = val.replace(/[ \t]+/g, ' ');
+            val = val.replace(/\n\s*\n\s*\n+/g, '\n\n');
+            ocrTextEditor.value = val;
+            updateTextStats();
+        });
+
+        document.getElementById('toolNormalizeDanda').addEventListener('click', () => {
+            let val = ocrTextEditor.value;
+            val = val.replace(/\|\|/g, '॥').replace(/\|/g, '।');
+            ocrTextEditor.value = val;
+            updateTextStats();
+        });
+
+        document.getElementById('toolFixHyphens').addEventListener('click', () => {
+            let val = ocrTextEditor.value;
+            val = val.replace(/-\n/g, '');
+            ocrTextEditor.value = val;
+            updateTextStats();
+        });
+
+        // Start Processing
+        startBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) {
+                alert('Please select or drop files to process.');
+                return;
+            }
+
+            switchPhase('loading');
+            downloadBtn.classList.add('d-none');
+            const pubBtn = document.getElementById('publishOcrBtn');
+            if (pubBtn) pubBtn.classList.add('d-none');
+
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+            progressStatusText.textContent = 'Uploading files...';
+            pagesMetric.textContent = '0 / 0';
+            etaMetric.textContent = '--';
+            speedMetric.textContent = '--';
+            pageStatusList.innerHTML = '';
+            ocrTextEditor.value = '';
+
+            const formData = new FormData();
+            selectedFiles.forEach(f => formData.append('files', f));
+            formData.append('format', document.getElementById('outputFormat').value);
+            formData.append('insert_page_breaks', document.getElementById('insertPageBreaks').checked);
+            formData.append('page_marker_format', document.getElementById('pageMarkerFormat').value);
+
+            try {
+                const uploadRes = await fetch('/api/ocr/start', { method: 'POST', body: formData });
+                const data = await uploadRes.json();
+                if (data.error) throw new Error(data.error);
+
+                currentTaskId = data.task_id;
+                pollStatus(currentTaskId);
+            } catch (err) {
+                progressStatusText.textContent = 'Error: ' + err.message;
+                progressStatusText.style.color = '#ef4444';
+                setTimeout(() => switchPhase('preUpload'), 3000);
+            }
+        });
+
+        // Process New Document (Reset back to Phase 1)
+        newDocumentBtn.addEventListener('click', () => {
+            if (currentTaskId && pollInterval) {
+                if (!confirm('An OCR process may be running. Are you sure you want to start a new document upload?')) {
+                    return;
+                }
+                try { fetch(`/api/ocr/cancel/${currentTaskId}`, { method: 'POST' }); } catch (e) {}
+                clearInterval(pollInterval);
+            }
+
+            selectedFiles = [];
+            currentTaskId = null;
+            renderFileQueue();
+            ocrTextEditor.value = '';
+            singlePageEditor.value = '';
+            updateTextStats();
+            downloadBtn.classList.add('d-none');
+            const pubBtnReset = document.getElementById('publishOcrBtn');
+            if (pubBtnReset) pubBtnReset.classList.add('d-none');
+            switchPhase('preUpload');
+        });
+
+        cancelBtn.addEventListener('click', async () => {
+            if (currentTaskId) {
+                try { await fetch(`/api/ocr/cancel/${currentTaskId}`, { method: 'POST' }); } catch (e) {}
+                clearInterval(pollInterval);
+                progressStatusText.textContent = 'Cancelled by user.';
+                progressStatusText.style.color = '#ef4444';
+                setTimeout(() => switchPhase('preUpload'), 1500);
+            }
+        });
+
+        function formatTime(seconds) {
+            if (!seconds || seconds < 0) return "--";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}m ${s}s`;
+        }
+
+        // Poll Task Status with Real-Time User Progress
+        function pollStatus(taskId) {
+            pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/ocr/status/${taskId}`);
+                    const data = await res.json();
+
+                    if (data.error) {
+                        clearInterval(pollInterval);
+                        progressStatusText.textContent = 'Error: ' + data.error;
+                        progressStatusText.style.color = '#ef4444';
+                        setTimeout(() => switchPhase('preUpload'), 3000);
+                        return;
+                    }
+
+                    if (data.cancelled) {
+                        clearInterval(pollInterval);
+                        progressStatusText.textContent = 'Cancelled.';
+                        progressStatusText.style.color = '#ef4444';
+                        setTimeout(() => switchPhase('preUpload'), 1500);
+                        return;
+                    }
+
+                    const processed = data.processed || 0;
+                    const total = data.total || 0;
+                    const pct = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+                    progressBar.style.width = pct + '%';
+                    progressPercent.textContent = pct + '%';
+                    progressStatusText.textContent = data.status || 'Processing...';
+                    pagesMetric.textContent = `${processed} / ${total}`;
+
+                    // Update Mini Progress Bar for Studio Header
+                    miniProgressBar.style.width = pct + '%';
+                    miniProgressMetrics.textContent = `${processed} / ${total} pages (${pct}%)`;
+                    miniProgressText.textContent = data.status || 'Processing pages...';
+
+                    // Update ETA and Speed
+                    if (data.ocr_start_time && processed > 0) {
+                        const now = Date.now() / 1000;
+                        const elapsed = data.done ? data.total_ocr_duration : (now - data.ocr_start_time);
+                        const avgSpeed = elapsed / processed;
+                        speedMetric.textContent = `${avgSpeed.toFixed(1)}s/p`;
+
+                        if (!data.done && total > processed) {
+                            const rem = total - processed;
+                            etaMetric.textContent = formatTime(rem * avgSpeed);
+                        } else {
+                            etaMetric.textContent = 'Done';
+                        }
+                    }
+
+                    // Render Real-Time Page Progress Details
+                    if (data.page_details && data.page_details.length > 0) {
+                        taskPageDetails = data.page_details;
+                        renderPageStatusList(data.page_details);
+                        updatePageSelect(data.page_details);
+                    }
+
+                    // Once at least 1 page is processed or done, switch to Studio Phase full screen!
+                    if (processed > 0 || data.done) {
+                        const studio = document.getElementById('studioPhase');
+                        if (studio.classList.contains('d-none')) {
+                            switchPhase('studio');
+                        }
+                        if (!data.done) {
+                            studioMiniProgress.classList.remove('d-none');
+                        } else {
+                            studioMiniProgress.classList.add('d-none');
+                        }
+                        fetchLiveResult(taskId);
+                    }
+
+                    if (data.done) {
+                        clearInterval(pollInterval);
+                        studioMiniProgress.classList.add('d-none');
+                        downloadBtn.href = `/api/ocr/download/${taskId}`;
+                        downloadBtn.classList.remove('d-none');
+                        const pubBtnDone = document.getElementById('publishOcrBtn');
+                        if (pubBtnDone) pubBtnDone.classList.remove('d-none');
+                    }
+                } catch (e) {
+                    clearInterval(pollInterval);
+                    progressStatusText.textContent = 'Connection error.';
+                    progressStatusText.style.color = '#ef4444';
+                }
+            }, 1800);
+        }
+
+        function renderPageStatusList(details) {
+            pageStatusList.innerHTML = details.map(pd => {
+                let badgeClass = 'status-queued';
+                let statusLabel = 'Queued ⚪';
+                if (pd.status === 'processing') {
+                    badgeClass = 'status-processing';
+                    statusLabel = 'Processing ⏳';
+                } else if (pd.status === 'completed') {
+                    badgeClass = 'status-completed';
+                    statusLabel = 'Completed ✓';
+                } else if (pd.status === 'failed') {
+                    badgeClass = 'status-failed';
+                    statusLabel = `Failed: ${pd.error || 'Error'} ⚠️`;
+                }
+
+                return `
+                    <div class="page-status-row">
+                        <span>Page ${pd.page} (${pd.orig})</span>
+                        <span class="status-badge-mini ${badgeClass}">${statusLabel}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function fetchLiveResult(taskId) {
+            try {
+                const res = await fetch(`/api/ocr/result/${taskId}`);
+                const data = await res.json();
+                if (data.full_text) {
+                    ocrTextEditor.value = data.full_text;
+                    updateTextStats();
+                }
+            } catch (e) {}
+        }
+
+        function updatePageSelect(details) {
+            const currentVal = pageSelect.value;
+            pageSelect.innerHTML = '<option value="">Select page...</option>' + details.map(pd => `
+                <option value="${pd.page}" ${currentVal == pd.page ? 'selected' : ''}>Page ${pd.page} (${pd.orig})</option>
+            `).join('');
+        }
+
+        pageSelect.addEventListener('change', (e) => {
+            const pageNum = parseInt(e.target.value);
+            if (!pageNum) return;
+            const pd = taskPageDetails.find(p => p.page === pageNum);
+            if (pd) {
+                if (pd.img_path && currentTaskId) {
+                    imageContainer.innerHTML = `<img src="/api/ocr/page_image/${currentTaskId}/${pd.img_path}" alt="Page ${pd.page}">`;
+                } else {
+                    imageContainer.innerHTML = `<span style="color: var(--t-text-muted);">Image preview loading...</span>`;
+                }
+                singlePageEditor.value = pd.text || (pd.error ? `Error: ${pd.error}` : 'Processing page...');
+            }
+        });
+
+        function handleBack() {
+            window.close();
+            setTimeout(() => { window.location.href = '/'; }, 100);
+        }
+
+        function openPublishOcrModal() {
+            if (!currentTaskId) return;
+            const filename = (selectedFiles && selectedFiles.length > 0) ? selectedFiles[0].name.replace(/\.[^/.]+$/, "") : "";
+            document.getElementById('publishBookName').value = filename || 'Community Book ' + new Date().toISOString().slice(0,10);
+            document.getElementById('publishOcrModal').style.display = 'flex';
+        }
+
+        function closePublishOcrModal() {
+            document.getElementById('publishOcrModal').style.display = 'none';
+        }
+
+        async function confirmPublishOcr() {
+            const bookName = document.getElementById('publishBookName').value.trim();
+            if (!bookName) {
+                alert('Please enter a book title.');
+                return;
+            }
+            const tags = document.getElementById('publishBookTags').value.trim();
+            const contributor = document.getElementById('publishContributor').value.trim();
+            const btn = document.getElementById('confirmPublishBtn');
+            btn.disabled = true;
+            btn.textContent = 'Publishing to Library...';
+            try {
+                const res = await fetch('/api/contribute/publish-ocr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        task_id: currentTaskId,
+                        book_name: bookName,
+                        tags: tags,
+                        contributor_name: contributor
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Book successfully published to library!');
+                    window.location.href = data.reader_url;
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to publish'));
+                    btn.disabled = false;
+                    btn.textContent = 'Publish Now';
+                }
+            } catch(e) {
+                alert('Network error publishing book.');
+                btn.disabled = false;
+                btn.textContent = 'Publish Now';
+            }
+        }
+    </script>
+
+    <!-- Publish OCR to Library Modal -->
+    <div id="publishOcrModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: var(--t-bg-surface, #fff); border-radius: 12px; max-width: 500px; width: 100%; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <h3 style="margin: 0 0 10px; font-size: 18px; color: var(--t-text-primary);">📚 Publish OCR Document to Library</h3>
+            <p style="font-size: 13px; color: var(--t-text-muted); margin-bottom: 16px;">Make this digitized document immediately readable in the Sanskrit Digital Library with an unverified community badge.</p>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--t-text-primary);">Book Title *</label>
+                <input type="text" id="publishBookName" class="form-control" placeholder="e.g., Meghadutam" style="width: 100%; box-sizing: border-box; padding: 8px 12px;">
+            </div>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--t-text-primary);">Tags (comma-separated)</label>
+                <input type="text" id="publishBookTags" class="form-control" placeholder="e.g., Kavya, Kalidasa, Sanskrit" style="width: 100%; box-sizing: border-box; padding: 8px 12px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--t-text-primary);">Your Name / Contributor Alias</label>
+                <input type="text" id="publishContributor" class="form-control" placeholder="e.g., Anonymous Scholar" style="width: 100%; box-sizing: border-box; padding: 8px 12px;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closePublishOcrModal()">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmPublishBtn" onclick="confirmPublishOcr()" style="background: #10b981; border: none; color: #fff; padding: 8px 16px; cursor: pointer;">Publish Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=35"></script>
+</body>
+
+</html>

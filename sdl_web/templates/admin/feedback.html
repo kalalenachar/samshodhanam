@@ -1,0 +1,436 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}Feedback Report - Sanskrit Digital Library Admin{% endblock %}
+{% block header_title %}Feedback{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .container { padding-top: 5px !important; }
+    .flash-messages:empty { display: none; }
+
+    .feedback-page-container {
+        margin-top: 0;
+    }
+
+    .feedback-toolbar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .feedback-toolbar input[type="text"] {
+        flex: 1;
+        min-width: 250px;
+        padding: 10px 15px;
+        border: 1px solid var(--t-border);
+        background: var(--t-input-bg);
+        color: var(--t-input-text);
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+    }
+
+    .feedback-toolbar input[type="text"]:focus {
+        border-color: var(--primary-color, var(--t-accent));
+    }
+
+    .feedback-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-feedback-action {
+        padding: 8px 15px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        font-family: inherit;
+    }
+
+    .btn-feedback-export { background: rgba(2, 132, 199, 0.15); color: var(--t-sky-blue, #0284c7); border-color: rgba(2, 132, 199, 0.3); }
+    .btn-feedback-clear { background: rgba(239, 68, 68, 0.15); color: var(--t-warm-red, #ef4444); border-color: rgba(239, 68, 68, 0.3); }
+    .btn-feedback-import { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+    .btn-feedback-export:hover { background: rgba(2, 132, 199, 0.3); }
+    .btn-feedback-clear:hover { background: rgba(239, 68, 68, 0.3); }
+    .btn-feedback-import:hover { background: rgba(139, 92, 246, 0.3); }
+
+    .feedback-table-container {
+        background: var(--t-bg-surface);
+        border-radius: 12px;
+        box-shadow: var(--t-shadow);
+        border: 1px solid var(--t-border);
+        overflow: hidden;
+    }
+
+    .feedback-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .feedback-table th {
+        background: var(--t-bg-surface-hover);
+        padding: 12px 15px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--t-text-primary);
+        border-bottom: 2px solid var(--t-border);
+        font-size: 13px;
+    }
+
+    .feedback-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid var(--t-border-light);
+        font-size: 14px;
+    }
+
+    .feedback-table tbody tr:hover {
+        background: var(--t-hover-bg);
+    }
+
+    #feedbackPagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 15px;
+        border-top: 1px solid #eee;
+    }
+
+    /* Feedback Modal */
+    #feedbackViewModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--t-bg-overlay);
+        z-index: 10001;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .feedback-content {
+        background: var(--t-bg-surface);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .feedback-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--t-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .feedback-list {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .comment-item {
+        padding: 12px;
+        border-bottom: 1px solid var(--t-border-light);
+        margin-bottom: 10px;
+    }
+
+    .comment-time {
+        font-size: 11px;
+        color: #999;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feedback-page-container">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--t-text-primary);"><span class="emoji">💬</span> User Feedback Report</h3>
+        <span style="font-size: 11px; color: #999;">Thumbs Up/Down & Comments from readers</span>
+    </div>
+
+    <div class="feedback-toolbar">
+        <input type="text" id="feedbackSearch" placeholder="🔍 Search feedback by book name..." oninput="loadFeedbackReport(1)">
+        
+        <div class="feedback-actions">
+            <button onclick="exportFeedbackAll()" class="btn-feedback-action btn-feedback-export" title="Export All History">
+                📥 Export All
+            </button>
+            {% if can_manage_feedback %}
+            <button onclick="clearFeedbackAll()" class="btn-feedback-action btn-feedback-clear" title="Clear All History">
+                🗑️ Clear All
+            </button>
+            <label class="btn-feedback-action btn-feedback-import" style="margin:0;" title="Import Feedback JSON">
+                📤 Import JSON
+                <input type="file" id="feedbackImportFile" style="display:none;" onchange="importFeedback(this)">
+            </label>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="feedback-table-container">
+        <table class="feedback-table">
+            <thead>
+                <tr>
+                    <th>Book Name</th>
+                    <th>Rating</th>
+                    <th>Recent Comments</th>
+                    <th style="width: 150px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="feedbackReportBody">
+                <tr><td colspan="4" style="text-align: center; padding: 20px; color: #999;">Loading feedback report...</td></tr>
+            </tbody>
+        </table>
+        <div id="feedbackPagination"></div>
+    </div>
+</div>
+
+<!-- Feedback View Modal -->
+<div id="feedbackViewModal">
+    <div class="feedback-content">
+        <div class="feedback-header">
+            <h3 id="feedbackBookTitle" style="margin: 0; font-size: 18px;">Book Feedback</h3>
+            <button onclick="closeFeedbackView()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        <div id="feedbackStats" style="padding: 15px 20px; background: var(--t-bg-surface-hover); display: flex; gap: 20px; font-weight: 600; border-bottom: 1px solid var(--t-border);">
+            <span id="feedbackUpCount" style="color: #4caf50;">👍 0</span>
+            <span id="feedbackDownCount" style="color: #f44336;">👎 0</span>
+        </div>
+        <div style="padding: 10px 20px; background: var(--t-bg-surface);">
+            <input type="text" id="modalCommentSearch" placeholder="🔍 Search within comments (text or page #)..." 
+                style="width: 100%; padding: 8px 12px; border: 1px solid var(--t-border); background: var(--t-input-bg); color: var(--t-input-text); border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                oninput="viewFeedback(currentCommentBookId, 1)">
+        </div>
+        <div class="feedback-list" id="feedbackCommentList">
+            <!-- Comments loaded via AJAX -->
+        </div>
+        <div id="feedbackModalPagination" style="padding: 10px 20px; border-top: 1px solid var(--t-border); display: flex; justify-content: center; align-items: center; gap: 10px;">
+        </div>
+        <div style="padding: 15px; border-top: 1px solid var(--t-border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="exportFeedbackBook(currentCommentBookId)" class="btn btn-secondary">📥 Export JSON</button>
+                {% if can_manage_feedback %}
+                <button onclick="clearFeedbackBook(currentCommentBookId)" class="btn btn-danger">🗑️ Clear Book History</button>
+                {% endif %}
+            </div>
+            <button class="btn btn-primary" onclick="closeFeedbackView()">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    loadFeedbackReport();
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('feedbackViewModal');
+        if (event.target == modal) {
+            closeFeedbackView();
+        }
+    }
+});
+
+let currentFeedbackPage = 1;
+function loadFeedbackReport(page = 1) {
+    currentFeedbackPage = page;
+    const body = document.getElementById('feedbackReportBody');
+    const pagination = document.getElementById('feedbackPagination');
+    const searchInput = document.getElementById('feedbackSearch');
+    
+    if (!body || !pagination || !searchInput) return;
+    
+    const query = searchInput.value;
+    
+    fetch(`/admin/api/feedback_all?page=${page}&q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(result => {
+            const data = result.data;
+            if (!data || data.length === 0) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px;">No feedback found.</td></tr>';
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            body.innerHTML = data.map(item => `
+                <tr>
+                    <td data-label="Book Name"><strong>${item.book_id}</strong></td>
+                    <td data-label="Rating">
+                        <span style="color: #4caf50;">👍 ${item.up}</span> | 
+                        <span style="color: #f44336;">👎 ${item.down}</span>
+                    </td>
+                    <td data-label="Recent Comments">
+                        ${item.latest_text 
+                            ? `<div style="font-size: 11px; color: #999;">${item.latest_time}</div>
+                               <div style="font-size: 12px; color: var(--t-text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                ${item.latest_text}
+                               </div>`
+                            : '<span style="color: #999;">-</span>'}
+                    </td>
+                    <td class="actions" data-label="Actions">
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="viewFeedback('${item.book_id.replace(/'/g, "\\'")}')" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px;">💬 View</button>
+                            <button onclick="exportFeedbackBook('${item.book_id.replace(/'/g, "\\'")}')" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px; background: #01579b; border-color: #01579b;">📥</button>
+                            <button onclick="clearFeedbackBook('${item.book_id.replace(/'/g, "\\'")}')" class="btn btn-primary" style="padding: 4px 8px; font-size: 11px; background: #c62828; border-color: #c62828;">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            let html = '';
+            if (result.total_pages > 1) {
+                html += `<button onclick="loadFeedbackReport(${page - 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 12px;" ${page <= 1 ? 'disabled style="background:#ccc"' : ''}>Prev</button>`;
+                html += `<span style="font-size: 13px; color: var(--t-text-muted);">Page ${page} of ${result.total_pages}</span>`;
+                html += `<button onclick="loadFeedbackReport(${page + 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 12px;" ${page >= result.total_pages ? 'disabled style="background:#ccc"' : ''}>Next</button>`;
+            }
+            pagination.innerHTML = html;
+        })
+        .catch(err => {
+            body.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #f44336;">Error loading report.</td></tr>';
+            pagination.innerHTML = '';
+        });
+}
+
+let currentCommentBookId = null;
+function viewFeedback(bookId, page = 1) {
+    currentCommentBookId = bookId;
+    const modal = document.getElementById('feedbackViewModal');
+    const titleEl = document.getElementById('feedbackBookTitle');
+    const upEl = document.getElementById('feedbackUpCount');
+    const downEl = document.getElementById('feedbackDownCount');
+    const listEl = document.getElementById('feedbackCommentList');
+    const paginationEl = document.getElementById('feedbackModalPagination');
+    
+    const query = document.getElementById('modalCommentSearch').value;
+    
+    titleEl.textContent = bookId;
+    if (page === 1 && !query) listEl.innerHTML = '<div style="text-align: center; padding: 20px;">Loading...</div>';
+    modal.style.display = 'flex';
+    
+    fetch(`/admin/feedback/${encodeURIComponent(bookId)}?page=${page}&q_comment=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+            upEl.textContent = `👍 ${data.up}`;
+            downEl.textContent = `👎 ${data.down}`;
+            
+            if (data.comments.length === 0) {
+                listEl.innerHTML = `<div style="text-align: center; color: #999; padding: 20px;">${query ? 'No matching comments.' : 'No comments yet.'}</div>`;
+                paginationEl.innerHTML = '';
+            } else {
+                listEl.innerHTML = data.comments.map(c => `
+                    <div class="comment-item">
+                        <div class="comment-time" style="display: flex; justify-content: space-between;">
+                            <span>${c.time}</span>
+                            ${c.page ? `<span style="background: #e1f5fe; color: #01579b; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Page ${c.page}</span>` : ''}
+                        </div>
+                        <div class="comment-text" style="margin-top: 5px;">
+                            ${c.status === 'down' ? '❌ ' : '✅ '}${c.text || '(No comment provided)'}
+                        </div>
+                    </div>
+                `).join('');
+
+                let html = '';
+                if (data.total_pages > 1) {
+                    html += `<button onclick="viewFeedback('${bookId.replace(/'/g, "\\'")}', ${page - 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" ${page <= 1 ? 'disabled style="background:#ccc"' : ''}>Prev</button>`;
+                    html += `<span style="font-size: 12px; color: var(--t-text-muted);">Page ${page} of ${data.total_pages}</span>`;
+                    html += `<button onclick="viewFeedback('${bookId.replace(/'/g, "\\'")}', ${page + 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" ${page >= data.total_pages ? 'disabled style="background:#ccc"' : ''}>Next</button>`;
+                }
+                paginationEl.innerHTML = html;
+            }
+        })
+        .catch(err => {
+            listEl.innerHTML = '<div style="color: #f44336; padding: 20px;">Error loading feedback.</div>';
+        });
+}
+
+function closeFeedbackView() {
+    document.getElementById('feedbackViewModal').style.display = 'none';
+}
+
+function exportFeedbackAll() {
+    window.location.href = '/admin/api/feedback/export';
+}
+
+function exportFeedbackBook(bookId) {
+    window.location.href = `/admin/api/feedback/export/${encodeURIComponent(bookId)}`;
+}
+
+function clearFeedbackAll() {
+    if (!confirm("Are you sure you want to permanently delete ALL feedback history for ALL books? This cannot be undone.")) return;
+    
+    fetch('/admin/api/feedback/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: null })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Feedback history cleared.');
+            loadFeedbackReport(1);
+        }
+    });
+}
+
+function clearFeedbackBook(bookId) {
+    if (!confirm(`Clear all feedback history for "${bookId}"?`)) return;
+    
+    fetch('/admin/api/feedback/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ book_id: bookId })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Book feedback cleared.');
+            closeFeedbackView();
+            loadFeedbackReport(currentFeedbackPage);
+        }
+    });
+}
+
+function importFeedback(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/admin/api/feedback/import', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            loadFeedbackReport(1);
+        } else {
+            alert('Error: ' + data.error);
+        }
+        input.value = '';
+    })
+    .catch(err => alert('Import failed.'));
+}
+</script>
+{% endblock %}

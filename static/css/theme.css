@@ -1,0 +1,1416 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@400;600;700&family=Noto+Serif+Tamil:wght@400;600;700&family=Noto+Serif+Telugu:wght@400;600;700&display=swap');
+@import url('./github-launch.css');
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAMSHODHANA MANDIRAM — GLOBAL THEME SYSTEM
+   Dark      : Night Sky / Deep Space / Moon Glow
+   Light     : Day Sky / Clouds / Sun
+   Sunset    : Twilight Dusk / Warm Amber
+   Nature    : Deep Forest / Earthy Greens
+   Sepia     : Ancient Manuscript / Parchment
+   Ocean     : Deep Sea / Aquamarine
+   Synthwave : Neon Purple / Retro Cyber
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@property --t-bg-body-start {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #01010a;
+}
+@property --t-bg-body-mid {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #04040f;
+}
+@property --t-bg-body-end {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #080818;
+}
+
+
+/* ── Night Sky / Space (Default Dark Theme) ─────────────────────────────── */
+:root {
+  /* Backgrounds — deep space */
+  --t-bg-body-start: #01010a;
+  --t-bg-body-mid:   #04040f;
+  --t-bg-body-end:   #080818;
+
+  /* Surfaces — dark glass panels */
+  --t-bg-surface:       rgba(6, 8, 24, 0.62);
+  --t-bg-surface-hover: rgba(12, 16, 42, 0.75);
+  --t-bg-elevated:      rgba(10, 14, 36, 0.88);
+  --t-bg-overlay:       rgba(1, 1, 8, 0.93);
+  --t-bg-header:        rgba(2, 3, 12, 0.78);
+
+  /* Text — moonlight palette */
+  --t-text-primary:   #e8edf4;
+  --t-text-secondary: #b8c8d8;
+  --t-text-muted:     #7a9ab8;
+
+  /* Borders — subtle silver-blue haze */
+  --t-border:       rgba(200, 220, 240, 0.12);
+  --t-border-light: rgba(200, 220, 240, 0.07);
+  --t-border-hover: rgba(220, 235, 250, 0.28);
+
+  /* Glass effect */
+  --t-glass-bg:     rgba(6, 8, 24, 0.52);
+  --t-glass-border: rgba(200, 220, 240, 0.15);
+
+  /* Hover / interaction */
+  --t-hover-bg: rgba(200, 220, 240, 0.06);
+
+  /* Scrollbar */
+  --t-scrollbar-track: #01010a;
+  --t-scrollbar-thumb: #4a6580;
+
+  /* Shadows */
+  --t-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.75);
+
+  /* Heading gradient — silver-white moon gleam */
+  --t-heading-gradient: linear-gradient(135deg, #e8edf4 0%, #b8c8d8 60%, #7a9ab8 100%);
+
+  /* ── Moon White Glow Accent ── */
+  --t-accent:          #d4e2f0;
+  --t-accent-hover:    #f0f6ff;
+  --t-accent-gradient: linear-gradient(135deg, #c8d8ec 0%, #e8f0f8 100%);
+  --t-accent-glow:     0 0 22px rgba(212, 226, 240, 0.3);
+  --t-text-on-accent:  #0c1a2e;
+
+  /* Accent alpha variants */
+  --t-accent-alpha-05: rgba(212, 226, 240, 0.05);
+  --t-accent-alpha-08: rgba(212, 226, 240, 0.08);
+  --t-accent-alpha-10: rgba(212, 226, 240, 0.10);
+  --t-accent-alpha-12: rgba(212, 226, 240, 0.12);
+  --t-accent-alpha-15: rgba(212, 226, 240, 0.15);
+  --t-accent-alpha-18: rgba(212, 226, 240, 0.18);
+  --t-accent-alpha-20: rgba(212, 226, 240, 0.20);
+  --t-accent-alpha-25: rgba(212, 226, 240, 0.25);
+  --t-accent-alpha-30: rgba(212, 226, 240, 0.30);
+  --t-accent-alpha-35: rgba(212, 226, 240, 0.35);
+  --t-accent-alpha-40: rgba(212, 226, 240, 0.40);
+  --t-accent-alpha-45: rgba(212, 226, 240, 0.45);
+  --t-accent-alpha-60: rgba(212, 226, 240, 0.60);
+
+  /* Star / nebula visibility */
+  --t-star-opacity:   0.8;
+  --t-nebula-opacity: 0.6;
+  --t-light-overlay-opacity: 0;
+
+  /* Theme toggle button */
+  --t-theme-btn-bg:     rgba(6, 8, 24, 0.72);
+  --t-theme-btn-border: rgba(200, 220, 240, 0.22);
+
+  /* Grid pattern — subtle star-chart cross */
+  --t-grid-bg: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8d8ec' fill-opacity='0.018'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+  /* Inputs */
+  --t-input-bg:           rgba(6, 8, 24, 0.72);
+  --t-input-border:       rgba(200, 220, 240, 0.22);
+  --t-input-text:         #e8edf4;
+  --t-input-placeholder:  rgba(180, 200, 220, 0.45);
+  --t-input-focus-bg:     rgba(6, 8, 24, 0.92);
+  --t-input-focus-border: #c8d8ec;
+
+  /* Label text */
+  --t-label-text: #b8c8d8;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: dark;
+  --t-select-option-bg: #070a1e;
+}
+
+/* ── Day Sky / Cloud / Sun (Light Theme Override) ───────────────────────── */
+:root[data-theme="light"], html[data-theme="light"] {
+
+  /* Backgrounds — clear sky gradient */
+  --t-bg-body-start: #0ea5e9;   /* vivid sky blue */
+  --t-bg-body-mid:   #38bdf8;   /* mid-sky pale blue */
+  --t-bg-body-end:   #bae6fd;   /* horizon pale sky blue */
+
+  /* Surfaces — cloud glass */
+  --t-bg-surface:       rgba(255, 255, 255, 0.72);
+  --t-bg-surface-hover: rgba(255, 255, 255, 0.88);
+  --t-bg-elevated:      rgba(255, 255, 255, 0.94);
+  --t-bg-overlay:       rgba(240, 249, 255, 0.96);
+  --t-bg-header:        rgba(255, 255, 255, 0.80);
+
+  /* Text — dark sky legible on cloud-white */
+  --t-text-primary:   #0c1a2e;
+  --t-text-secondary: #1e3a5f;
+  --t-text-muted:     #4a6d8c;
+
+  /* Borders — soft sky/cloud outlines */
+  --t-border:       rgba(125, 211, 252, 0.35);
+  --t-border-light: rgba(125, 211, 252, 0.18);
+  --t-border-hover: rgba(2, 132, 199, 0.30);
+
+  /* Glass effect — white cloud translucent */
+  --t-glass-bg:     rgba(255, 255, 255, 0.60);
+  --t-glass-border: rgba(255, 255, 255, 0.45);
+
+  /* Hover */
+  --t-hover-bg: rgba(2, 132, 199, 0.06);
+
+  /* Scrollbar */
+  --t-scrollbar-track: #e0f2fe;
+  --t-scrollbar-thumb: #7ec8e3;
+
+  /* Shadows — soft cloud-white drop */
+  --t-shadow: 0 8px 32px 0 rgba(15, 50, 80, 0.10);
+
+  /* Heading gradient — navy to sky */
+  --t-heading-gradient: linear-gradient(135deg, #0c1a2e 0%, #1e5f8c 100%);
+
+  /* ── Sun-Yellow Accent (warm, but sky blue is the star) ── */
+  --t-accent:          #f5c518;   /* warm sunny yellow */
+  --t-accent-hover:    #e6ac00;   /* deeper golden yellow */
+  --t-accent-gradient: linear-gradient(135deg, #f5c518 0%, #f59e0b 100%);
+  --t-accent-glow:     0 0 18px rgba(245, 197, 24, 0.40);
+  --t-text-on-accent:  #0c1a2e;
+
+  /* Accent alpha — yellow-sun tints */
+  --t-accent-alpha-05: rgba(245, 197, 24, 0.05);
+  --t-accent-alpha-08: rgba(245, 197, 24, 0.08);
+  --t-accent-alpha-10: rgba(245, 197, 24, 0.10);
+  --t-accent-alpha-12: rgba(245, 197, 24, 0.12);
+  --t-accent-alpha-15: rgba(245, 197, 24, 0.15);
+  --t-accent-alpha-18: rgba(245, 197, 24, 0.18);
+  --t-accent-alpha-20: rgba(245, 197, 24, 0.20);
+  --t-accent-alpha-25: rgba(245, 197, 24, 0.25);
+  --t-accent-alpha-30: rgba(245, 197, 24, 0.30);
+  --t-accent-alpha-35: rgba(245, 197, 24, 0.35);
+  --t-accent-alpha-40: rgba(245, 197, 24, 0.40);
+  --t-accent-alpha-45: rgba(245, 197, 24, 0.45);
+  --t-accent-alpha-60: rgba(245, 197, 24, 0.60);
+
+  /* No stars/nebula in daylight */
+  --t-star-opacity:   0;
+  --t-nebula-opacity: 0;
+  --t-light-overlay-opacity: 0.60;
+
+  /* Theme toggle button — cloud glass */
+  --t-theme-btn-bg:     rgba(255, 255, 255, 0.80);
+  --t-theme-btn-border: rgba(125, 211, 252, 0.40);
+
+  /* No grid in day sky */
+  --t-grid-bg: none;
+
+  /* Inputs — cloud white */
+  --t-input-bg:           rgba(255, 255, 255, 0.80);
+  --t-input-border:       rgba(2, 132, 199, 0.25);
+  --t-input-text:         #0c1a2e;
+  --t-input-placeholder:  rgba(12, 26, 46, 0.45);
+  --t-input-focus-bg:     rgba(255, 255, 255, 0.95);
+  --t-input-focus-border: #0284c7;  /* sky-blue focus ring (not yellow) */
+
+  /* Label — sky blue */
+  --t-label-text: #0369a1;
+
+  /* ── Extra light-only tokens for selective use ── */
+  --t-sky-blue:       #0284c7;
+  --t-sky-blue-light: #38bdf8;
+  --t-warm-orange:    #f97316;   /* minimal warm accent */
+  --t-warm-red:       #ef4444;   /* minimal danger/highlight */
+
+  /* Form color scheme & Select Option background */
+  color-scheme: light;
+  --t-select-option-bg: #ffffff;
+}
+
+/* ── Sunset / Twilight Dusk ──────────────────────────────────────────────── */
+:root[data-theme="sunset"], html[data-theme="sunset"] {
+  --t-bg-body-start: #0f0326;
+  --t-bg-body-mid:   #4a1942;
+  --t-bg-body-end:   #c84b20;
+
+  --t-bg-surface:       rgba(30, 10, 40, 0.65);
+  --t-bg-surface-hover: rgba(50, 18, 60, 0.78);
+  --t-bg-elevated:      rgba(40, 14, 50, 0.90);
+  --t-bg-overlay:       rgba(15, 3, 38, 0.94);
+  --t-bg-header:        rgba(20, 8, 35, 0.80);
+
+  --t-text-primary:   #f4e8e0;
+  --t-text-secondary: #d8b8a0;
+  --t-text-muted:     #b88a70;
+
+  --t-border:       rgba(240, 180, 120, 0.15);
+  --t-border-light: rgba(240, 180, 120, 0.08);
+  --t-border-hover: rgba(250, 200, 140, 0.30);
+
+  --t-glass-bg:     rgba(30, 10, 40, 0.55);
+  --t-glass-border: rgba(240, 180, 120, 0.18);
+  --t-hover-bg:     rgba(240, 180, 120, 0.08);
+
+  --t-scrollbar-track: #0f0326;
+  --t-scrollbar-thumb: #805040;
+  --t-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.65);
+
+  --t-heading-gradient: linear-gradient(135deg, #f4e8e0 0%, #f0a050 60%, #d06030 100%);
+
+  --t-accent:          #f0a030;
+  --t-accent-hover:    #ffb848;
+  --t-accent-gradient: linear-gradient(135deg, #f0a030 0%, #e06820 100%);
+  --t-accent-glow:     0 0 22px rgba(240, 160, 48, 0.35);
+  --t-text-on-accent:  #1a0520;
+
+  --t-accent-alpha-05: rgba(240, 160, 48, 0.05);
+  --t-accent-alpha-08: rgba(240, 160, 48, 0.08);
+  --t-accent-alpha-10: rgba(240, 160, 48, 0.10);
+  --t-accent-alpha-12: rgba(240, 160, 48, 0.12);
+  --t-accent-alpha-15: rgba(240, 160, 48, 0.15);
+  --t-accent-alpha-18: rgba(240, 160, 48, 0.18);
+  --t-accent-alpha-20: rgba(240, 160, 48, 0.20);
+  --t-accent-alpha-25: rgba(240, 160, 48, 0.25);
+  --t-accent-alpha-30: rgba(240, 160, 48, 0.30);
+  --t-accent-alpha-35: rgba(240, 160, 48, 0.35);
+  --t-accent-alpha-40: rgba(240, 160, 48, 0.40);
+  --t-accent-alpha-45: rgba(240, 160, 48, 0.45);
+  --t-accent-alpha-60: rgba(240, 160, 48, 0.60);
+
+  --t-star-opacity:   0.4;
+  --t-nebula-opacity: 0.3;
+  --t-light-overlay-opacity: 0.25;
+
+  --t-theme-btn-bg:     rgba(30, 10, 40, 0.75);
+  --t-theme-btn-border: rgba(240, 160, 48, 0.30);
+  --t-grid-bg: none;
+
+  --t-input-bg:           rgba(30, 10, 40, 0.72);
+  --t-input-border:       rgba(240, 180, 120, 0.25);
+  --t-input-text:         #f4e8e0;
+  --t-input-placeholder:  rgba(216, 184, 160, 0.45);
+  --t-input-focus-bg:     rgba(30, 10, 40, 0.92);
+  --t-input-focus-border: #f0a030;
+  --t-label-text: #d8b8a0;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: dark;
+  --t-select-option-bg: #1c0724;
+}
+
+/* ── Nature / Deep Forest ────────────────────────────────────────────────── */
+:root[data-theme="nature"], html[data-theme="nature"] {
+  --t-bg-body-start: #071a07;
+  --t-bg-body-mid:   #0f2e0f;
+  --t-bg-body-end:   #1a4a1a;
+
+  --t-bg-surface:       rgba(10, 30, 10, 0.65);
+  --t-bg-surface-hover: rgba(18, 50, 18, 0.78);
+  --t-bg-elevated:      rgba(14, 40, 14, 0.90);
+  --t-bg-overlay:       rgba(5, 15, 5, 0.94);
+  --t-bg-header:        rgba(8, 22, 8, 0.80);
+
+  --t-text-primary:   #e0f0e0;
+  --t-text-secondary: #a8d0a8;
+  --t-text-muted:     #70a870;
+
+  --t-border:       rgba(120, 200, 120, 0.14);
+  --t-border-light: rgba(120, 200, 120, 0.07);
+  --t-border-hover: rgba(140, 220, 140, 0.28);
+
+  --t-glass-bg:     rgba(10, 30, 10, 0.52);
+  --t-glass-border: rgba(120, 200, 120, 0.16);
+  --t-hover-bg:     rgba(120, 200, 120, 0.07);
+
+  --t-scrollbar-track: #071a07;
+  --t-scrollbar-thumb: #3a7a3a;
+  --t-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.70);
+
+  --t-heading-gradient: linear-gradient(135deg, #e0f0e0 0%, #70c870 60%, #40a040 100%);
+
+  --t-accent:          #5cb85c;
+  --t-accent-hover:    #72d272;
+  --t-accent-gradient: linear-gradient(135deg, #5cb85c 0%, #3a9a3a 100%);
+  --t-accent-glow:     0 0 22px rgba(92, 184, 92, 0.30);
+  --t-text-on-accent:  #071a07;
+
+  --t-accent-alpha-05: rgba(92, 184, 92, 0.05);
+  --t-accent-alpha-08: rgba(92, 184, 92, 0.08);
+  --t-accent-alpha-10: rgba(92, 184, 92, 0.10);
+  --t-accent-alpha-12: rgba(92, 184, 92, 0.12);
+  --t-accent-alpha-15: rgba(92, 184, 92, 0.15);
+  --t-accent-alpha-18: rgba(92, 184, 92, 0.18);
+  --t-accent-alpha-20: rgba(92, 184, 92, 0.20);
+  --t-accent-alpha-25: rgba(92, 184, 92, 0.25);
+  --t-accent-alpha-30: rgba(92, 184, 92, 0.30);
+  --t-accent-alpha-35: rgba(92, 184, 92, 0.35);
+  --t-accent-alpha-40: rgba(92, 184, 92, 0.40);
+  --t-accent-alpha-45: rgba(92, 184, 92, 0.45);
+  --t-accent-alpha-60: rgba(92, 184, 92, 0.60);
+
+  --t-star-opacity:   0;
+  --t-nebula-opacity: 0;
+  --t-light-overlay-opacity: 0;
+
+  --t-theme-btn-bg:     rgba(10, 30, 10, 0.75);
+  --t-theme-btn-border: rgba(92, 184, 92, 0.30);
+  --t-grid-bg: none;
+
+  --t-input-bg:           rgba(10, 30, 10, 0.72);
+  --t-input-border:       rgba(120, 200, 120, 0.25);
+  --t-input-text:         #e0f0e0;
+  --t-input-placeholder:  rgba(168, 208, 168, 0.45);
+  --t-input-focus-bg:     rgba(10, 30, 10, 0.92);
+  --t-input-focus-border: #5cb85c;
+  --t-label-text: #a8d0a8;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: dark;
+  --t-select-option-bg: #071a07;
+}
+
+/* ── Sepia / Ancient Manuscript ──────────────────────────────────────────── */
+:root[data-theme="sepia"], html[data-theme="sepia"] {
+  --t-bg-body-start: #d4b896;
+  --t-bg-body-mid:   #c8a882;
+  --t-bg-body-end:   #b89468;
+
+  --t-bg-surface:       rgba(210, 185, 150, 0.75);
+  --t-bg-surface-hover: rgba(220, 195, 160, 0.88);
+  --t-bg-elevated:      rgba(225, 200, 165, 0.94);
+  --t-bg-overlay:       rgba(200, 175, 140, 0.96);
+  --t-bg-header:        rgba(210, 185, 150, 0.85);
+
+  --t-text-primary:   #3a2a1a;
+  --t-text-secondary: #5a4030;
+  --t-text-muted:     #7a6050;
+
+  --t-border:       rgba(90, 60, 30, 0.20);
+  --t-border-light: rgba(90, 60, 30, 0.10);
+  --t-border-hover: rgba(90, 60, 30, 0.35);
+
+  --t-glass-bg:     rgba(210, 185, 150, 0.60);
+  --t-glass-border: rgba(90, 60, 30, 0.18);
+  --t-hover-bg:     rgba(90, 60, 30, 0.06);
+
+  --t-scrollbar-track: #c8a882;
+  --t-scrollbar-thumb: #8a6a4a;
+  --t-shadow: 0 8px 32px 0 rgba(60, 40, 20, 0.15);
+
+  --t-heading-gradient: linear-gradient(135deg, #3a2a1a 0%, #6a4a2a 60%, #8b6914 100%);
+
+  --t-accent:          #8b6914;
+  --t-accent-hover:    #a07818;
+  --t-accent-gradient: linear-gradient(135deg, #8b6914 0%, #6a4a0a 100%);
+  --t-accent-glow:     0 0 18px rgba(139, 105, 20, 0.30);
+  --t-text-on-accent:  #f5e6c8;
+
+  --t-accent-alpha-05: rgba(139, 105, 20, 0.05);
+  --t-accent-alpha-08: rgba(139, 105, 20, 0.08);
+  --t-accent-alpha-10: rgba(139, 105, 20, 0.10);
+  --t-accent-alpha-12: rgba(139, 105, 20, 0.12);
+  --t-accent-alpha-15: rgba(139, 105, 20, 0.15);
+  --t-accent-alpha-18: rgba(139, 105, 20, 0.18);
+  --t-accent-alpha-20: rgba(139, 105, 20, 0.20);
+  --t-accent-alpha-25: rgba(139, 105, 20, 0.25);
+  --t-accent-alpha-30: rgba(139, 105, 20, 0.30);
+  --t-accent-alpha-35: rgba(139, 105, 20, 0.35);
+  --t-accent-alpha-40: rgba(139, 105, 20, 0.40);
+  --t-accent-alpha-45: rgba(139, 105, 20, 0.45);
+  --t-accent-alpha-60: rgba(139, 105, 20, 0.60);
+
+  --t-star-opacity:   0;
+  --t-nebula-opacity: 0;
+  --t-light-overlay-opacity: 0;
+
+  --t-theme-btn-bg:     rgba(210, 185, 150, 0.85);
+  --t-theme-btn-border: rgba(139, 105, 20, 0.35);
+  --t-grid-bg: none;
+
+  --t-input-bg:           rgba(225, 200, 165, 0.80);
+  --t-input-border:       rgba(90, 60, 30, 0.25);
+  --t-input-text:         #3a2a1a;
+  --t-input-placeholder:  rgba(58, 42, 26, 0.40);
+  --t-input-focus-bg:     rgba(230, 210, 175, 0.95);
+  --t-input-focus-border: #8b6914;
+  --t-label-text: #5a4030;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: light;
+  --t-select-option-bg: #ecd5b8;
+}
+
+/* ── Ocean / Deep Sea ────────────────────────────────────────────────────── */
+:root[data-theme="ocean"], html[data-theme="ocean"] {
+  --t-bg-body-start: #041e32;
+  --t-bg-body-mid:   #0a3d5c;
+  --t-bg-body-end:   #14687a;
+
+  --t-bg-surface:       rgba(8, 35, 55, 0.65);
+  --t-bg-surface-hover: rgba(14, 55, 80, 0.78);
+  --t-bg-elevated:      rgba(10, 45, 68, 0.90);
+  --t-bg-overlay:       rgba(4, 20, 35, 0.94);
+  --t-bg-header:        rgba(6, 28, 45, 0.80);
+
+  --t-text-primary:   #e0f4f4;
+  --t-text-secondary: #a0d8d8;
+  --t-text-muted:     #60b0b0;
+
+  --t-border:       rgba(0, 212, 170, 0.15);
+  --t-border-light: rgba(0, 212, 170, 0.08);
+  --t-border-hover: rgba(0, 230, 190, 0.30);
+
+  --t-glass-bg:     rgba(8, 35, 55, 0.52);
+  --t-glass-border: rgba(0, 212, 170, 0.16);
+  --t-hover-bg:     rgba(0, 212, 170, 0.07);
+
+  --t-scrollbar-track: #041e32;
+  --t-scrollbar-thumb: #1a7a7a;
+  --t-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.70);
+
+  --t-heading-gradient: linear-gradient(135deg, #e0f4f4 0%, #00d4aa 60%, #0090a0 100%);
+
+  --t-accent:          #00d4aa;
+  --t-accent-hover:    #20eec4;
+  --t-accent-gradient: linear-gradient(135deg, #00d4aa 0%, #0090a0 100%);
+  --t-accent-glow:     0 0 22px rgba(0, 212, 170, 0.30);
+  --t-text-on-accent:  #041e32;
+
+  --t-accent-alpha-05: rgba(0, 212, 170, 0.05);
+  --t-accent-alpha-08: rgba(0, 212, 170, 0.08);
+  --t-accent-alpha-10: rgba(0, 212, 170, 0.10);
+  --t-accent-alpha-12: rgba(0, 212, 170, 0.12);
+  --t-accent-alpha-15: rgba(0, 212, 170, 0.15);
+  --t-accent-alpha-18: rgba(0, 212, 170, 0.18);
+  --t-accent-alpha-20: rgba(0, 212, 170, 0.20);
+  --t-accent-alpha-25: rgba(0, 212, 170, 0.25);
+  --t-accent-alpha-30: rgba(0, 212, 170, 0.30);
+  --t-accent-alpha-35: rgba(0, 212, 170, 0.35);
+  --t-accent-alpha-40: rgba(0, 212, 170, 0.40);
+  --t-accent-alpha-45: rgba(0, 212, 170, 0.45);
+  --t-accent-alpha-60: rgba(0, 212, 170, 0.60);
+
+  --t-star-opacity:   0;
+  --t-nebula-opacity: 0;
+  --t-light-overlay-opacity: 0.15;
+
+  --t-theme-btn-bg:     rgba(8, 35, 55, 0.75);
+  --t-theme-btn-border: rgba(0, 212, 170, 0.30);
+  --t-grid-bg: none;
+
+  --t-input-bg:           rgba(8, 35, 55, 0.72);
+  --t-input-border:       rgba(0, 212, 170, 0.25);
+  --t-input-text:         #e0f4f4;
+  --t-input-placeholder:  rgba(160, 216, 216, 0.45);
+  --t-input-focus-bg:     rgba(8, 35, 55, 0.92);
+  --t-input-focus-border: #00d4aa;
+  --t-label-text: #a0d8d8;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: dark;
+  --t-select-option-bg: #041e32;
+}
+
+/* ── Synthwave / Neon Retro ──────────────────────────────────────────────── */
+:root[data-theme="synthwave"], html[data-theme="synthwave"] {
+  --t-bg-body-start: #0a0015;
+  --t-bg-body-mid:   #1a0035;
+  --t-bg-body-end:   #2d0060;
+
+  --t-bg-surface:       rgba(15, 0, 30, 0.68);
+  --t-bg-surface-hover: rgba(30, 0, 55, 0.80);
+  --t-bg-elevated:      rgba(22, 0, 42, 0.92);
+  --t-bg-overlay:       rgba(8, 0, 18, 0.95);
+  --t-bg-header:        rgba(12, 0, 25, 0.82);
+
+  --t-text-primary:   #f0e0ff;
+  --t-text-secondary: #d0a8f0;
+  --t-text-muted:     #a070c8;
+
+  --t-border:       rgba(255, 45, 149, 0.18);
+  --t-border-light: rgba(255, 45, 149, 0.08);
+  --t-border-hover: rgba(255, 80, 170, 0.35);
+
+  --t-glass-bg:     rgba(15, 0, 30, 0.55);
+  --t-glass-border: rgba(255, 45, 149, 0.20);
+  --t-hover-bg:     rgba(255, 45, 149, 0.08);
+
+  --t-scrollbar-track: #0a0015;
+  --t-scrollbar-thumb: #6a2090;
+  --t-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.75);
+
+  --t-heading-gradient: linear-gradient(135deg, #f0e0ff 0%, #ff2d95 50%, #00d4ff 100%);
+
+  --t-accent:          #ff2d95;
+  --t-accent-hover:    #ff50aa;
+  --t-accent-gradient: linear-gradient(135deg, #ff2d95 0%, #8b00ff 100%);
+  --t-accent-glow:     0 0 25px rgba(255, 45, 149, 0.40);
+  --t-text-on-accent:  #ffffff;
+
+  --t-accent-alpha-05: rgba(255, 45, 149, 0.05);
+  --t-accent-alpha-08: rgba(255, 45, 149, 0.08);
+  --t-accent-alpha-10: rgba(255, 45, 149, 0.10);
+  --t-accent-alpha-12: rgba(255, 45, 149, 0.12);
+  --t-accent-alpha-15: rgba(255, 45, 149, 0.15);
+  --t-accent-alpha-18: rgba(255, 45, 149, 0.18);
+  --t-accent-alpha-20: rgba(255, 45, 149, 0.20);
+  --t-accent-alpha-25: rgba(255, 45, 149, 0.25);
+  --t-accent-alpha-30: rgba(255, 45, 149, 0.30);
+  --t-accent-alpha-35: rgba(255, 45, 149, 0.35);
+  --t-accent-alpha-40: rgba(255, 45, 149, 0.40);
+  --t-accent-alpha-45: rgba(255, 45, 149, 0.45);
+  --t-accent-alpha-60: rgba(255, 45, 149, 0.60);
+
+  --t-star-opacity:   0.9;
+  --t-nebula-opacity: 0.5;
+  --t-light-overlay-opacity: 0;
+
+  --t-theme-btn-bg:     rgba(15, 0, 30, 0.78);
+  --t-theme-btn-border: rgba(255, 45, 149, 0.35);
+  --t-grid-bg: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ff2d95' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+
+  --t-input-bg:           rgba(15, 0, 30, 0.75);
+  --t-input-border:       rgba(255, 45, 149, 0.25);
+  --t-input-text:         #f0e0ff;
+  --t-input-placeholder:  rgba(208, 168, 240, 0.45);
+  --t-input-focus-bg:     rgba(15, 0, 30, 0.95);
+  --t-input-focus-border: #ff2d95;
+  --t-label-text: #d0a8f0;
+
+  /* Form color scheme & Select Option background */
+  color-scheme: dark;
+  --t-select-option-bg: #120022;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOBAL THEME STYLES & TRANSITIONS
+   ══════════════════════════════════════════════════════════════════════════ */
+html {
+  background: linear-gradient(160deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%) no-repeat fixed !important;
+  background-size: cover !important;
+  transition: background-color 1s ease;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: transparent !important;
+  color: var(--t-text-primary) !important;
+  min-height: 100vh;
+  position: relative;
+  z-index: 0; /* Establish stacking context to prevent ::before/::after from hiding behind html background */
+  transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Global Input Placeholder Styles */
+input::placeholder,
+textarea::placeholder {
+  color: var(--t-input-placeholder) !important;
+}
+
+/* Global Form Controls & Select Dropdowns */
+select {
+  color-scheme: inherit;
+  background-color: var(--t-input-bg, var(--t-bg-surface));
+  color: var(--t-text-primary);
+}
+
+select option,
+select optgroup {
+  background-color: var(--t-select-option-bg, #070a1e);
+  color: var(--t-text-primary);
+}
+
+
+/* Smooth transitions triggered only during theme toggle */
+html.theme-transitioning,
+html.theme-transitioning body {
+  transition: --t-bg-body-start 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              --t-bg-body-mid 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              --t-bg-body-end 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+html.theme-transitioning header,
+html.theme-transitioning nav,
+html.theme-transitioning main,
+html.theme-transitioning footer,
+html.theme-transitioning .reader-header,
+html.theme-transitioning .ocr-header,
+html.theme-transitioning .ocr-scroll-container,
+html.theme-transitioning .ocr-content-wrapper,
+html.theme-transitioning .ocr-page-content,
+html.theme-transitioning .ocr-text,
+html.theme-transitioning .sutra-card,
+html.theme-transitioning details.commentary-card,
+html.theme-transitioning .sutra-contents,
+html.theme-transitioning .btn-action,
+html.theme-transitioning .zoom-btn,
+html.theme-transitioning .nav-btn,
+html.theme-transitioning .theme-toggle-btn,
+html.theme-transitioning input,
+html.theme-transitioning select,
+html.theme-transitioning button,
+html.theme-transitioning a,
+html.theme-transitioning .card,
+html.theme-transitioning .panel,
+html.theme-transitioning .modal-content,
+html.theme-transitioning .dropdown-menu {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* ── Cosmic Overlay Layer (body::before - Dark Theme Elements) ─────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: -2;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-image:
+    /* Stars */
+    radial-gradient(1px   1px   at  18px  28px, rgba(255,255,255,0.92), transparent),
+    radial-gradient(1px   1px   at  42px  72px, rgba(255,255,255,0.85), transparent),
+    radial-gradient(1.5px 1.5px at  55px 165px, rgba(220,235,255,0.80), transparent),
+    radial-gradient(1px   1px   at  82px 118px, rgba(255,255,255,0.90), transparent),
+    radial-gradient(1.5px 1.5px at 112px  78px, rgba(255,255,255,0.88), transparent),
+    radial-gradient(2px   2px   at 155px  25px, rgba(255,255,255,0.95), transparent),
+    radial-gradient(1px   1px   at 205px 148px, rgba(255,255,255,0.82), transparent),
+    radial-gradient(1.5px 1.5px at 255px  48px, rgba(230,240,255,0.78), transparent),
+    radial-gradient(1px   1px   at  70px 240px, rgba(255,255,255,0.80), transparent),
+    radial-gradient(1px   1px   at 180px 195px, rgba(255,255,255,0.75), transparent),
+    radial-gradient(2px   2px   at  30px 190px, rgba(200,220,255,0.70), transparent),
+    radial-gradient(1px   1px   at 130px  10px, rgba(255,255,255,0.88), transparent),
+    radial-gradient(1.5px 1.5px at 220px  90px, rgba(220,235,255,0.72), transparent),
+    radial-gradient(1px   1px   at 270px 160px, rgba(255,255,255,0.80), transparent),
+    radial-gradient(2.5px 2.5px at  90px  50px, rgba(255,255,255,0.65), transparent),
+    /* Grid */
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8d8ec' fill-opacity='0.018'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+    /* Nebula */
+    radial-gradient(ellipse 55% 45% at  8% 18%, rgba(80,  60, 160, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 92% 82%, rgba(40,  80, 180, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 30% at 55% 50%, rgba(100, 60, 200, 0.06) 0%, transparent 55%);
+  background-size: 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 320px 320px, 60px 60px, auto, auto, auto;
+  opacity: var(--t-star-opacity);
+}
+
+/* ── Sky & Cloud Overlay Layer (body::after - Light Theme Elements) ─────────────────────────────── */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-image:
+    /* Sun Glow */
+    radial-gradient(ellipse 40% 35% at 88% 12%, rgba(245, 197, 24, 0.45) 0%, rgba(249, 115, 22, 0.15) 45%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at  0% 100%, rgba(56, 189, 248, 0.15) 0%, transparent 55%),
+    /* Clouds */
+    radial-gradient(ellipse 38% 22% at 18% 32%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.25) 50%, transparent 80%),
+    radial-gradient(ellipse 45% 20% at 72% 22%, rgba(255,255,255,0.90) 0%, rgba(255,255,255,0.30) 45%, transparent 75%),
+    radial-gradient(ellipse 30% 18% at 42% 68%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.18) 50%, transparent 80%),
+    radial-gradient(ellipse 25% 14% at 85% 55%, rgba(255,255,255,0.70) 0%, rgba(255,255,255,0.15) 50%, transparent 80%);
+  background-size: cover;
+  opacity: var(--t-light-overlay-opacity);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR THEME SYNC
+   ══════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar          { width: 10px; height: 10px; }
+::-webkit-scrollbar-track    { background: var(--t-scrollbar-track); }
+::-webkit-scrollbar-thumb    { background: var(--t-scrollbar-thumb); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t-accent); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   FLOATING THEME TOGGLE BUTTON
+   ══════════════════════════════════════════════════════════════════════════ */
+.theme-toggle-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--t-theme-btn-bg);
+  border: 1px solid var(--t-theme-btn-border);
+  box-shadow: var(--t-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 99999;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--t-text-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1) translateY(-2px);
+  border-color: var(--t-accent);
+  box-shadow: var(--t-accent-glow);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn:hover svg {
+  transform: rotate(45deg);
+}
+
+/* Theme name label — appears briefly on switch */
+.theme-label {
+  position: fixed;
+  bottom: 78px;
+  right: 12px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--t-theme-btn-bg);
+  border: 1px solid var(--t-theme-btn-border);
+  color: var(--t-text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 99999;
+}
+
+.theme-label.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.highlighted-cell {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border: 2px solid #10b981 !important;
+  animation: pulse-highlight 2s infinite ease-in-out;
+}
+
+@keyframes pulse-highlight {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   UNIFIED APP-WIDE NAVIGATION & HEADER OVERRIDES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Header/Navbar Container */
+header,
+nav.navbar,
+header.header,
+header.topbar {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 12px max(28px, calc((100% - 1400px) / 2)) !important;
+  height: 64px !important;
+  min-height: 64px !important;
+  background: var(--t-bg-header) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border-bottom: 1px solid var(--t-border) !important;
+  box-shadow: var(--t-shadow) !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10000 !important;
+  transition: background 0.3s, backdrop-filter 0.3s, border-color 0.3s !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+/* Reset nested containers inside headers to prevent double-nesting */
+header .nav-container,
+header .container {
+  padding: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Transparent header bar on the home page only */
+body:has(#home.active) header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Force standard body styling to prevent visual layout shifts */
+body {
+  padding-top: 0 !important;
+  margin: 0 !important;
+}
+
+/* 2. Logo Group & Branding Wrapper */
+.navbar-brand-group,
+.header-logo,
+.header-brand,
+.topbar-brand,
+.nav-logo-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 3. Brand & Brand text */
+.brand,
+.navbar-brand,
+.topbar-brand,
+.logo:not(:has(.logo-sanskrit)) {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: var(--t-text-primary) !important;
+  text-decoration: none !important;
+  font-family: 'Outfit', 'Inter', sans-serif !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 3.1 About page stacked logo override */
+.logo:has(.logo-sanskrit) {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 1px !important;
+  background: transparent !important;
+  border: none !important;
+  text-decoration: none !important;
+  line-height: 1.1 !important;
+}
+
+.logo-sanskrit {
+  color: var(--t-accent) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  font-family: 'Noto Serif Devanagari', 'Outfit', sans-serif !important;
+  line-height: 1.1 !important;
+}
+
+.logo-english {
+  color: var(--t-text-primary) !important;
+  font-size: 0.65rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2px !important;
+  font-family: 'Inter', sans-serif !important;
+  line-height: 1.1 !important;
+}
+
+/* 4. Brand Logo Image */
+.brand img,
+.navbar-logo,
+.topbar-logo,
+.logo img,
+.navbar-brand img,
+.topbar-brand img {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  object-fit: cover !important;
+  box-shadow: 0 4px 12px var(--t-accent-alpha-20) !important;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
+.brand:hover img,
+.navbar-brand:hover img,
+.logo:hover img {
+  transform: scale(1.15) !important;
+  box-shadow: var(--t-accent-glow) !important;
+}
+
+/* 5. Home/Back Button */
+.navbar-home-btn {
+  display: inline-flex;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  background: var(--t-accent-alpha-12) !important;
+  color: var(--t-accent) !important;
+  border: 1px solid var(--t-border) !important;
+  transition: all 0.25s ease !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.navbar-home-btn:hover {
+  background: var(--t-accent-alpha-30) !important;
+  color: var(--t-accent-hover) !important;
+  transform: scale(1.05) !important;
+  border-color: var(--t-border-hover) !important;
+}
+
+.back-btn,
+.back-link {
+  display: inline-flex;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  background: var(--t-accent-alpha-12) !important;
+  color: var(--t-accent) !important;
+  border: 1px solid var(--t-border) !important;
+  transition: all 0.25s ease !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  padding: 6px 14px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  gap: 8px !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.back-btn:hover,
+.back-link:hover {
+  background: var(--t-accent-alpha-30) !important;
+  color: var(--t-accent-hover) !important;
+  transform: translateX(-3px) !important;
+  border-color: var(--t-border-hover) !important;
+}
+
+.back-btn svg,
+.back-link svg {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* 6. Navigation Link Containers */
+nav ul:not(#navlist),
+.nav-menu,
+.navbar-links {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 7. Navigation Links */
+nav a,
+.navbar-links a,
+.nav-menu a,
+.nav-link {
+  color: var(--t-text-secondary) !important;
+  text-decoration: none !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  transition: all 0.25s ease !important;
+  display: inline-flex;
+  align-items: center !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+nav a:hover,
+.navbar-links a:hover,
+.nav-menu a:hover,
+.nav-link:hover,
+nav a.active,
+.navbar-links a.active,
+.nav-menu a.active,
+.nav-link.active {
+  color: var(--t-text-primary) !important;
+  background: var(--t-accent-alpha-20) !important;
+}
+
+nav a.active,
+.navbar-links a.active,
+.nav-menu a.active,
+.nav-link.active {
+  background: var(--t-accent-alpha-30) !important;
+  font-weight: 600 !important;
+}
+
+/* 8. User Profile Avatar Buttons */
+.user-avatar-nav-btn,
+.quiz-user-avatar-btn,
+.user-avatar-btn,
+.avatar-btn,
+#nav-avatar-btn {
+  display: flex;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 50% !important;
+  border: 1px solid var(--t-border) !important;
+  transition: all 0.25s ease !important;
+  cursor: pointer !important;
+  color: var(--t-text-primary) !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.user-avatar-nav-btn:hover,
+.quiz-user-avatar-btn:hover,
+.user-avatar-btn:hover,
+.avatar-btn:hover {
+  transform: scale(1.1) !important;
+  border-color: var(--t-accent) !important;
+  box-shadow: var(--t-accent-glow) !important;
+}
+
+/* 9. Mobile menu toggle */
+.mobile-toggle {
+  background: none !important;
+  border: none !important;
+  color: var(--t-text-primary) !important;
+  font-size: 22px !important;
+  cursor: pointer !important;
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-toggle {
+    display: block !important;
+  }
+}
+
+/* 10. Unified Page Containers & Alignment Overrides (Matching Header Ratio) */
+html, body {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.container,
+.container-lg,
+.container-xl,
+.browse-container,
+.api-container,
+.game-container,
+.selection-container,
+main:not(.reader-container) {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-left: max(28px, calc((100% - 1400px) / 2)) !important;
+  padding-right: max(28px, calc((100% - 1400px) / 2)) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MULTI-SCRIPT CHANGER UI & INDIC FONTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+[data-script-font="devanagari"], .script-font-devanagari, [data-script-font="sa"], .script-font-sa {
+  font-family: 'Sanskrit Text', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+[data-script-font="kannada"], .script-font-kannada {
+  font-family: 'Noto Serif Kannada', 'Noto Sans Kannada', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+[data-script-font="tamil"], .script-font-tamil {
+  font-family: 'Noto Serif Tamil', 'Noto Sans Tamil', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+[data-script-font="telugu"], .script-font-telugu {
+  font-family: 'Noto Serif Telugu', 'Noto Sans Telugu', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+[data-script-font="en"], .script-font-en {
+  font-family: 'Inter', sans-serif !important;
+}
+
+[data-script-font="telugu"] .samhita-content,
+[data-script-font="telugu"] .padapatha-content,
+[data-script-font="telugu"] .bhashya-content,
+[data-script-font="telugu"] .mantra-badge,
+[data-script-font="telugu"] .script-target {
+  font-family: 'Noto Serif Telugu', 'Noto Sans Telugu', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+
+[data-script-font="kannada"] .samhita-content,
+[data-script-font="kannada"] .padapatha-content,
+[data-script-font="kannada"] .bhashya-content,
+[data-script-font="kannada"] .mantra-badge,
+[data-script-font="kannada"] .script-target {
+  font-family: 'Noto Serif Kannada', 'Noto Sans Kannada', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+
+[data-script-font="tamil"] .samhita-content,
+[data-script-font="tamil"] .padapatha-content,
+[data-script-font="tamil"] .bhashya-content,
+[data-script-font="tamil"] .mantra-badge,
+[data-script-font="tamil"] .script-target {
+  font-family: 'Noto Serif Tamil', 'Noto Sans Tamil', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+
+[data-script-font="devanagari"] .samhita-content,
+[data-script-font="devanagari"] .padapatha-content,
+[data-script-font="devanagari"] .bhashya-content,
+[data-script-font="devanagari"] .mantra-badge,
+[data-script-font="devanagari"] .script-target,
+[data-script-font="sa"] .samhita-content,
+[data-script-font="sa"] .padapatha-content,
+[data-script-font="sa"] .bhashya-content,
+[data-script-font="sa"] .mantra-badge,
+[data-script-font="sa"] .script-target {
+  font-family: 'Sanskrit Text', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+}
+
+[data-script-font="en"] .samhita-content,
+[data-script-font="en"] .padapatha-content,
+[data-script-font="en"] .bhashya-content,
+[data-script-font="en"] .mantra-badge,
+[data-script-font="en"] .script-target {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.script-picker-btn {
+  background: rgba(14, 165, 233, 0.15) !important;
+  border: 1px solid rgba(14, 165, 233, 0.4) !important;
+  color: #38bdf8 !important;
+  width: auto !important;
+  padding: 0 12px !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 30px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  text-decoration: none !important;
+}
+.script-picker-btn:hover {
+  background: rgba(14, 165, 233, 0.28) !important;
+  border-color: rgba(56, 189, 248, 0.7) !important;
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+.script-picker-popover {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: var(--t-bg-elevated, rgba(18, 18, 32, 0.98)) !important;
+  border: 1px solid var(--t-border, rgba(56, 189, 248, 0.35)) !important;
+  border-radius: 14px !important;
+  padding: 8px !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.6), 0 0 20px rgba(14, 165, 233, 0.2) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2500;
+}
+
+.script-option-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: var(--t-text-primary);
+}
+.script-option-item:hover {
+  background: rgba(56, 189, 248, 0.15);
+}
+.script-option-item.active {
+  background: rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-weight: 700;
+}
+.script-option-item .script-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.script-option-item .script-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.script-option-item .script-desc {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.script-option-item .script-check {
+  font-size: 13px;
+  color: #38bdf8;
+  display: none;
+}
+.script-option-item.active .script-check {
+  display: inline;
+}
+
+/* ── Transliteration Info Badge & Hover Popover ── */
+.translit-info-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 1060;
+}
+
+.translit-info-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px 0 5px;
+  border-radius: 20px;
+  background: rgba(56, 189, 248, 0.12) !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  color: #38bdf8 !important;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.translit-info-btn:hover,
+.translit-info-wrapper:hover .translit-info-btn,
+.translit-info-wrapper:focus-within .translit-info-btn {
+  background: rgba(56, 189, 248, 0.22) !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.translit-info-btn .info-badge-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  color: #ffffff;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 12px;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.translit-info-btn .info-label {
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+
+.translit-info-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 330px;
+  max-width: 90vw;
+  background: var(--t-bg-elevated, rgba(15, 23, 42, 0.98)) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+  border-radius: 14px !important;
+  padding: 14px 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.15) !important;
+  color: var(--t-text-primary, #e2e8f0);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.5;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.97);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.translit-info-wrapper:hover .translit-info-popover,
+.translit-info-wrapper:focus-within .translit-info-popover,
+.translit-info-popover.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+@media (max-width: 600px) {
+  .translit-info-btn {
+    padding: 0 8px 0 5px;
+    height: 28px;
+    font-size: 11px;
+  }
+  .translit-info-btn .info-badge-icon {
+    width: 17px;
+    height: 17px;
+    font-size: 11px;
+  }
+  .translit-info-popover {
+    position: fixed;
+    top: 54px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+/* ==========================================================================
+   Global Mobile Mode Blocker Rules
+   ========================================================================== */
+html.smsdl-mobile-locked,
+body.smsdl-mobile-locked {
+  overflow: hidden !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+  position: relative !important;
+}
+
+body.smsdl-mobile-locked > *:not(#smsdl-mobile-blocker) {
+  pointer-events: none !important;
+  user-select: none !important;
+  filter: blur(8px) brightness(0.35) !important;
+  opacity: 0.2 !important;
+  transition: filter 0.3s ease, opacity 0.3s ease !important;
+}
+
+
+

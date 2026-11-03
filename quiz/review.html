@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q&A JSON Reviewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+    <style>
+        :root {
+            --primary: var(--t-accent);
+            --primary-hover: var(--t-accent-hover);
+            --bg-color: var(--t-bg-body-start);
+            --card-bg: var(--t-bg-surface);
+            --text-main: var(--t-text-primary);
+            --text-muted: var(--t-text-muted);
+            --success: #10B981;
+            --success-bg: rgba(16, 185, 129, 0.15);
+            --border: var(--t-border);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 2rem;
+        }
+
+        header {
+            max-width: 1000px;
+            margin: 0 auto 2rem auto;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .controls {
+            max-width: 1000px;
+            margin: 0 auto 2rem auto;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--card-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: var(--t-text-on-accent);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: var(--t-text-on-accent);
+        }
+
+        select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 1rem;
+            background-color: var(--t-bg-surface);
+            cursor: pointer;
+        }
+
+        #questions-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .question-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .badge {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .options {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #FAFAFA;
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .option.correct {
+            background-color: var(--success-bg);
+            border-color: var(--success);
+            color: #065F46;
+            font-weight: 500;
+        }
+
+        .option-marker {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .option.correct .option-marker {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .explanation {
+            background-color: var(--t-accent-alpha-08);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            color: var(--text-main);
+        }
+
+        .explanation a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+        .explanation strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: var(--card-bg);
+            border-radius: 12px;
+            color: var(--text-muted);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Q&A JSON Reviewer</h1>
+        <p class="subtitle">Review your multilingual quiz questions easily</p>
+    </header>
+
+    <div class="controls">
+        <div class="file-upload">
+            <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+            <button class="btn" onclick="document.getElementById('jsonFileInput').click()">Upload JSON File</button>
+            <span id="fileName" style="color: var(--text-muted); font-size: 0.9rem;"></span>
+        </div>
+        
+        <div>
+            <label for="langSelect" style="margin-right: 0.5rem; font-weight: 500;">Language:</label>
+            <select id="langSelect">
+                <option value="sa">Sanskrit (sa)</option>
+                <option value="en">English (en)</option>
+                <option value="hi">Hindi (hi)</option>
+                <option value="kn">Kannada (kn)</option>
+                <option value="te">Telugu (te)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="loader" class="loader">Loading...</div>
+    
+    <div id="questions-container">
+        <div class="empty-state">
+            <svg style="width: 64px; height: 64px; margin: 0 auto 1rem auto; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <h2>No Data Loaded</h2>
+            <p>Upload a JSON file or load the sample file to begin reviewing.</p>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+        let currentLang = 'sa';
+
+        const fileInput = document.getElementById('jsonFileInput');
+        const fileNameDisplay = document.getElementById('fileName');
+        const langSelect = document.getElementById('langSelect');
+        const container = document.getElementById('questions-container');
+        const loader = document.getElementById('loader');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileNameDisplay.textContent = file.name;
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                try {
+                    const json = JSON.parse(event.target.result);
+                    currentData = json;
+                    renderQuestions();
+                } catch (error) {
+                    alert('Error parsing JSON file. Please ensure it is valid.');
+                    console.error(error);
+                }
+            };
+            
+            reader.readAsText(file);
+        });
+
+
+
+        langSelect.addEventListener('change', (e) => {
+            currentLang = e.target.value;
+            if (currentData.length > 0) {
+                renderQuestions();
+            }
+        });
+
+        function renderQuestions() {
+            if (!Array.isArray(currentData) || currentData.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h2>No questions found in the array.</h2></div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            currentData.forEach((q, index) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                
+                const questionText = q.question[currentLang] || q.question['en'] || 'Question missing';
+                const options = q.options[currentLang] || q.options['en'] || [];
+                const explanation = q.explanation ? (q.explanation[currentLang] || q.explanation['en'] || '') : '';
+                
+                let optionsHtml = '<ul class="options">';
+                options.forEach((opt, optIdx) => {
+                    const isCorrect = optIdx === q.answerIndex;
+                    const letter = String.fromCharCode(65 + optIdx);
+                    optionsHtml += `
+                        <li class="option ${isCorrect ? 'correct' : ''}">
+                            <span class="option-marker">${letter}</span>
+                            ${opt}
+                            ${isCorrect ? ' <svg style="width: 20px; height: 20px; float: right; margin-top: 2px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                        </li>
+                    `;
+                });
+                optionsHtml += '</ul>';
+
+                let explanationHtml = '';
+                if (explanation) {
+                    explanationHtml = `
+                        <div class="explanation">
+                            <strong>Explanation:</strong>
+                            ${explanation}
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="meta">
+                        <span class="badge">Q${index + 1}</span>
+                        ${q.subject ? `<span class="badge" style="background-color: #E0E7FF; color: #4338CA;">${q.subject}</span>` : ''}
+                        ${q.level ? `<span class="badge" style="background-color: #FEF3C7; color: #B45309;">${q.level}</span>` : ''}
+                    </div>
+                    <div class="question-text">${questionText}</div>
+                    ${optionsHtml}
+                    ${explanationHtml}
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+    </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

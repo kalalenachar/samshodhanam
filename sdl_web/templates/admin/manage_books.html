@@ -1,0 +1,1876 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}Manage Books - Sanskrit Digital Library{% endblock %}
+
+{% block content %}
+<!-- Fake inputs to prevent autofill on search/filter fields -->
+<div style="position: absolute; overflow: hidden; width: 0px; height: 0px; opacity: 0; pointer-events: none;" aria-hidden="true">
+    <input type="text" name="fake_username_remembered" autocomplete="username" tabindex="-1">
+    <input type="password" name="fake_password_remembered" autocomplete="current-password" tabindex="-1">
+</div>
+
+<!-- Books List -->
+<section class="books-section">
+    <div class="dashboard-header-flex"
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h3 style="margin: 0;"><span class="emoji">📖</span> Uploaded Books ({{ total_books }})</h3>
+            {% if session.get('admin_role') == 'super' %}
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button type="button" id="refreshCacheBtn" onclick="triggerRefreshCache()"
+                    class="btn btn-danger"
+                    style="background-color: #ff9800; border-color: #f57c00; font-size: 13px; padding: 6px 14px; height: auto; width: auto !important;">🔄
+                    Refresh Cache</button>
+
+
+
+                <div id="cacheProgressContainer"
+                    style="display: none; align-items: center; gap: 10px; background: #fff7e6; padding: 4px 12px; border-radius: 20px; border: 1px solid #ffd591;">
+                    <div
+                        style="width: 100px; height: 8px; background: #f0f0f0; border-radius: 4px; overflow: hidden;">
+                        <div id="cacheProgressBar"
+                            style="width: 0%; height: 100%; background: #faad14; transition: width 0.3s;"></div>
+                    </div>
+                    <span id="cacheStatusText"
+                        style="font-size: 11px; color: #d48806; font-weight: 600; white-space: nowrap;"></span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="dashboard-actions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div id="globalDashboardActions" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="openRichTextSettingsModal()" style="background-color: #8b5cf6; border-color: #7c3aed;">🎨 Rich Text Settings</button>
+                {% if session.get('admin_role') == 'super' or 'PERM_UPLOAD_EXCEL' in
+                session.get('admin_permissions', []) %}
+                <button class="btn btn-primary" onclick="document.getElementById('excelFileInput').click()"
+                    style="background-color: #4CAF50;">⬆️ Upload Edits (Excel)</button>
+                <input type="file" id="excelFileInput" accept=".xlsx" style="display: none;"
+                    onchange="uploadExcel(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('jsonFileInput').click()"
+                    style="background-color: #0284c7;">⬆️ Upload Edits (JSON)</button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display: none;"
+                    onchange="uploadJson(event)">
+                {% endif %}
+            </div>
+            <div id="selectionStatus"
+                style="display: none; font-size: 13px; font-weight: 600; color: var(--t-accent); background: var(--t-accent-alpha-10); padding: 6px 12px; border-radius: 20px;">
+                <span id="selectedCount">0</span> selected
+            </div>
+            <div class="bulk-actions" id="bulkActions" style="display: none; gap: 10px; flex-wrap: wrap;">
+                {% if session.get('admin_role') == 'super' or 'PERM_EDIT_TAGS' in session.get('admin_permissions', []) or 'PERM_EDIT_BOOK_NAME' in session.get('admin_permissions', []) %}
+                <button id="bulkToDraftBtn" class="btn btn-warning" style="display: none; background-color: #f59e0b; border-color: #d97706; color: white; font-weight: 600;" onclick="bulkChangeStatus('draft')">📄 Set as Draft</button>
+                <button id="bulkToPublishBtn" class="btn btn-success" style="display: none; background-color: #10b981; border-color: #059669; color: white; font-weight: 600;" onclick="bulkChangeStatus('published')">🌐 Publish Selected</button>
+                {% endif %}
+                {% if session.get('admin_role') == 'super' or 'PERM_DOWNLOAD_BOOKS' in
+                session.get('admin_permissions', []) %}
+                <button class="btn btn-primary" onclick="downloadSelectedZip()">⬇️ Download ZIP</button>
+                {% endif %}
+                {% if session.get('admin_role') == 'super' or 'PERM_UPLOAD_EXCEL' in
+                session.get('admin_permissions', []) %}
+                <button class="btn btn-primary" onclick="downloadSelectedExcel()">⬇️ Download Excel</button>
+                <button class="btn btn-primary" onclick="downloadSelectedJson()" style="background-color: #0284c7; border-color: #0284c7;">⬇️ Download JSON</button>
+                {% endif %}
+                {% if session.get('admin_role') == 'super' or 'PERM_DELETE_BOOK' in
+                session.get('admin_permissions', []) %}
+                <button class="btn btn-danger" onclick="deleteSelected()">🗑️ Delete Selected</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+
+    {% if books %}
+    <!-- Global Selection Bar -->
+    <div id="globalSelectBar"
+        style="display: none; background: var(--t-accent-alpha-15); border: 1px solid var(--t-border); padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-size: 14px; color: var(--t-text-primary);">
+        <span id="pageSelectText">All {{ books|length }} books on this page are selected.</span>
+        <button onclick="selectAllGlobal()"
+            style="background: none; border: none; color: var(--t-accent); font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: 10px;">
+            Select all {{ total_books }} books in SDL
+        </button>
+    </div>
+    <div id="globalSelectActiveBar"
+        style="display: none; background: var(--t-accent-alpha-20); border: 1px solid var(--t-border-hover); padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-size: 14px; color: var(--t-text-primary);">
+        <strong>All {{ total_books }} books in the library are selected.</strong>
+        <button onclick="clearGlobalSelection()"
+            style="background: none; border: none; color: var(--t-accent); font-weight: 700; cursor: pointer; text-decoration: underline; margin-left: 10px;">
+            Clear Selection
+        </button>
+    </div>
+
+    <div class="admin-controls-bar"
+        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
+        <div class="admin-filters" style="display: flex; gap: 12px; flex: 1; align-items: center; flex-wrap: wrap;">
+            <input type="text" name="name" id="filterBookName" class="sanskrit-enabled"
+                data-sanskrit-id="adminSanskrit" placeholder="🔍 Search by Book Name..."
+                value="{{ q_name or '' }}" autocomplete="off"
+                style="flex: 1; min-width: 200px; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none;"
+                oninput="debounceSearch()">
+            <input type="text" name="tag" id="filterTags" class="sanskrit-enabled"
+                data-sanskrit-id="adminSanskrit" placeholder="🏷️ Search by Tags..." value="{{ q_tag or '' }}" autocomplete="off"
+                style="flex: 1; min-width: 180px; padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none;"
+                oninput="debounceSearch()">
+            
+            <button type="button" id="toggleAdvFilterBtn" onclick="toggleAdvancedFilters()" class="btn btn-secondary"
+                style="background: var(--t-bg-surface, #fff); border: 1px solid #ccc; color: var(--t-text-primary, #333); padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; height: 42px; white-space: nowrap; transition: all 0.2s;">
+                <span>🎛️ Filter</span>
+                <span id="activeFilterBadge" class="badge" style="display: none; background: var(--t-accent, #7c3aed); color: white; border-radius: 10px; padding: 2px 7px; font-size: 11px; font-weight: 700;">0</span>
+            </button>
+
+            <a href="javascript:void(0)" id="clearAllFiltersBtn" onclick="resetAllFilters()" class="btn btn-danger"
+                style="display: none; padding: 10px 16px; text-decoration: none; align-items: center; justify-content: center; height: 42px;">Clear All</a>
+        </div>
+        <div class="sanskrit-toggle-container" style="display: inline-flex; margin-bottom: 0;">
+            <label class="switch" style="margin: 0;">
+                <input type="checkbox" id="adminSanskrit" checked>
+                <span class="slider round"></span>
+            </label>
+            <label for="adminSanskrit"
+                style="font-size: 14px; color: var(--t-text-muted); cursor: pointer; white-space: nowrap;">Type in
+                Sanskrit</label>
+        </div>
+        <div class="mobile-select-all"
+            style="display: none; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px 15px; border-radius: 6px; border: 1px solid #ddd; width: 100%;">
+            <input type="checkbox" id="selectAllMobile" onclick="toggleSelectAllMobile()">
+            <label for="selectAllMobile"
+                style="font-size: 14px; font-weight: 600; color: var(--t-text-primary); cursor: pointer;">Select All
+                Books</label>
+        </div>
+    </div>
+
+    <!-- Active Filter Chips Bar -->
+    <div id="activeFiltersContainer" style="display: none; margin-bottom: 15px; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 13px; font-weight: 600; color: var(--t-text-muted);">Active Filters:</span>
+        <div id="activeFilterChips" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+    </div>
+
+    <!-- Collapsible Advanced Filter Panel -->
+    <div id="advancedFilterPanel" style="display: none; background: var(--t-bg-surface, #ffffff); border: 1px solid var(--t-border, #e5e7eb); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: var(--t-text-primary); display: flex; align-items: center; gap: 8px;">
+                <span>🎛️</span> Advanced Filtering Options
+            </h4>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" onclick="resetAllFilters()" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px; height: auto;">🔄 Reset All</button>
+                <button type="button" onclick="toggleAdvancedFilters()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--t-text-muted); line-height: 1;" title="Close filters">&times;</button>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: #dc2626; margin-bottom: 5px;">🚫 Exclude Tags (Negative Tags)</label>
+                <input type="text" id="filterNegTag" class="sanskrit-enabled" data-sanskrit-id="adminSanskrit" placeholder="e.g. Grammar, Modern..." value="{{ q_neg_tag or '' }}" autocomplete="off" style="width: 100%; padding: 8px 12px; border: 1px solid #fca5a5; border-radius: 6px; font-size: 13px; outline: none; background: #fff5f5;" oninput="debounceSearch()">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 5px;">📑 Sub-Book / Chapter</label>
+                <input type="text" id="filterSubbook" class="sanskrit-enabled" data-sanskrit-id="adminSanskrit" placeholder="Search subbook name..." value="{{ q_subbook or '' }}" autocomplete="off" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none;" oninput="debounceSearch()">
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 5px;">🌐 Publication Status</label>
+                <select id="filterStatus" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; background: white;" onchange="loadBooks(1)">
+                    <option value="">All Statuses</option>
+                    <option value="published" {{ 'selected' if q_status == 'published' }}>Published Only</option>
+                    <option value="draft" {{ 'selected' if q_status == 'draft' }}>Draft Only</option>
+                    <option value="community" {{ 'selected' if q_status == 'community' }}>🤝 Community (Unverified)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 5px;">📄 Format / OCR Type</label>
+                <select id="filterOcr" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; background: white;" onchange="loadBooks(1)">
+                    <option value="">All Formats</option>
+                    <option value="digitized" {{ 'selected' if q_ocr == 'digitized' }}>Digitized (Has Text)</option>
+                    <option value="text_only" {{ 'selected' if q_ocr == 'text_only' }}>Text-Only (No PDF)</option>
+                    <option value="pdf_only" {{ 'selected' if q_ocr == 'pdf_only' }}>PDF-Only (No Text)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 5px;">✏️ Proofreading Status</label>
+                <select id="filterProofread" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; background: white;" onchange="loadBooks(1)">
+                    <option value="">All Proofreading States</option>
+                    <option value="not_started" {{ 'selected' if q_proofread == 'not_started' }}>Not Started (0%)</option>
+                    <option value="in_progress" {{ 'selected' if q_proofread == 'in_progress' }}>In Progress (1-99%)</option>
+                    <option value="completed" {{ 'selected' if q_proofread == 'completed' }}>Completed (100%)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 5px;">💬 Reader Feedback</label>
+                <select id="filterFeedback" style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; background: white;" onchange="loadBooks(1)">
+                    <option value="">All Reader Activity</option>
+                    <option value="has_up" {{ 'selected' if q_feedback == 'has_up' }}>Has Upvotes 👍</option>
+                    <option value="has_down" {{ 'selected' if q_feedback == 'has_down' }}>Has Downvotes 👎</option>
+                    <option value="has_comments" {{ 'selected' if q_feedback == 'has_comments' }}>Has Comments 💬</option>
+                    <option value="any" {{ 'selected' if q_feedback == 'any' }}>Any Feedback Activity</option>
+                </select>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center; border-top: 1px dashed #eee; padding-top: 10px;">
+            <button type="button" onclick="resetAllFilters()" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">Clear All</button>
+            <button type="button" onclick="loadBooks(1)" class="btn btn-primary" style="padding: 6px 18px; font-size: 13px; background: var(--t-accent, #7c3aed); border-color: var(--t-accent, #7c3aed);">Apply Filters</button>
+        </div>
+    </div>
+    <table class="books-table">
+        <thead>
+            <tr>
+                <th style="width: 40px;"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                <th style="width: 60px; cursor:pointer;user-select:none;" onclick="sortTable('s_no')">S.No <span
+                        class="sort-arrow" id="sortArrowS_no">{% if sort_col == 's_no' %}{{ ' ▲' if sort_order
+                        == 'asc' else ' ▼' }}{% endif %}</span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortTable('name')">Book Name <span
+                        class="sort-arrow" id="sortArrowName">{% if sort_col == 'name' %}{{ ' ▲' if sort_order
+                        == 'asc' else ' ▼' }}{% endif %}</span></th>
+                <th style="cursor:pointer;user-select:none;" onclick="sortTable('tags')">Tags <span
+                        class="sort-arrow" id="sortArrowTags">{% if sort_col == 'tags' %}{{ ' ▲' if sort_order
+                        == 'asc' else ' ▼' }}{% endif %}</span></th>
+
+                <th style="cursor:pointer;user-select:none;" onclick="sortTable('notes')">Notes <span
+                        class="sort-arrow" id="sortArrowNotes">{% if sort_col == 'notes' %}{{ ' ▲' if
+                        sort_order == 'asc' else ' ▼' }}{% endif %}</span></th>
+                {% if session.get('admin_role') == 'super' or 'PERM_VIEW_FEEDBACK' in session.get('admin_permissions', []) %}
+                <th style="width: 120px;">Feedback</th>
+                {% endif %}
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="booksTableBody">
+            {% for book in books %}
+            <tr data-book-id="{{ book.name }}">
+                <td style="text-align: center;"><input type="checkbox" class="book-checkbox"
+                        value="{{ book.name }}" data-published="{{ 'true' if book.get('published', True) else 'false' }}" onchange="updateSelectionState()"></td>
+                <td data-label="S.No" style="text-align: center; color: var(--t-text-muted); font-weight: 600;">{{ book.s_no }}
+                </td>
+                <td data-label="Book Name" style="word-wrap: break-word; overflow-wrap: break-word;"><strong>{{
+                        book.name }}</strong>{% if book.get('is_community') %}<span class="badge" style="background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle;">🤝 Community</span>{% endif %}{% if book.get('published', True) %}<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;">Published</span>{% else %}<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;">Draft</span>{% endif %}<span class="ai-status-badge" style="margin-left: 8px; font-size: 11px; font-weight: normal; vertical-align: middle;"></span></td>
+                <td data-label="Tags">{{ book.tags or '-' }}</td>
+
+                <td data-label="Notes" style="font-size: 13px; color: var(--t-text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ book.notes or '' }}">
+                    <div style="display: flex; align-items: center; gap: 6px; max-width: 100%;">
+                        {% if book.proofread_pct %}
+                            {% if book.proofread_pct >= 100 %}
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0;" title="Completed Proofreading">✓ 100%</span>
+                            {% else %}
+                                <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: var(--t-text-secondary); border: 1px solid rgba(139, 92, 246, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0;" title="Proofreading In Progress">{{ book.proofread_pct }}%</span>
+                            {% endif %}
+                        {% endif %}
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ book.notes or '-' }}</span>
+                    </div>
+                </td>
+                {% if session.get('admin_role') == 'super' or 'PERM_VIEW_FEEDBACK' in session.get('admin_permissions', []) %}
+                <td data-label="Feedback">
+                    <div style="display: flex; gap: 8px; font-size: 13px;">
+                        <span title="Positive Feedback">👍 {{ book.feedback_up }}</span>
+                        <span title="Negative Feedback">👎 {{ book.feedback_down }}</span>
+                        {% if book.feedback_comments_count > 0 %}
+                        <button onclick="viewFeedback('{{ book.name|e }}')"
+                            style="background: none; border: none; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline; color: var(--t-accent);">
+                            💬 {{ book.feedback_comments_count }}
+                        </button>
+                        {% endif %}
+                    </div>
+                </td>
+                {% endif %}
+                <td class="actions">
+                    {% if book.archive_url or book.has_txt %}
+                    <a href="/reader/{{ book.name }}/1?from=admin_manage_books" class="btn btn-success"
+                        style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-block;">👁️
+                        View</a>
+                    {% endif %}
+                    {% if book.get('is_community') and book.get('verification') != 'verified' %}
+                    <button type="button" class="btn btn-success" onclick="verifyBookDirect('{{ book.name }}')" style="padding: 6px 10px; font-size: 12px; background: #10b981; border: none; color: #fff; display: inline-block;" title="Verify as official library book">✓ Verify</button>
+                    {% endif %}
+                    {% set can_edit = session.get('admin_role') == 'super' or 'PERM_EDIT_BOOK_NAME' in
+                    session.get('admin_permissions', []) or 'PERM_EDIT_TAGS' in session.get('admin_permissions',
+                    []) or 'PERM_EDIT_SUB_BOOK' in session.get('admin_permissions', []) or 'PERM_EDIT_LINK' in
+                    session.get('admin_permissions', []) or 'PERM_EDIT_OCR' in session.get('admin_permissions',
+                    []) %}
+                    {% if can_edit %}
+                    <a href="{{ url_for('admin_edit_book', folder_name=book.name) }}" class="btn btn-primary"
+                        style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-block;">✏️
+                        Edit</a>
+                    {% endif %}
+                    {% if session.get('admin_role') == 'super' or 'PERM_DELETE_BOOK' in
+                    session.get('admin_permissions', []) %}
+                    <button class="btn btn-danger" data-book-name="{{ book.name }}"
+                        onclick="deleteBook(this.dataset.bookName)" style="padding: 6px 12px; font-size: 13px;">
+                        🗑️ Delete
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div id="booksPagination" class="pagination"
+        style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 30px; padding: 20px 0;">
+        {% if total_pages > 1 %}
+        {% if page > 1 %}
+        <button onclick="loadBooks('{{page-1}}')" class="btn btn-primary"
+            style="background: var(--t-accent); padding: 8px 16px;">← Previous</button>
+        {% else %}
+        <button class="btn btn-primary" style="background: #ccc; cursor: not-allowed; padding: 8px 16px;"
+            disabled>← Previous</button>
+        {% endif %}
+
+        <span style="font-weight: 600; color: var(--t-text-muted);">Page {{ page }} of {{ total_pages }}</span>
+
+        {% if page < total_pages %} <button onclick="loadBooks('{{page+1}}')" class="btn btn-primary"
+            style="background: var(--t-accent); padding: 8px 16px;">Next →</button>
+            {% else %}
+            <button class="btn btn-primary" style="background: #ccc; cursor: not-allowed; padding: 8px 16px;"
+                disabled>Next →</button>
+            {% endif %}
+            {% endif %}
+    </div>
+    {% else %}
+    <div class="no-results">
+        <h4>No books uploaded yet</h4>
+        <p>Upload a ZIP file containing book folders to get started</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Feedback View Modal -->
+<div id="feedbackViewModal">
+    <div class="feedback-content">
+        <div class="feedback-header">
+            <h3 id="feedbackBookTitle" style="margin: 0; font-size: 18px;">Book Feedback</h3>
+            <button onclick="closeFeedbackView()"
+                style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        <div id="feedbackStats"
+            style="padding: 15px 20px; background: #f8f9fa; display: flex; gap: 20px; font-weight: 600; border-bottom: 1px solid #eee;">
+            <span id="feedbackUpCount" style="color: #4caf50;">👍 0</span>
+            <span id="feedbackDownCount" style="color: #f44336;">👎 0</span>
+        </div>
+        <div style="padding: 10px 20px; background: var(--t-bg-surface);">
+            <input type="text" id="modalCommentSearch" placeholder="🔍 Search within comments (text or page #)..."
+                style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;"
+                oninput="viewFeedback(currentCommentBookId, 1)">
+        </div>
+        <div class="feedback-list" id="feedbackCommentList">
+            <!-- Comments loaded via AJAX -->
+        </div>
+        <div id="feedbackModalPagination"
+            style="padding: 10px 20px; border-top: 1px solid #f0f0f0; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <!-- Modal pagination -->
+        </div>
+        <div
+            style="padding: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="exportFeedbackBook(currentCommentBookId)" class="btn btn-primary"
+                    style="background: #01579b; border-color: #01579b;">📥 Export JSON</button>
+                {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_FEEDBACK' in session.get('admin_permissions', []) %}
+                <button onclick="clearFeedbackBook(currentCommentBookId)" class="btn btn-primary"
+                    style="background: #c62828; border-color: #c62828;">🗑️ Clear Book History</button>
+                {% endif %}
+            </div>
+            <button class="btn btn-primary" onclick="closeFeedbackView()">Close</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 98% !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .books-section {
+        padding: 15px 20px !important;
+    }
+
+    .dashboard-header-flex {
+        margin-bottom: 10px !important;
+    }
+
+    /* Feedback Modal */
+    #feedbackViewModal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: var(--t-bg-overlay);
+        z-index: 10001;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .feedback-content {
+        background: var(--t-bg-surface);
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .feedback-header {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .feedback-list {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .comment-item {
+        padding: 12px;
+        border-bottom: 1px solid #f5f5f5;
+        margin-bottom: 10px;
+    }
+
+    .comment-time {
+        font-size: 11px;
+        color: #999;
+        margin-bottom: 5px;
+    }
+
+    @media (max-width: 900px) {
+        .dashboard-header-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 15px !important;
+        }
+        .dashboard-header-flex > div {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+        }
+        .dashboard-actions {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
+            gap: 10px !important;
+        }
+        .dashboard-actions button,
+        .dashboard-actions .bulk-actions button {
+            width: 100% !important;
+            justify-content: center !important;
+        }
+        .bulk-actions {
+            flex-direction: column !important;
+            width: 100% !important;
+            gap: 10px !important;
+        }
+    }
+</style>
+
+<script>
+    function deleteBook(bookName) {
+        if (!confirm(`Are you sure you want to delete "${bookName}"?`)) {
+            return;
+        }
+
+        fetch(`/admin/delete/${encodeURIComponent(bookName)}`, {
+            method: 'POST'
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error deleting book');
+            });
+    }
+
+    function verifyBookDirect(bookName) {
+        if (!confirm(`Verify "${bookName}" as an official library book? This will remove the unverified community badge.`)) {
+            return;
+        }
+        fetch(`/admin/verify-book/${encodeURIComponent(bookName)}`, {
+            method: 'POST'
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Book verified successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to verify book'));
+                }
+            })
+            .catch(err => {
+                alert('Error connecting to server.');
+            });
+    }
+
+    // ---- Selection Logic (Global) ----
+    let selectedBooks = new Set();
+    let bookStatusMap = new Map();
+    let isGlobalSelected = false;
+    let totalBooksCount = Number("{{ total_books }}");
+
+    // Load from session storage if exists
+    try {
+        const saved = sessionStorage.getItem('selectedBooks');
+        const savedMap = sessionStorage.getItem('bookStatusMap');
+        const savedGlobal = sessionStorage.getItem('isGlobalSelected');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            selectedBooks = new Set(parsed);
+        }
+        if (savedMap) {
+            bookStatusMap = new Map(JSON.parse(savedMap));
+        }
+        if (savedGlobal === 'true') {
+            isGlobalSelected = true;
+        }
+    } catch (e) { }
+
+    function syncCheckboxesToState() {
+        const checkboxes = document.querySelectorAll('.book-checkbox');
+        if (checkboxes.length === 0) return;
+        checkboxes.forEach(cb => {
+            cb.checked = isGlobalSelected || selectedBooks.has(cb.value);
+            if (cb.hasAttribute('data-published')) {
+                bookStatusMap.set(cb.value, cb.getAttribute('data-published') === 'true');
+            }
+        });
+        updateBulkActionsUI();
+    }
+
+    function updateSelectionState() {
+        if (isGlobalSelected) {
+            isGlobalSelected = false;
+            selectedBooks.clear();
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            checkboxes.forEach(cb => {
+                if (cb.hasAttribute('data-published')) {
+                    bookStatusMap.set(cb.value, cb.getAttribute('data-published') === 'true');
+                }
+                if (cb.checked) selectedBooks.add(cb.value);
+            });
+        } else {
+            const checkboxes = document.querySelectorAll('.book-checkbox');
+            checkboxes.forEach(cb => {
+                if (cb.hasAttribute('data-published')) {
+                    bookStatusMap.set(cb.value, cb.getAttribute('data-published') === 'true');
+                }
+                if (cb.checked) {
+                    selectedBooks.add(cb.value);
+                } else {
+                    selectedBooks.delete(cb.value);
+                }
+            });
+        }
+        saveSelection();
+        updateBulkActionsUI();
+    }
+
+    function saveSelection() {
+        sessionStorage.setItem('selectedBooks', JSON.stringify([...selectedBooks]));
+        sessionStorage.setItem('bookStatusMap', JSON.stringify([...bookStatusMap]));
+        sessionStorage.setItem('isGlobalSelected', isGlobalSelected);
+    }
+
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.book-checkbox');
+
+        if (selectAll && selectAll.checked) {
+            isGlobalSelected = true;
+            selectedBooks.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                if (cb.hasAttribute('data-published')) {
+                    bookStatusMap.set(cb.value, cb.getAttribute('data-published') === 'true');
+                }
+            });
+        } else {
+            isGlobalSelected = false;
+            selectedBooks.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                if (cb.hasAttribute('data-published')) {
+                    bookStatusMap.set(cb.value, cb.getAttribute('data-published') === 'true');
+                }
+            });
+        }
+
+        saveSelection();
+        updateBulkActionsUI();
+    }
+
+    function toggleSelectAllMobile() {
+        const selectAllMobile = document.getElementById('selectAllMobile');
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll && selectAllMobile) {
+            selectAll.checked = selectAllMobile.checked;
+        }
+        toggleSelectAll();
+    }
+
+    function updateBulkActionsUI() {
+        const bulkActions = document.getElementById('bulkActions');
+        const selectionStatus = document.getElementById('selectionStatus');
+        const selectedCount = document.getElementById('selectedCount');
+        const globalBar = document.getElementById('globalSelectBar');
+        const globalActiveBar = document.getElementById('globalSelectActiveBar');
+        const globalDashboardActions = document.getElementById('globalDashboardActions');
+
+        if (!bulkActions && !selectionStatus && !globalBar) return;
+
+        const checkboxes = document.querySelectorAll('.book-checkbox');
+        const pageAllChecked = checkboxes.length > 0 && Array.from(checkboxes).every(cb => cb.checked);
+
+        let count = isGlobalSelected ? totalBooksCount : selectedBooks.size;
+
+        if (count > 0) {
+            if (globalDashboardActions) globalDashboardActions.style.display = 'none';
+            if (bulkActions) bulkActions.style.display = 'flex';
+            if (selectionStatus) selectionStatus.style.display = 'block';
+            if (selectedCount) selectedCount.textContent = count;
+        } else {
+            if (globalDashboardActions) globalDashboardActions.style.display = 'flex';
+            if (bulkActions) bulkActions.style.display = 'none';
+            if (selectionStatus) selectionStatus.style.display = 'none';
+        }
+
+        if (globalBar) globalBar.style.display = 'none';
+        if (globalActiveBar) globalActiveBar.style.display = 'none';
+
+
+        const bulkToDraftBtn = document.getElementById('bulkToDraftBtn');
+        const bulkToPublishBtn = document.getElementById('bulkToPublishBtn');
+
+        if (bulkToDraftBtn || bulkToPublishBtn) {
+            if (bulkToDraftBtn) bulkToDraftBtn.style.display = count > 0 ? 'inline-block' : 'none';
+            if (bulkToPublishBtn) bulkToPublishBtn.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+
+        const selectAll = document.getElementById('selectAll');
+        const selectAllMobile = document.getElementById('selectAllMobile');
+
+        if (checkboxes.length > 0) {
+            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+
+            if (selectAll) {
+                selectAll.checked = pageAllChecked;
+                selectAll.indeterminate = someChecked && !pageAllChecked;
+            }
+            if (selectAllMobile) {
+                selectAllMobile.checked = pageAllChecked;
+                selectAllMobile.indeterminate = someChecked && !pageAllChecked;
+            }
+        }
+    }
+
+    // Run sync on load
+    document.addEventListener('DOMContentLoaded', () => {
+        syncCheckboxesToState();
+        updateActiveFilterUI();
+
+        const negTag = (document.getElementById('filterNegTag') ? document.getElementById('filterNegTag').value : '').trim();
+        const subbook = (document.getElementById('filterSubbook') ? document.getElementById('filterSubbook').value : '').trim();
+        const ocr = (document.getElementById('filterOcr') ? document.getElementById('filterOcr').value : '').trim();
+        const proofread = (document.getElementById('filterProofread') ? document.getElementById('filterProofread').value : '').trim();
+        const feedback = (document.getElementById('filterFeedback') ? document.getElementById('filterFeedback').value : '').trim();
+        if (negTag || subbook || ocr || proofread || feedback) {
+            const panel = document.getElementById('advancedFilterPanel');
+            const btn = document.getElementById('toggleAdvFilterBtn');
+            if (panel) panel.style.display = 'block';
+            if (btn) {
+                btn.style.background = 'var(--t-accent-alpha-10, #f3e8ff)';
+                btn.style.borderColor = 'var(--t-accent, #7c3aed)';
+                btn.style.color = 'var(--t-accent, #7c3aed)';
+            }
+        }
+
+        // Add click-to-close for feedback modal
+        window.onclick = function (event) {
+            const modal = document.getElementById('feedbackViewModal');
+            if (event.target == modal) {
+                closeFeedbackView();
+            }
+        }
+    });
+
+    // ---- Feedback Viewing ----
+    let currentCommentBookId = null;
+    function viewFeedback(bookId, page = 1) {
+        currentCommentBookId = bookId;
+        const modal = document.getElementById('feedbackViewModal');
+        const titleEl = document.getElementById('feedbackBookTitle');
+        const upEl = document.getElementById('feedbackUpCount');
+        const downEl = document.getElementById('feedbackDownCount');
+        const listEl = document.getElementById('feedbackCommentList');
+        const paginationEl = document.getElementById('feedbackModalPagination');
+
+        const query = document.getElementById('modalCommentSearch').value;
+
+        titleEl.textContent = bookId;
+        if (page === 1 && !query) listEl.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--t-text-muted);">Loading...</div>';
+        modal.style.display = 'flex';
+
+        fetch(`/admin/feedback/${encodeURIComponent(bookId)}?page=${page}&q_comment=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(data => {
+                upEl.textContent = `👍 ${data.up}`;
+                downEl.textContent = `👎 ${data.down}`;
+
+                if (data.comments.length === 0) {
+                    listEl.innerHTML = `<div style="text-align: center; color: #999; padding: 20px;">${query ? 'No matching comments.' : 'No comments yet.'}</div>`;
+                    paginationEl.innerHTML = '';
+                } else {
+                    listEl.innerHTML = data.comments.map(c => `
+                        <div class="comment-item" style="border-bottom: 1px solid #eee; padding: 10px 0;">
+                            <div class="comment-time" style="display: flex; justify-content: space-between; font-size: 11px; color: #999;">
+                                <span>${c.time}</span>
+                                ${c.page ? `<span style="background: #e1f5fe; color: #01579b; padding: 2px 6px; border-radius: 4px; font-weight: 600;">Page ${c.page}</span>` : ''}
+                            </div>
+                            <div class="comment-text" style="margin-top: 5px; font-size: 13px; color: var(--t-text-primary);">
+                                ${c.status === 'down' ? '❌ ' : '✅ '}${c.text || '(No comment provided)'}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    let html = '';
+                    if (data.total_pages > 1) {
+                        html += `<button onclick="viewFeedback('${bookId.replace(/'/g, "\\'")}', ${page - 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" ${page <= 1 ? 'disabled style="background:#ccc"' : ''}>Prev</button>`;
+                        html += `<span style="font-size: 12px; color: var(--t-text-muted);">Page ${page} of ${data.total_pages}</span>`;
+                        html += `<button onclick="viewFeedback('${bookId.replace(/'/g, "\\'")}', ${page + 1})" class="btn btn-primary" style="padding: 4px 10px; font-size: 11px;" ${page >= data.total_pages ? 'disabled style="background:#ccc"' : ''}>Next</button>`;
+                    }
+                    paginationEl.innerHTML = html;
+                }
+            })
+            .catch(err => {
+                listEl.innerHTML = '<div style="color: #f44336; padding: 20px;">Error loading feedback.</div>';
+            });
+    }
+
+    function closeFeedbackView() {
+        document.getElementById('feedbackViewModal').style.display = 'none';
+    }
+
+    function exportFeedbackBook(bookId) {
+        window.location.href = `/admin/api/feedback/export/${encodeURIComponent(bookId)}`;
+    }
+
+    function clearFeedbackBook(bookId) {
+        if (!confirm(`Clear all feedback history for "${bookId}"?`)) return;
+
+        fetch('/admin/api/feedback/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ book_id: bookId })
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Book feedback cleared.');
+                    closeFeedbackView();
+                    loadBooks(currentBooksPage);
+                }
+            });
+    }
+
+    // ---- Sorting (Server-side via AJAX) ----
+    let currentSortCol = "{{ sort_col }}";
+    let currentSortOrder = "{{ sort_order }}";
+    let currentBooksPage = Number("{{ page }}");
+
+    function sortTable(colName) {
+        if (currentSortCol === colName) {
+            currentSortOrder = (currentSortOrder === 'asc') ? 'desc' : 'asc';
+        } else {
+            currentSortCol = colName;
+            currentSortOrder = 'asc';
+        }
+        loadBooks(1);
+    }
+
+    const ADMIN_PERMS = {
+        role: "{{ session.get('admin_role') }}",
+        perms: JSON.parse('{{ session.get("admin_permissions", []) | tojson | safe }}')
+    };
+
+    function canDelete() {
+        return ADMIN_PERMS.role === 'super' || ADMIN_PERMS.perms.includes('PERM_DELETE_BOOK');
+    }
+
+    function canViewFeedback() {
+        return ADMIN_PERMS.role === 'super' || ADMIN_PERMS.perms.includes('PERM_VIEW_FEEDBACK');
+    }
+
+    let searchDebounceTimer;
+    function debounceSearch() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            loadBooks(1);
+        }, 300);
+    }
+
+    function toggleAdvancedFilters() {
+        const panel = document.getElementById('advancedFilterPanel');
+        const btn = document.getElementById('toggleAdvFilterBtn');
+        if (!panel) return;
+        if (panel.style.display === 'none' || !panel.style.display) {
+            panel.style.display = 'block';
+            if (btn) {
+                btn.style.background = 'var(--t-accent-alpha-10, #f3e8ff)';
+                btn.style.borderColor = 'var(--t-accent, #7c3aed)';
+                btn.style.color = 'var(--t-accent, #7c3aed)';
+            }
+        } else {
+            panel.style.display = 'none';
+            if (btn) {
+                btn.style.background = 'var(--t-bg-surface, #fff)';
+                btn.style.borderColor = '#ccc';
+                btn.style.color = 'var(--t-text-primary, #333)';
+            }
+        }
+    }
+
+    function updateActiveFilterUI() {
+        const name = (document.getElementById('filterBookName') ? document.getElementById('filterBookName').value : '').trim();
+        const tag = (document.getElementById('filterTags') ? document.getElementById('filterTags').value : '').trim();
+        const negTag = (document.getElementById('filterNegTag') ? document.getElementById('filterNegTag').value : '').trim();
+        const subbook = (document.getElementById('filterSubbook') ? document.getElementById('filterSubbook').value : '').trim();
+        const status = (document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '').trim();
+        const ocr = (document.getElementById('filterOcr') ? document.getElementById('filterOcr').value : '').trim();
+        const proofread = (document.getElementById('filterProofread') ? document.getElementById('filterProofread').value : '').trim();
+        const feedback = (document.getElementById('filterFeedback') ? document.getElementById('filterFeedback').value : '').trim();
+
+        const activeFilters = [];
+        if (name) activeFilters.push({ key: 'name', label: `Name: ${name}` });
+        if (tag) activeFilters.push({ key: 'tag', label: `Tag: ${tag}` });
+        if (negTag) activeFilters.push({ key: 'neg_tag', label: `Exclude: ${negTag}`, isNeg: true });
+        if (subbook) activeFilters.push({ key: 'subbook', label: `Subbook: ${subbook}` });
+        if (status) {
+            const statusLabel = status === 'published' ? 'Published' : 'Draft';
+            activeFilters.push({ key: 'status', label: `Status: ${statusLabel}` });
+        }
+        if (ocr) {
+            let ocrLabel = ocr;
+            if (ocr === 'digitized') ocrLabel = 'Digitized';
+            else if (ocr === 'text_only') ocrLabel = 'Text Only';
+            else if (ocr === 'pdf_only') ocrLabel = 'PDF Only';
+            activeFilters.push({ key: 'ocr', label: `Format: ${ocrLabel}` });
+        }
+        if (proofread) {
+            let pfLabel = proofread;
+            if (proofread === 'not_started') pfLabel = '0%';
+            else if (proofread === 'in_progress') pfLabel = '1-99%';
+            else if (proofread === 'completed') pfLabel = '100%';
+            activeFilters.push({ key: 'proofread', label: `Proofread: ${pfLabel}` });
+        }
+        if (feedback) {
+            let fbLabel = feedback;
+            if (feedback === 'has_up') fbLabel = '👍 Upvoted';
+            else if (feedback === 'has_down') fbLabel = '👎 Downvoted';
+            else if (feedback === 'has_comments') fbLabel = '💬 Comments';
+            else if (feedback === 'any') fbLabel = 'Any Reaction';
+            activeFilters.push({ key: 'feedback', label: `Feedback: ${fbLabel}` });
+        }
+
+        const badge = document.getElementById('activeFilterBadge');
+        if (badge) {
+            if (activeFilters.length > 0) {
+                badge.textContent = activeFilters.length;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        const clearBtn = document.getElementById('clearAllFiltersBtn');
+        if (clearBtn) {
+            clearBtn.style.display = activeFilters.length > 0 ? 'inline-flex' : 'none';
+        }
+
+        const container = document.getElementById('activeFiltersContainer');
+        const chipsDiv = document.getElementById('activeFilterChips');
+        if (container && chipsDiv) {
+            if (activeFilters.length > 0) {
+                container.style.display = 'flex';
+                chipsDiv.innerHTML = activeFilters.map(f => `
+                    <span style="background: ${f.isNeg ? '#fee2e2' : 'var(--t-accent-alpha-10, #f3e8ff)'}; color: ${f.isNeg ? '#dc2626' : 'var(--t-accent, #7c3aed)'}; border: 1px solid ${f.isNeg ? '#fca5a5' : 'rgba(124, 58, 237, 0.3)'}; border-radius: 16px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        ${f.label}
+                        <button type="button" onclick="clearSingleFilter('${f.key}')" style="background: none; border: none; color: ${f.isNeg ? '#dc2626' : 'var(--t-accent, #7c3aed)'}; font-weight: 700; cursor: pointer; font-size: 14px; padding: 0; line-height: 1;">&times;</button>
+                    </span>
+                `).join('');
+            } else {
+                container.style.display = 'none';
+                chipsDiv.innerHTML = '';
+            }
+        }
+    }
+
+    function clearSingleFilter(key) {
+        if (key === 'name' && document.getElementById('filterBookName')) document.getElementById('filterBookName').value = '';
+        if (key === 'tag' && document.getElementById('filterTags')) document.getElementById('filterTags').value = '';
+        if (key === 'neg_tag' && document.getElementById('filterNegTag')) document.getElementById('filterNegTag').value = '';
+        if (key === 'subbook' && document.getElementById('filterSubbook')) document.getElementById('filterSubbook').value = '';
+        if (key === 'status' && document.getElementById('filterStatus')) document.getElementById('filterStatus').value = '';
+        if (key === 'ocr' && document.getElementById('filterOcr')) document.getElementById('filterOcr').value = '';
+        if (key === 'proofread' && document.getElementById('filterProofread')) document.getElementById('filterProofread').value = '';
+        if (key === 'feedback' && document.getElementById('filterFeedback')) document.getElementById('filterFeedback').value = '';
+        loadBooks(1);
+    }
+
+    function resetAllFilters() {
+        if (document.getElementById('filterBookName')) document.getElementById('filterBookName').value = '';
+        if (document.getElementById('filterTags')) document.getElementById('filterTags').value = '';
+        if (document.getElementById('filterNegTag')) document.getElementById('filterNegTag').value = '';
+        if (document.getElementById('filterSubbook')) document.getElementById('filterSubbook').value = '';
+        if (document.getElementById('filterStatus')) document.getElementById('filterStatus').value = '';
+        if (document.getElementById('filterOcr')) document.getElementById('filterOcr').value = '';
+        if (document.getElementById('filterProofread')) document.getElementById('filterProofread').value = '';
+        if (document.getElementById('filterFeedback')) document.getElementById('filterFeedback').value = '';
+        loadBooks(1);
+    }
+
+    function loadBooks(page = 1) {
+        currentBooksPage = page;
+        const name = document.getElementById('filterBookName') ? document.getElementById('filterBookName').value : '';
+        const tag = document.getElementById('filterTags') ? document.getElementById('filterTags').value : '';
+        const neg_tag = document.getElementById('filterNegTag') ? document.getElementById('filterNegTag').value : '';
+        const subbook = document.getElementById('filterSubbook') ? document.getElementById('filterSubbook').value : '';
+        const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
+        const ocr = document.getElementById('filterOcr') ? document.getElementById('filterOcr').value : '';
+        const proofread = document.getElementById('filterProofread') ? document.getElementById('filterProofread').value : '';
+        const feedback = document.getElementById('filterFeedback') ? document.getElementById('filterFeedback').value : '';
+
+        const params = new URLSearchParams({
+            ajax: '1',
+            page: page,
+            name: name,
+            tag: tag,
+            neg_tag: neg_tag,
+            subbook: subbook,
+            status: status,
+            ocr: ocr,
+            proofread: proofread,
+            feedback: feedback,
+            sort: currentSortCol,
+            order: currentSortOrder
+        });
+
+        // Update URL without reload
+        const newUrl = window.location.pathname + '?' + params.toString().replace('ajax=1&', '');
+        window.history.replaceState({}, '', newUrl);
+
+        updateActiveFilterUI();
+
+        const tbody = document.getElementById('booksTableBody');
+        const paginationEl = document.getElementById('booksPagination');
+
+        fetch('/admin/manage-books?' + params.toString())
+            .then(r => r.json())
+            .then(data => {
+                totalBooksCount = data.total_books;
+                const headerCount = document.querySelector('.books-section h3');
+                if (headerCount) {
+                    headerCount.innerHTML = `📖 Uploaded Books (${data.total_books})`;
+                }
+
+                if (data.books.length === 0) {
+                    const colspan = canViewFeedback() ? 8 : 7;
+                    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 40px; color: #999;">No books found matching your search.</td></tr>`;
+                    paginationEl.innerHTML = '';
+                    return;
+                }
+
+                data.books.forEach(book => {
+                    bookStatusMap.set(book.name, book.published === undefined || book.published === true);
+                });
+                tbody.innerHTML = data.books.map(book => `
+                    <tr data-book-id="${book.name}">
+                        <td style="text-align: center;">
+                            <input type="checkbox" class="book-checkbox" value="${book.name}" 
+                                data-published="${(book.published === undefined || book.published === true) ? 'true' : 'false'}"
+                                ${(isGlobalSelected || selectedBooks.has(book.name)) ? 'checked' : ''} 
+                                onchange="updateSelectionState()">
+                        </td>
+                        <td data-label="S.No" style="text-align: center; color: var(--t-text-muted); font-weight: 600;">${book.s_no}</td>
+                        <td data-label="Book Name" style="word-wrap: break-word; overflow-wrap: break-word;">
+                            <strong>${book.name}</strong>${(book.published === undefined || book.published === true) ? 
+                                `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;">Published</span>` :
+                                `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;">Draft</span>`
+                            }${book.is_community ? 
+                                `<span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;">🤝 Community</span>` : ''
+                            }<span class="ai-status-badge" style="margin-left: 8px; font-size: 11px; font-weight: normal; vertical-align: middle;"></span>
+                        </td>
+                        <td data-label="Tags">${book.tags || '-'}</td>
+
+                        <td data-label="Notes" style="font-size: 13px; color: var(--t-text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${book.notes || ''}">
+                            <div style="display: flex; align-items: center; gap: 6px; max-width: 100%;">
+                                ${book.proofread_pct ? (
+                                    book.proofread_pct >= 100 
+                                    ? `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0;" title="Completed Proofreading">✓ 100%</span>`
+                                    : `<span class="badge" style="background: rgba(139, 92, 246, 0.15); color: var(--t-text-secondary); border: 1px solid rgba(139, 92, 246, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; flex-shrink: 0;" title="Proofreading In Progress">${book.proofread_pct}%</span>`
+                                ) : ''}
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${book.notes || '-'}</span>
+                            </div>
+                        </td>
+                        ${canViewFeedback() ? `
+                        <td data-label="Feedback">
+                            <div style="display: flex; gap: 8px; font-size: 13px;">
+                                <span title="Positive Feedback">👍 ${book.feedback_up}</span>
+                                <span title="Negative Feedback">👎 ${book.feedback_down}</span>
+                                ${book.feedback_comments_count > 0 ? `
+                                    <button onclick="viewFeedback('${book.name.replace(/'/g, "\\'")}')" 
+                                        style="background: none; border: none; cursor: pointer; padding: 0; font-size: 13px; text-decoration: underline; color: var(--t-accent);">
+                                        💬 ${book.feedback_comments_count}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                        ` : ''}
+                        <td class="actions">
+                            ${(book.archive_url || book.has_txt) ? `
+                                <a href="/reader/${encodeURIComponent(book.name)}/1?from=admin_manage_books" class="btn btn-success"
+                                    style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-block;">👁️ View</a>
+                            ` : ''}
+                            ${(book.is_community && book.verification !== 'verified') ? `
+                                <button type="button" class="btn btn-success" onclick="verifyBookDirect('${book.name.replace(/'/g, "\\'")}')"
+                                    style="padding: 6px 10px; font-size: 12px; background: #10b981; border: none; color: #fff; display: inline-block;" title="Verify as official library book">✓ Verify</button>
+                            ` : ''}
+                            <a href="/admin/edit/${encodeURIComponent(book.name)}" class="btn btn-primary"
+                                style="text-decoration: none; padding: 6px 12px; font-size: 13px; display: inline-block;">✏️ Edit</a>
+                            ${canDelete() ? `
+                                <button class="btn btn-danger" onclick="deleteBook('${book.name.replace(/'/g, "\\'")}')" 
+                                    style="padding: 6px 12px; font-size: 13px;">🗑️ Delete</button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+
+                document.querySelectorAll('.sort-arrow').forEach(span => span.textContent = '');
+                const activeArrowId = 'sortArrow' + currentSortCol.charAt(0).toUpperCase() + currentSortCol.slice(1);
+                const activeArrow = document.getElementById(activeArrowId);
+                if (activeArrow) {
+                    activeArrow.textContent = currentSortOrder === 'asc' ? ' ▲' : ' ▼';
+                }
+
+                let html = '';
+                if (data.total_pages > 1) {
+                    html += `<button onclick="loadBooks(${data.page - 1})" class="btn btn-primary" style="background: var(--t-accent); padding: 8px 16px;" ${data.page <= 1 ? 'disabled style="background:#ccc"' : ''}>← Previous</button>`;
+                    html += `<span style="font-weight: 600; color: var(--t-text-muted);">Page ${data.page} of ${data.total_pages}</span>`;
+                    html += `<button onclick="loadBooks(${data.page + 1})" class="btn btn-primary" style="background: var(--t-accent); padding: 8px 16px;" ${data.page >= data.total_pages ? 'disabled style="background:#ccc"' : ''}>Next →</button>`;
+                }
+                paginationEl.innerHTML = html;
+
+                updateBulkActionsUI();
+                if (typeof updateAIEmbeddingStatuses !== 'undefined') {
+                    updateAIEmbeddingStatuses();
+                }
+            })
+            .catch(err => console.error('Error loading books:', err));
+    }
+
+    function getSelectedBooks() {
+        if (isGlobalSelected) return 'all';
+        return Array.from(selectedBooks);
+    }
+
+    function getActiveFilters() {
+        const name = document.getElementById('filterBookName') ? document.getElementById('filterBookName').value : '';
+        const tag = document.getElementById('filterTags') ? document.getElementById('filterTags').value : '';
+        const neg_tag = document.getElementById('filterNegTag') ? document.getElementById('filterNegTag').value : '';
+        const subbook = document.getElementById('filterSubbook') ? document.getElementById('filterSubbook').value : '';
+        const status = document.getElementById('filterStatus') ? document.getElementById('filterStatus').value : '';
+        const ocr = document.getElementById('filterOcr') ? document.getElementById('filterOcr').value : '';
+        const proofread = document.getElementById('filterProofread') ? document.getElementById('filterProofread').value : '';
+        const feedback = document.getElementById('filterFeedback') ? document.getElementById('filterFeedback').value : '';
+        return { name, tag, neg_tag, subbook, status, ocr, proofread, feedback };
+    }
+
+    function deleteSelected() {
+        const selected = getSelectedBooks();
+        if (selected.length === 0 && selected !== 'all') return;
+
+        const count = isGlobalSelected ? totalBooksCount : selected.length;
+        if (!confirm(`Are you sure you want to delete ${count} book(s)?`)) {
+            return;
+        }
+
+        const payload = { books: selected };
+        if (isGlobalSelected) {
+            Object.assign(payload, getActiveFilters());
+        }
+
+        fetch('/admin/delete_bulk', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    selectedBooks.clear();
+                    isGlobalSelected = false;
+                    saveSelection();
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error deleting books');
+                console.error(error);
+            });
+    }
+
+    function bulkChangeStatus(newStatus) {
+        const selected = getSelectedBooks();
+        if (selected.length === 0 && selected !== 'all') return;
+
+        const count = isGlobalSelected ? totalBooksCount : selected.length;
+        const statusLabel = newStatus === 'published' ? 'Published' : 'Draft';
+        if (!confirm(`Are you sure you want to change the status of ${count} book(s) to ${statusLabel}?`)) {
+            return;
+        }
+
+        const payload = { books: selected, target_status: newStatus };
+        if (isGlobalSelected) {
+            Object.assign(payload, getActiveFilters());
+        }
+
+        fetch('/admin/bulk_change_status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                selectedBooks.clear();
+                isGlobalSelected = false;
+                saveSelection();
+                location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error updating book status');
+            console.error(error);
+        });
+    }
+
+    function downloadSelectedExcel() {
+        const selected = getSelectedBooks();
+        if (selected.length === 0 && selected !== 'all') return;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/download_excel';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'books';
+        input.value = selected === 'all' ? 'all' : JSON.stringify(selected);
+        form.appendChild(input);
+
+        if (isGlobalSelected) {
+            const filters = getActiveFilters();
+            for (const [k, v] of Object.entries(filters)) {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = k;
+                inp.value = v;
+                form.appendChild(inp);
+            }
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+    function downloadSelectedJson() {
+        const selected = getSelectedBooks();
+        if (selected.length === 0 && selected !== 'all') return;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/download_json';
+        form.style.display = 'none';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'books';
+        input.value = selected === 'all' ? 'all' : JSON.stringify(selected);
+        form.appendChild(input);
+
+        if (isGlobalSelected) {
+            const filters = getActiveFilters();
+            for (const [k, v] of Object.entries(filters)) {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = k;
+                inp.value = v;
+                form.appendChild(inp);
+            }
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+    }
+
+
+    // ---- ZIP Download with Progress ----
+    function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+        return (bytes / 1073741824).toFixed(2) + ' GB';
+    }
+
+    let downloadCancelled = false;
+    let activeDownloadXhr = null;
+    let activeTaskId = null;
+
+    function showDownloadOverlay(phase, progress) {
+        const overlay = document.getElementById('downloadOverlay');
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const title = document.getElementById('downloadTitle');
+        const detail = document.getElementById('downloadDetail');
+        const icon = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        overlay.style.display = 'flex';
+        cancelBtn.style.display = 'inline-block';
+        icon.textContent = '⬇️';
+        fill.className = 'download-progress-fill';
+
+        if (phase === 'preparing') {
+            title.textContent = 'Preparing ZIP...';
+            detail.textContent = 'Compressing files on the server.';
+            fill.style.width = (progress || 0) + '%';
+            pct.textContent = (progress || 0) + '%';
+        } else if (phase === 'downloading') {
+            title.textContent = 'Downloading...';
+            detail.textContent = 'Your ZIP file is being downloaded.';
+            fill.style.width = (progress || 0) + '%';
+            pct.textContent = (progress || 0) + '%';
+        }
+    }
+
+    function hideDownloadOverlay() {
+        document.getElementById('downloadOverlay').style.display = 'none';
+    }
+
+    function cancelDownload() {
+        downloadCancelled = true;
+        if (activeDownloadXhr) {
+            activeDownloadXhr.abort();
+            activeDownloadXhr = null;
+        }
+        if (activeTaskId) {
+            fetch(`/admin/cancel_zip/${activeTaskId}`, { method: 'POST' }).catch(() => { });
+            activeTaskId = null;
+        }
+        hideDownloadOverlay();
+    }
+
+    function downloadSelectedZip() {
+        const selected = getSelectedBooks();
+        if (selected.length === 0 && selected !== 'all') return;
+
+        downloadCancelled = false;
+        activeTaskId = null;
+        showDownloadOverlay('preparing', 0);
+
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const title = document.getElementById('downloadTitle');
+        const detail = document.getElementById('downloadDetail');
+        const icon = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        const formData = new FormData();
+        formData.append('books', selected === 'all' ? 'all' : JSON.stringify(selected));
+        formData.append('format', 'sdl');
+
+        if (isGlobalSelected) {
+            const filters = getActiveFilters();
+            for (const [k, v] of Object.entries(filters)) {
+                formData.append(k, v);
+            }
+        }
+
+        fetch('/admin/start_zip', { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    fill.className = 'download-progress-fill error';
+                    fill.style.width = '100%';
+                    title.textContent = 'Error';
+                    detail.textContent = data.error;
+                    icon.textContent = '❌';
+                    pct.textContent = '';
+                    return;
+                }
+
+                const taskId = data.task_id;
+                activeTaskId = taskId;
+                const totalFiles = data.total_files;
+                stats.textContent = `0 / ${totalFiles} files`;
+
+                const pollInterval = setInterval(() => {
+                    if (downloadCancelled) {
+                        clearInterval(pollInterval);
+                        return;
+                    }
+
+                    fetch(`/admin/zip_progress/${taskId}`)
+                        .then(r => r.json())
+                        .then(prog => {
+                            if (downloadCancelled) {
+                                clearInterval(pollInterval);
+                                return;
+                            }
+
+                            fill.style.width = prog.progress + '%';
+                            pct.textContent = prog.progress + '%';
+                            stats.textContent = `${prog.processed_files} / ${prog.total_files} files`;
+
+                            if (prog.status === 'done') {
+                                clearInterval(pollInterval);
+                                startFileDownload(taskId, prog.download_name);
+                            } else if (prog.status === 'error') {
+                                clearInterval(pollInterval);
+                                fill.className = 'download-progress-fill error';
+                                fill.style.width = '100%';
+                                title.textContent = 'Preparation Failed';
+                                detail.textContent = prog.error || 'Unknown error';
+                                icon.textContent = '❌';
+                                pct.textContent = '';
+                                stats.textContent = '';
+                            }
+                        })
+                        .catch(() => {
+                            clearInterval(pollInterval);
+                            fill.className = 'download-progress-fill error';
+                            fill.style.width = '100%';
+                            title.textContent = 'Connection Error';
+                            detail.textContent = 'Lost connection to server.';
+                            icon.textContent = '❌';
+                            pct.textContent = '';
+                            stats.textContent = '';
+                        });
+                }, 1000);
+            })
+            .catch(err => {
+                fill.className = 'download-progress-fill error';
+                fill.style.width = '100%';
+                title.textContent = 'Error';
+                detail.textContent = 'Failed to start ZIP creation.';
+                icon.textContent = '❌';
+                pct.textContent = '';
+                stats.textContent = '';
+            });
+    }
+
+    function startFileDownload(taskId, serverDownloadName) {
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const title = document.getElementById('downloadTitle');
+        const detail = document.getElementById('downloadDetail');
+        const icon = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        title.textContent = 'Downloading...';
+        detail.textContent = 'Your ZIP file is being downloaded.';
+        fill.style.width = '0%';
+        pct.textContent = '0%';
+        stats.textContent = '';
+
+        const xhr = new XMLHttpRequest();
+        activeDownloadXhr = xhr;
+        xhr.responseType = 'blob';
+
+        let downloadStartTime = Date.now();
+
+        xhr.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                fill.style.width = percent + '%';
+                pct.textContent = percent + '%';
+
+                const elapsed = (Date.now() - downloadStartTime) / 1000;
+                const speed = elapsed > 0 ? e.loaded / elapsed : 0;
+                stats.textContent = `${formatBytes(e.loaded)} / ${formatBytes(e.total)}  •  ${formatBytes(speed)}/s`;
+            } else {
+                pct.textContent = formatBytes(e.loaded);
+                stats.textContent = 'Downloading...';
+            }
+        });
+
+        xhr.onload = function () {
+            activeDownloadXhr = null;
+            if (xhr.status === 200) {
+                fill.className = 'download-progress-fill done';
+                fill.style.width = '100%';
+                pct.textContent = '100%';
+                title.textContent = 'Download Complete!';
+                detail.textContent = '';
+                icon.textContent = '✅';
+                cancelBtn.style.display = 'none';
+                stats.textContent = '';
+
+                let filename = serverDownloadName;
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('filename=') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) { 
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                if (!filename) filename = 'books_export.zip';
+
+                const blob = xhr.response;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                setTimeout(hideDownloadOverlay, 1500);
+            } else {
+                fill.className = 'download-progress-fill error';
+                fill.style.width = '100%';
+                title.textContent = 'Download Failed';
+                detail.textContent = 'Server returned an error.';
+                icon.textContent = '❌';
+                pct.textContent = '';
+                stats.textContent = '';
+            }
+        };
+
+        xhr.onerror = function () {
+            activeDownloadXhr = null;
+            fill.className = 'download-progress-fill error';
+            fill.style.width = '100%';
+            title.textContent = 'Download Failed';
+            detail.textContent = 'A network error occurred.';
+            icon.textContent = '❌';
+            pct.textContent = '';
+            stats.textContent = '';
+        };
+
+        xhr.onabort = function () {
+            activeDownloadXhr = null;
+        };
+
+        xhr.open('GET', `/admin/download_zip/${taskId}`, true);
+        xhr.send();
+    }
+
+    function uploadExcel(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.xlsx')) {
+            alert('Please upload an Excel (.xlsx) file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('excel_file', file);
+
+        const overlay = document.getElementById('downloadOverlay');
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const titleEl = document.getElementById('downloadTitle');
+        const detailEl = document.getElementById('downloadDetail');
+        const iconEl = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        overlay.style.display = 'flex';
+        fill.className = 'download-progress-fill indeterminate';
+        fill.style.width = '30%';
+        iconEl.textContent = '📊';
+        titleEl.textContent = 'Processing Excel...';
+        detailEl.textContent = 'Applying updates from spreadsheet...';
+        pct.textContent = '';
+        stats.textContent = '';
+        cancelBtn.style.display = 'none';
+
+        fetch('{{ url_for("admin_upload_excel") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                fill.classList.remove('indeterminate');
+                fill.style.width = '100%';
+                if (data.success) {
+                    fill.classList.add('done');
+                    iconEl.textContent = '✅';
+                    titleEl.textContent = 'Excel Applied!';
+                    detailEl.innerText = data.message || 'Metadata updated successfully.';
+                    pct.textContent = '100%';
+                    if (data.has_errors) {
+                        cancelBtn.textContent = 'Close & Reload';
+                        cancelBtn.onclick = () => { overlay.style.display = 'none'; location.reload(); };
+                        cancelBtn.style.display = 'inline-block';
+                    } else {
+                        setTimeout(() => { overlay.style.display = 'none'; location.reload(); }, 2000);
+                    }
+                } else {
+                    fill.classList.add('error');
+                    iconEl.textContent = '❌';
+                    titleEl.textContent = 'Excel Upload Failed';
+                    detailEl.innerText = data.error || 'Unknown error';
+                    pct.textContent = '';
+                    cancelBtn.textContent = 'Close';
+                    cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                    cancelBtn.style.display = 'inline-block';
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                fill.classList.remove('indeterminate');
+                fill.classList.add('error');
+                fill.style.width = '100%';
+                iconEl.textContent = '❌';
+                titleEl.textContent = 'Excel Upload Failed';
+                detailEl.textContent = 'Network error during upload.';
+                pct.textContent = '';
+                cancelBtn.textContent = 'Close';
+                cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                cancelBtn.style.display = 'inline-block';
+                alert('Error uploading Excel file');
+            });
+
+        event.target.value = '';
+    }
+
+    function uploadJson(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!file.name.toLowerCase().endsWith('.json')) {
+            alert('Please upload a JSON (.json) file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('json_file', file);
+
+        const overlay = document.getElementById('downloadOverlay');
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const titleEl = document.getElementById('downloadTitle');
+        const detailEl = document.getElementById('downloadDetail');
+        const iconEl = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        overlay.style.display = 'flex';
+        fill.className = 'download-progress-fill indeterminate';
+        fill.style.width = '30%';
+        iconEl.textContent = '📄';
+        titleEl.textContent = 'Processing JSON...';
+        detailEl.textContent = 'Applying updates from JSON file...';
+        pct.textContent = '';
+        stats.textContent = '';
+        cancelBtn.style.display = 'none';
+
+        fetch('{{ url_for("admin_upload_json") }}', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                fill.classList.remove('indeterminate');
+                fill.style.width = '100%';
+                if (data.success) {
+                    fill.classList.add('done');
+                    iconEl.textContent = '✅';
+                    titleEl.textContent = 'JSON Applied!';
+                    detailEl.innerText = data.message || 'Metadata updated successfully.';
+                    pct.textContent = '100%';
+                    if (data.has_errors) {
+                        cancelBtn.textContent = 'Close & Reload';
+                        cancelBtn.onclick = () => { overlay.style.display = 'none'; location.reload(); };
+                        cancelBtn.style.display = 'inline-block';
+                    } else {
+                        setTimeout(() => { overlay.style.display = 'none'; location.reload(); }, 2000);
+                    }
+                } else {
+                    fill.classList.add('error');
+                    iconEl.textContent = '❌';
+                    titleEl.textContent = 'JSON Upload Failed';
+                    detailEl.innerText = data.error || 'Unknown error';
+                    pct.textContent = '';
+                    cancelBtn.textContent = 'Close';
+                    cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                    cancelBtn.style.display = 'inline-block';
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => {
+                fill.classList.remove('indeterminate');
+                fill.classList.add('error');
+                fill.style.width = '100%';
+                iconEl.textContent = '❌';
+                titleEl.textContent = 'JSON Upload Failed';
+                detailEl.textContent = 'Network error during upload.';
+                pct.textContent = '';
+                cancelBtn.textContent = 'Close';
+                cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                cancelBtn.style.display = 'inline-block';
+                alert('Error uploading JSON file');
+            });
+
+        event.target.value = '';
+    }
+</script>
+
+<script>
+    // Cache Refresh Logic
+    let cachePollInterval = null;
+
+    async function triggerRefreshCache() {
+        if (!confirm('Are you sure you want to refresh all application caches? This will rebuild the catalog index in the background.')) {
+            return;
+        }
+
+        const btn = document.getElementById('refreshCacheBtn');
+        btn.disabled = true;
+        btn.innerHTML = '⌛ Starting...';
+
+        try {
+            const res = await fetch('{{ url_for("admin_refresh_cache") }}', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                startCachePolling();
+            } else {
+                alert('Error: ' + data.error);
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Refresh Cache';
+            }
+        } catch (e) {
+            alert('Request failed');
+            btn.disabled = false;
+            btn.innerHTML = '🔄 Refresh Cache';
+        }
+    }
+
+    function startCachePolling() {
+        const container = document.getElementById('cacheProgressContainer');
+        const btn = document.getElementById('refreshCacheBtn');
+        if (!container || !btn) return;
+        container.style.display = 'flex';
+        btn.disabled = true;
+        btn.innerHTML = '🔄 Refreshing...';
+
+        if (cachePollInterval) clearInterval(cachePollInterval);
+        cachePollInterval = setInterval(updateCacheStatus, 1000);
+        updateCacheStatus();
+    }
+
+    async function updateCacheStatus() {
+        try {
+            const res = await fetch('{{ url_for("admin_cache_status") }}');
+            const data = await res.json();
+
+            const statusText = document.getElementById('cacheStatusText');
+            const progressBar = document.getElementById('cacheProgressBar');
+
+            if (!statusText || !progressBar) {
+                clearInterval(cachePollInterval);
+                return;
+            }
+
+            if (!data.running && data.status === 'IDLE') {
+                clearInterval(cachePollInterval);
+                const container = document.getElementById('cacheProgressContainer');
+                if (container) container.style.display = 'none';
+                const btn = document.getElementById('refreshCacheBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 Refresh Cache';
+                }
+                return;
+            }
+
+            statusText.innerText = data.status;
+
+            const match = data.status.match(/\[(\d+)\/(\d+)\]/);
+            if (match) {
+                const current = parseInt(match[1]);
+                const total = parseInt(match[2]);
+                const percent = Math.round((current / total) * 100);
+                progressBar.style.width = percent + '%';
+            } else {
+                progressBar.style.width = '100%';
+            }
+        } catch (e) {
+            console.error('Failed to poll cache status');
+        }
+    }
+
+    window.addEventListener('load', () => {
+        const currentRole = "{{ session.get('admin_role', '') }}";
+        if (currentRole === 'super') {
+            fetch('{{ url_for("admin_cache_status") }}')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.running) startCachePolling();
+                });
+        }
+    });
+</script>
+
+<!-- Universal Rich Text Settings Modal -->
+<div id="richTextSettingsModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:#ffffff; color:#333; padding:25px; border-radius:12px; width:90%; max-width:550px; max-height:85vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.25);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+            <h3 style="margin:0;"><span class="emoji">🎨</span> Universal Rich Text Settings</h3>
+            <button onclick="closeRichTextSettingsModal()" style="background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
+        </div>
+        
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Configure default font family and dynamic level font sizes (L1, L2, L3...) applied across reader views.</p>
+        
+        <!-- Default Font -->
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:600; display:block; margin-bottom:5px;">Default Font Family</label>
+            <select id="rtDefaultFont" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #ccc; font-size:14px;">
+                <option value="Noto Sans Devanagari">Noto Sans Devanagari</option>
+                <option value="Sanskrit 2003">Sanskrit 2003</option>
+                <option value="Adishila">Adishila</option>
+                <option value="Inter">Inter</option>
+                <option value="Roboto">Roboto</option>
+                <option value="Devanagari System Default">Devanagari System Default</option>
+            </select>
+        </div>
+        
+        <!-- Dynamic Level Font Sizes -->
+        <div style="margin-bottom:15px;">
+            <label style="font-weight:600; display:block; margin-bottom:8px;">Level Font Sizes</label>
+            <div id="richTextLevelsContainer" style="display:flex; flex-direction:column; gap:10px;">
+                <!-- Dynamically populated L1, L2, L3... -->
+            </div>
+            
+            <button type="button" onclick="addRichTextLevelRow()" style="margin-top:12px; background:#f3e8ff; color:#7c3aed; border:1px dashed #a855f7; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer; width:100%;">
+                ➕ Add Level
+            </button>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button onclick="closeRichTextSettingsModal()" style="padding:8px 16px; border-radius:6px; border:1px solid #ccc; background:#f5f5f5; cursor:pointer;">Cancel</button>
+            <button onclick="saveRichTextSettings()" style="padding:8px 16px; border-radius:6px; border:none; background:#7c3aed; color:#fff; font-weight:600; cursor:pointer;">💾 Save Settings</button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+let currentRichTextLevels = {};
+
+async function openRichTextSettingsModal() {
+    document.getElementById('richTextSettingsModal').style.display = 'flex';
+    try {
+        const res = await fetch('/admin/api/rich-text-settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+            document.getElementById('rtDefaultFont').value = data.settings.default_font || 'Noto Sans Devanagari';
+            currentRichTextLevels = data.settings.level_font_sizes || {'1': '22px'};
+            renderRichTextLevelRows();
+        }
+    } catch (e) {
+        console.error("Error loading rich text settings:", e);
+    }
+}
+
+function closeRichTextSettingsModal() {
+    document.getElementById('richTextSettingsModal').style.display = 'none';
+}
+
+function renderRichTextLevelRows() {
+    const container = document.getElementById('richTextLevelsContainer');
+    container.innerHTML = '';
+    
+    const keys = Object.keys(currentRichTextLevels).sort((a,b) => parseInt(a) - parseInt(b));
+    if (keys.length === 0) {
+        keys.push('1');
+        currentRichTextLevels['1'] = '22px';
+    }
+    
+    keys.forEach((levelNum) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; gap:10px; background:#f9fafb; padding:8px 12px; border-radius:6px; border:1px solid #e5e7eb;';
+        row.innerHTML = `
+            <span style="font-weight:600; min-width:80px; color:#4b5563;">L${levelNum} Size:</span>
+            <input type="text" value="${currentRichTextLevels[levelNum]}" onchange="currentRichTextLevels['${levelNum}']=this.value.trim()" placeholder="e.g. 22px" style="flex:1; padding:6px 10px; border-radius:4px; border:1px solid #d1d5db; font-size:14px;">
+            ${levelNum !== '1' ? `<button type="button" onclick="removeRichTextLevelRow('${levelNum}')" style="background:none; border:none; color:#ef4444; font-size:16px; cursor:pointer;" title="Remove Level">🗑️</button>` : '<span style="width:24px;"></span>'}
+        `;
+        container.appendChild(row);
+    });
+}
+
+function addRichTextLevelRow() {
+    const keys = Object.keys(currentRichTextLevels).map(n => parseInt(n)).filter(n => !isNaN(n));
+    const maxLevel = keys.length > 0 ? Math.max(...keys) : 0;
+    const nextLevel = (maxLevel + 1).toString();
+    const defaultSizes = {'2': '18px', '3': '16px', '4': '14px', '5': '13px'};
+    currentRichTextLevels[nextLevel] = defaultSizes[nextLevel] || '14px';
+    renderRichTextLevelRows();
+}
+
+function removeRichTextLevelRow(levelNum) {
+    delete currentRichTextLevels[levelNum];
+    renderRichTextLevelRows();
+}
+
+async function saveRichTextSettings() {
+    const defaultFont = document.getElementById('rtDefaultFont').value;
+    const payload = {
+        default_font: defaultFont,
+        level_font_sizes: currentRichTextLevels
+    };
+    try {
+        const res = await fetch('/admin/api/rich-text-settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Universal Rich Text Settings saved successfully!");
+            closeRichTextSettingsModal();
+        } else {
+            alert("❌ Failed to save: " + (data.message || "Unknown error"));
+        }
+    } catch(e) {
+        alert("❌ Error saving settings: " + e.message);
+    }
+}
+
+</script>
+{% endblock %}

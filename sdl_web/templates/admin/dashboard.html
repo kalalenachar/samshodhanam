@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function () {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) { }
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) { }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard - Sanskrit Digital Library{% endblock %}</title>
+    {% block extra_styles %}{% endblock %}
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="{{ url_for('static', filename='js/keymanweb.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sanskrit_keyboard.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+
+    <style>
+        /* ── Dashboard-specific overrides ─────────────────────────────── */
+        .db-hero {
+            position: relative;
+            overflow: hidden;
+            padding: 42px 0 36px;
+            margin-bottom: 36px;
+        }
+
+        .db-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 80% at 10% -10%, var(--t-accent-alpha-18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 60% at 90% 110%, var(--t-accent-alpha-15) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        .db-hero-inner {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .db-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--t-accent-alpha-15);
+            border: 1px solid var(--t-accent-alpha-30);
+            border-radius: 100px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--t-text-secondary);
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .db-hero-badge span.dot {
+            width: 7px;
+            height: 7px;
+            background: var(--t-accent);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1)
+            }
+
+            50% {
+                opacity: .5;
+                transform: scale(.7)
+            }
+        }
+
+        .db-hero-title {
+            font-size: clamp(26px, 3.5vw, 40px);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -.5px;
+            background: var(--t-heading-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .db-hero-sub {
+            font-size: 14px;
+            color: var(--t-text-muted);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .db-hero-time {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .db-hero-clock {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .db-hero-date {
+            font-size: 12px;
+            color: var(--t-text-muted);
+            margin-top: 4px;
+        }
+
+        /* ── Stats Grid ─────────────────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 36px;
+        }
+
+        .stat-card {
+            position: relative;
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--t-border-light);
+            border-radius: 18px;
+            padding: 22px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            cursor: default;
+            text-decoration: none;
+            color: inherit;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), box-shadow .3s, border-color .3s;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 18px 18px 0 0;
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, .35), 0 0 0 1px var(--t-accent-alpha-20);
+            border-color: var(--t-accent-alpha-25);
+        }
+
+        .stat-card:hover::after {
+            opacity: 1;
+        }
+
+        /* per-card accent colors */
+        .stat-card.c-books::after {
+            background: linear-gradient(90deg, var(--t-accent), var(--t-accent));
+        }
+
+        .stat-card.c-published::after {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .stat-card.c-unpublished::after {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card.c-users::after {
+            background: linear-gradient(90deg, #06b6d4, #22d3ee);
+        }
+
+        .stat-card.c-quiz::after {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .stat-card.c-katha::after {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .stat-card.c-articles::after {
+            background: linear-gradient(90deg, var(--t-text-secondary), var(--t-text-secondary));
+        }
+
+
+        .stat-card.c-proofread::after {
+            background: linear-gradient(90deg, var(--t-text-secondary), var(--t-accent));
+        }
+
+        .stat-card-icon-wrap {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .c-books .stat-card-icon-wrap {
+            background: var(--t-accent-alpha-15);
+            border: 1px solid var(--t-accent-alpha-25);
+        }
+
+        .c-published .stat-card-icon-wrap {
+            background: rgba(16, 185, 129, .15);
+            border: 1px solid rgba(16, 185, 129, .25);
+        }
+
+        .c-unpublished .stat-card-icon-wrap {
+            background: rgba(245, 158, 11, .15);
+            border: 1px solid rgba(245, 158, 11, .25);
+        }
+
+        .c-users .stat-card-icon-wrap {
+            background: rgba(6, 182, 212, .15);
+            border: 1px solid rgba(6, 182, 212, .25);
+        }
+
+        .c-quiz .stat-card-icon-wrap {
+            background: rgba(16, 185, 129, .15);
+            border: 1px solid rgba(16, 185, 129, .25);
+        }
+
+        .c-katha .stat-card-icon-wrap {
+            background: rgba(245, 158, 11, .15);
+            border: 1px solid rgba(245, 158, 11, .25);
+        }
+
+        .c-articles .stat-card-icon-wrap {
+            background: rgba(236, 72, 153, .15);
+            border: 1px solid rgba(236, 72, 153, .25);
+        }
+
+
+        .c-proofread .stat-card-icon-wrap {
+            background: rgba(139, 92, 246, .15);
+            border: 1px solid rgba(139, 92, 246, .25);
+        }
+
+        .stat-card-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: var(--t-text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-card-value {
+            font-size: clamp(24px, 2.5vw, 32px);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -1px;
+            color: var(--t-text-primary);
+            font-variant-numeric: tabular-nums;
+            transition: font-size 0.2s ease, letter-spacing 0.2s ease;
+        }
+
+        .stat-card-value.value-long {
+            font-size: clamp(20px, 2.2vw, 24px);
+            letter-spacing: -1.2px;
+        }
+
+        .ai-widget-value.value-long {
+            font-size: clamp(18px, 2vw, 22px);
+        }
+
+        .c-books .stat-card-value {
+            color: var(--t-accent);
+        }
+
+        .c-users .stat-card-value {
+            color: #22d3ee;
+        }
+
+        .c-quiz .stat-card-value {
+            color: #34d399;
+        }
+
+        .c-katha .stat-card-value {
+            color: #fbbf24;
+        }
+
+        .c-articles .stat-card-value {
+            color: var(--t-text-secondary);
+        }
+
+
+        .c-proofread .stat-card-value {
+            color: var(--t-text-secondary);
+        }
+
+        .stat-card-desc {
+            font-size: 11.5px;
+            color: var(--t-text-secondary);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .stat-card-arrow {
+            position: absolute;
+            bottom: 18px;
+            right: 20px;
+            font-size: 18px;
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: opacity .25s, transform .25s;
+            color: var(--t-accent);
+        }
+
+        .stat-card:hover .stat-card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* ── Section header ─────────────────────────────────────────────── */
+        .db-section-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .db-section-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            letter-spacing: -.2px;
+        }
+
+        .db-section-header .db-section-line {
+            flex: 1;
+            height: 1px;
+            background: var(--t-hover-bg) ;
+        }
+
+        .db-section-header .db-section-tag {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--t-accent);
+            background: var(--t-accent-alpha-12);
+            border: 1px solid var(--t-accent-alpha-20);
+            border-radius: 100px;
+            padding: 3px 10px;
+            letter-spacing: .3px;
+        }
+
+        /* ── Status Toggle ──────────────────────────────────────────────── */
+        .db-status-toggle {
+            display: inline-flex;
+            background: var(--t-hover-bg);
+            border-radius: 12px;
+            padding: 3px;
+            border: 1px solid var(--t-border-light);
+            gap: 2px;
+            margin: 0 10px;
+        }
+
+        .db-status-toggle-btn {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--t-text-secondary);
+            padding: 5px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .db-status-toggle-btn:hover {
+            color: var(--t-text-primary);
+        }
+
+        .db-status-toggle-btn.active {
+            background: var(--t-bg-surface);
+            color: var(--t-accent);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* ── Charts Grid ─────────────────────────────────────────────────── */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 36px;
+        }
+
+        .charts-grid .chart-card.wide {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 1100px) {
+            .charts-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .charts-grid .chart-card.wide {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid .chart-card.wide {
+                grid-column: span 1;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--t-border-light);
+            border-radius: 18px;
+            padding: 24px 24px 20px;
+            display: flex;
+            flex-direction: column;
+            transition: border-color .3s, box-shadow .3s;
+        }
+
+        .chart-card:hover {
+            border-color: var(--t-border) ;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+        }
+
+        .chart-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--t-border-light);
+        }
+
+        .chart-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-card-title .ct-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            background: var(--t-accent-alpha-15);
+            border: 1px solid var(--t-accent-alpha-20);
+        }
+
+        .chart-card-sub {
+            font-size: 11px;
+            color: var(--t-text-muted);
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            height: 260px;
+            width: 100%;
+        }
+
+        /* ── Total Content Ring Card ─────────────────────────────────── */
+        .ring-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            padding: 30px 24px !important;
+        }
+
+        .ring-wrap {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            flex-shrink: 0;
+        }
+
+        .ring-canvas {
+            width: 130px !important;
+            height: 130px !important;
+        }
+
+        .ring-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ring-center-val {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--t-text-primary);
+            line-height: 1;
+        }
+
+        .ring-center-lbl {
+            font-size: 10px;
+            color: var(--t-text-muted);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .ring-legend {
+            width: 100%;
+        }
+
+        .ring-legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--t-border-light);
+            font-size: 12px;
+        }
+
+        .ring-legend-item:last-child {
+            border-bottom: none;
+        }
+
+        .ring-legend-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-right: 8px;
+        }
+
+        .ring-legend-name {
+            color: var(--t-text-muted);
+            flex: 1;
+        }
+
+        .ring-legend-val {
+            color: var(--t-text-primary);
+            font-weight: 700;
+        }
+
+        /* ── Quick Actions row ───────────────────────────────────────── */
+        .db-actions-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .db-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .22s;
+            border: 1px solid transparent;
+        }
+
+        .db-action-btn.primary {
+            background: linear-gradient(135deg, var(--t-accent), var(--t-accent));
+            color: var(--t-text-on-accent);
+            box-shadow: 0 4px 20px var(--t-accent-alpha-30);
+        }
+
+        .db-action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px var(--t-accent);
+        }
+
+        .db-action-btn.ghost {
+            background: var(--t-hover-bg) ;
+            color: var(--t-text-muted);
+            border-color: var(--t-border-light) ;
+        }
+
+        .db-action-btn.ghost:hover {
+            background: var(--t-bg-surface-hover);
+            color: var(--t-text-primary);
+            border-color: var(--t-border-hover);
+            transform: translateY(-2px);
+        }
+
+
+        /* ── Tabs Navigation ────────────────────────────────────────── */
+        .db-tabs-nav {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--t-border-light);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .db-tab-btn {
+            background: var(--t-hover-bg);
+            border: 1px solid var(--t-border-light);
+            color: var(--t-text-muted);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .db-tab-btn:hover {
+            background: var(--t-hover-bg);
+            color: var(--t-text-primary);
+            border-color: var(--t-border) ;
+            transform: translateY(-1px);
+        }
+
+        .db-tab-btn.active {
+            background: var(--t-accent-alpha-15);
+            border-color: var(--t-accent-alpha-30);
+            color: var(--t-text-secondary);
+            box-shadow: 0 4px 12px var(--t-accent-alpha-08);
+        }
+
+        .db-tab-content {
+            display: none;
+        }
+
+        .db-tab-content.active {
+            display: block;
+            animation: dbFadeIn .35s ease-out;
+        }
+
+        @keyframes dbFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── AI Info Widgets ────────────────────────────────────────── */
+        .ai-widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .ai-widget-card {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid var(--t-border-light);
+            border-radius: 18px;
+            padding: 22px 22px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ai-widget-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .7px;
+            color: var(--t-text-muted);
+        }
+
+        .ai-widget-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--t-accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ai-widget-sub {
+            font-size: 11.5px;
+            color: var(--t-text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ── Download/Upload Progress Overlay ─────────────────────────── */
+        #downloadOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .download-modal {
+            background: var(--t-bg-surface);
+            border-radius: 16px;
+            padding: 36px 44px;
+            text-align: center;
+            min-width: 360px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            animation: modalIn 0.25s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .download-modal-icon {
+            font-size: 38px;
+            margin-bottom: 10px;
+        }
+
+        .download-modal h3 {
+            color: var(--t-text-primary);
+            font-size: 18px;
+        }
+
+        .download-progress-track {
+            height: 12px;
+            background: var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .download-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .download-progress-fill.indeterminate {
+            width: 30% !important;
+            animation: indeterminate 1.4s infinite ease-in-out;
+        }
+
+        @keyframes indeterminate {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(430%);
+            }
+        }
+
+        .download-progress-fill.done {
+            background: linear-gradient(90deg, var(--success-color), #66bb6a);
+        }
+
+        .download-progress-fill.error {
+            background: var(--danger-color);
+        }
+    </style>
+</head>
+
+<body spellcheck="false">
+    <header class="header admin-header">
+        <h1><span class="emoji">⚙️</span> <span>Admin</span> {% block header_title %}Dashboard{% endblock %}</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub">🏠 Hub</a>
+            <a href="{{ url_for('admin_dashboard') }}"
+                class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">Dashboard</a>
+            <a href="{{ url_for('admin_manage_books') }}"
+                class="{{ 'active' if request.endpoint == 'admin_manage_books' else '' }}">Manage Books</a>
+            <a href="{{ url_for('admin_review_queue') }}"
+                class="{{ 'active' if request.endpoint == 'admin_review_queue' else '' }}">🛡️ Review Queue</a>
+            {% if session.get('admin_role') == 'super' %}
+            <a href="{{ url_for('admin_taxonomy_page') }}"
+                class="{{ 'active' if request.endpoint == 'admin_taxonomy_page' else '' }}">🏷️ Taxonomy</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' or 'PERM_ADD_BOOK' in session.get('admin_permissions', []) %}
+            <a href="{{ url_for('admin_upload_panel') }}"
+                class="{{ 'active' if request.endpoint == 'admin_upload_panel' else '' }}">Upload</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' or 'PERM_VIEW_FEEDBACK' in session.get('admin_permissions', [])
+            %}
+            <a href="{{ url_for('admin_feedback_page') }}"
+                class="{{ 'active' if request.endpoint == 'admin_feedback_page' else '' }}">Feedback</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' %}
+            <a href="{{ url_for('admin_pipeline_page') }}"
+                class="{{ 'active' if request.endpoint == 'admin_pipeline_page' else '' }}">Pipeline</a>
+            <a href="{{ url_for('admin_vector_hub_page') }}"
+                class="{{ 'active' if request.endpoint in ['admin_vector_hub_page', 'admin_verify_chunks_page'] else '' }}">Vector Hub</a>
+            <a href="{{ url_for('api_v1.admin_panel') }}"
+                class="{{ 'active' if request.endpoint == 'api_v1.admin_panel' else '' }}">API</a>
+            {% endif %}
+            <a href="{{ url_for('admin_logout') }}">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        {% block content %}
+
+
+
+        <!-- ── Metrics Cards ─────────────────────────────────────── -->
+        <div class="db-section-header">
+            <h3>📈 Key Metrics</h3>
+            <div class="db-status-toggle">
+                <a href="{{ url_for('admin_dashboard') }}?status=all" class="db-status-toggle-btn {% if status_filter == 'all' %}active{% endif %}">All</a>
+                <a href="{{ url_for('admin_dashboard') }}?status=published" class="db-status-toggle-btn {% if status_filter == 'published' %}active{% endif %}">Published</a>
+                <a href="{{ url_for('admin_dashboard') }}?status=draft" class="db-status-toggle-btn {% if status_filter == 'draft' %}active{% endif %}">Draft</a>
+            </div>
+            <div class="db-section-line"></div>
+            <span class="db-section-tag">Live</span>
+        </div>
+        <div class="stats-grid">
+            <a href="{{ url_for('admin_manage_books') }}" class="stat-card c-books">
+                <div class="stat-card-icon-wrap">📖</div>
+                <div class="stat-card-label">Total Books</div>
+                <div class="stat-card-value" data-count="{{ book_count }}">0</div>
+                <div class="stat-card-desc">Uploaded texts &amp; manuscripts</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin_manage_books') }}?status=published" class="stat-card c-published">
+                <div class="stat-card-icon-wrap">✅</div>
+                <div class="stat-card-label">Published Books</div>
+                <div class="stat-card-value" data-count="{{ published_book_count }}">0</div>
+                <div class="stat-card-desc">Visible to public catalog search</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin_manage_books') }}?status=draft" class="stat-card c-unpublished">
+                <div class="stat-card-icon-wrap">📝</div>
+                <div class="stat-card-label">Unpublished Books</div>
+                <div class="stat-card-value" data-count="{{ unpublished_book_count }}">0</div>
+                <div class="stat-card-desc">Drafts or work in progress</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin_review_queue') }}" class="stat-card c-users">
+                <div class="stat-card-icon-wrap">🛡️</div>
+                <div class="stat-card-label">Pending Community Edits</div>
+                <div class="stat-card-value" data-count="{{ pending_edits_count | default(0) }}">0</div>
+                <div class="stat-card-desc">User page edits awaiting approval</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin_manage_books') }}?status=community" class="stat-card c-proofread">
+                <div class="stat-card-icon-wrap">🤝</div>
+                <div class="stat-card-label">Community Uploads</div>
+                <div class="stat-card-value" data-count="{{ community_books_count | default(0) }}">0</div>
+                <div class="stat-card-desc">Guest-submitted books (unverified)</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <a href="{{ url_for('admin_manage_books') }}?ocr=text_only" class="stat-card c-katha">
+                <div class="stat-card-icon-wrap">🔤</div>
+                <div class="stat-card-label">Text Only Books</div>
+                <div class="stat-card-value" data-count="{{ text_only_books_count }}">0</div>
+                <div class="stat-card-desc">Books with text but no archive scan</div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+
+            <div class="stat-card c-quiz">
+                <div class="stat-card-icon-wrap">📄</div>
+                <div class="stat-card-label">Total Pages OCR'd</div>
+                <div class="stat-card-value" data-count="{{ total_pages_ocrd }}">0</div>
+                <div class="stat-card-desc">Transcribed pages in catalog (Avg. {{ avg_pages_per_book }} pages/book)</div>
+            </div>
+
+            <div class="stat-card c-articles">
+                <div class="stat-card-icon-wrap">🔠</div>
+                <div class="stat-card-label">Total Characters</div>
+                <div class="stat-card-value" data-count="{{ total_chars_ocrd }}">0</div>
+                <div class="stat-card-desc">Characters of transcribed text</div>
+            </div>
+
+            <a href="{{ url_for('admin_manage_books') }}" class="stat-card c-proofread" style="text-decoration: none; color: inherit;">
+                <div class="stat-card-icon-wrap">✍️</div>
+                <div class="stat-card-label">Proofread Pages</div>
+                <div class="stat-card-value" data-count="{{ total_proofread_pages }}">0</div>
+                <div class="stat-card-desc">
+                    {{ proofread_percentage }}% of {{ total_pages_ocrd }} pages ({{ completed_proofreading_books }} completed, {{ in_progress_proofreading_books }} in progress)
+                    <div style="margin-top: 10px; width: 100%; background: var(--t-hover-bg) ; height: 6px; border-radius: 3px; overflow: hidden;">
+                        <div style="width: {{ proofread_percentage }}%; background: linear-gradient(90deg, var(--t-text-secondary), var(--t-accent)); height: 100%; border-radius: 3px;"></div>
+                    </div>
+                </div>
+                <span class="stat-card-arrow">→</span>
+            </a>
+        </div>
+
+        <!-- ── Analytics Section with Tabs ──────────────────────── -->
+        <div class="db-section-header">
+            <h3>📊 Analytics</h3>
+            <div class="db-section-line"></div>
+            <span class="db-section-tag">Interactive</span>
+        </div>
+
+        <div class="db-tabs-nav">
+            <button class="db-tab-btn active" data-tab="content-tags">🏷️ Content &amp; Tags</button>
+            <button class="db-tab-btn" data-tab="ai-search">🤖 AI &amp; Search</button>
+        </div>
+
+        <!-- Tab 1: Content & Tags -->
+        <div id="content-tags" class="db-tab-content active">
+            <div class="charts-grid">
+                <!-- Bar chart: books per tag (wide) -->
+                <div class="chart-card wide">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span class="ct-icon">🏷️</span>
+                            Books per Tag — Top {{ bar_tags|length }}
+                        </div>
+                        <div class="chart-card-sub">{{ book_count }} books · {{ bar_tags|length }} categories</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="barTagsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Doughnut: tag distribution -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span class="ct-icon">🔖</span>
+                            Tag Distribution
+                        </div>
+                        <div class="chart-card-sub">Top {{ tags_data|length }} tags</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tagDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: AI & Search -->
+        <div id="ai-search" class="db-tab-content">
+            <!-- Widgets displaying ChromaDB stats -->
+            <div class="ai-widgets-grid">
+                <div class="ai-widget-card">
+                    <span class="ai-widget-label">ChromaDB Chunks</span>
+                    <span class="ai-widget-value" id="vectorChunksVal" data-count="{{ db_stats.total_chunks }}">0</span>
+                    <span class="ai-widget-sub">Total embedded text passages</span>
+                </div>
+                <div class="ai-widget-card">
+                    <span class="ai-widget-label">Database Size</span>
+                    <span class="ai-widget-value">{{ db_stats.storage_size }}</span>
+                    <span class="ai-widget-sub">Disk space allocated</span>
+                </div>
+                <div class="ai-widget-card">
+                    <span class="ai-widget-label">Last Database Update</span>
+                    <span class="ai-widget-value" style="font-size: 15px; font-weight: 600; padding-top: 6px;">{{
+                        db_stats.last_updated }}</span>
+                    <span class="ai-widget-sub">Last modified timestamp</span>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <!-- Doughnut: AI Embedding & Chunking Progress -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div class="chart-card-title">
+                            <span class="ct-icon">🤖</span>
+                            Vector DB Indexing Status
+                        </div>
+                        <div class="chart-card-sub">Library embedding coverage</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="aiStatusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick AI Info panel -->
+                <div class="chart-card wide"
+                    style="justify-content: center; background: var(--t-accent-alpha-05); border: 1px solid var(--t-accent-alpha-15); box-shadow: 0 8px 32px rgba(0,0,0,.2);">
+                    <h4 style="margin:0 0 12px; color:var(--t-text-secondary); font-size:16px;">💡 AI RAG Engine Insight</h4>
+                    <p style="margin:0; font-size:13px; color:var(--t-text-muted); line-height:1.6;">
+                        The Sanskrit Digital Library uses <strong>AI Retrieval-augmented Generation (RAG)</strong>
+                        to enable semantic searches across thousands of text pages. Texts are chunked and pre-processed in the Antigravity IDE and can be imported and managed directly in the <a
+                            href="/admin/vector-hub"
+                            style="color:var(--t-accent); font-weight: 600; text-decoration: underline;">Vector Hub</a> for ChromaDB indexing.
+                    </p>
+                    <div style="margin-top: 18px; display: flex; gap: 10px;">
+                        <a href="/admin/vector-hub" class="db-action-btn primary"
+                            style="padding: 8px 16px; font-size: 12px;">Go to Vector Hub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <!-- ── Chart.js ───────────────────────────────────────────── -->
+
+        <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                /* ── Helper: resolve CSS variable to real color value ── */
+                function cssVar(name) {
+                    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+                }
+
+                /* ── Theme-aware color pack ──────────────────────────── */
+                function themeColors() {
+                    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+                    return {
+                        isDark,
+                        gridColor:     isDark ? 'rgba(200,220,240,0.06)' : 'rgba(2,132,199,0.09)',
+                        tickColor:     isDark ? '#7a9ab8'                 : '#4a6d8c',
+                        tooltipBg:     isDark ? 'rgba(2,6,23,0.96)'       : 'rgba(255,255,255,0.97)',
+                        tooltipTitle:  isDark ? '#e8edf4'                  : '#0c1a2e',
+                        tooltipBody:   isDark ? '#94a3b8'                  : '#4a6d8c',
+                        tooltipBorder: isDark ? 'rgba(200,220,240,0.14)'  : 'rgba(2,132,199,0.20)',
+                        legendColor:   isDark ? '#7a9ab8'                  : '#4a6d8c',
+                    };
+                }
+
+                function makeTooltip(tc) {
+                    return {
+                        padding: 12,
+                        backgroundColor: tc.tooltipBg,
+                        titleColor:      tc.tooltipTitle,
+                        bodyColor:       tc.tooltipBody,
+                        titleFont: { size: 13, weight: '700' },
+                        bodyFont:  { size: 12 },
+                        cornerRadius: 10,
+                        borderColor:  tc.tooltipBorder,
+                        borderWidth: 1,
+                        displayColors: true,
+                        boxPadding: 5,
+                    };
+                }
+
+                Chart.defaults.font.family = "'Inter', sans-serif";
+
+                /* ── 1. Bar chart: Books per Tag ──────────────────────── */
+                const barData   = JSON.parse('{{ bar_tags | tojson | safe }}');
+                const barLabels = Object.keys(barData);
+                const barValues = Object.values(barData);
+
+                const barGrad = (ctx) => {
+                    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+                    const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+                    if (isDark) {
+                        g.addColorStop(0,   'rgba(212,226,240,0.85)');
+                        g.addColorStop(0.5, 'rgba(148,172,200,0.65)');
+                        g.addColorStop(1,   'rgba(100,130,170,0.25)');
+                    } else {
+                        g.addColorStop(0,   'rgba(2,132,199,0.85)');
+                        g.addColorStop(0.5, 'rgba(56,189,248,0.65)');
+                        g.addColorStop(1,   'rgba(125,211,252,0.25)');
+                    }
+                    return g;
+                };
+
+                const tc0 = themeColors();
+                new Chart(document.getElementById('barTagsChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: barLabels,
+                        datasets: [{
+                            label: 'Books',
+                            data: barValues,
+                            backgroundColor: (ctx) => barGrad(ctx),
+                            borderColor: 'transparent',
+                            borderWidth: 0,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            hoverBackgroundColor: 'rgba(56,189,248,0.85)',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: makeTooltip(tc0),
+                        },
+                        scales: {
+                            x: {
+                                grid:   { color: tc0.gridColor, drawBorder: false },
+                                ticks:  { color: tc0.tickColor, font: { size: 11, weight: '500' }, maxRotation: 30 },
+                                border: { display: false },
+                            },
+                            y: {
+                                grid:   { color: tc0.gridColor, drawBorder: false },
+                                ticks:  { color: tc0.tickColor, font: { size: 11 }, precision: 0 },
+                                border: { display: false },
+                            }
+                        },
+                        animation: {
+                            duration: 900,
+                            easing: 'easeOutQuart',
+                            delay: (ctx) => ctx.dataIndex * 50,
+                        }
+                    }
+                });
+
+                /* ── 3. Doughnut: Tag Distribution ────────────────────── */
+                const tagsRaw  = JSON.parse('{{ tags_data | tojson | safe }}');
+                const tLabels  = Object.keys(tagsRaw);
+                const tValues  = Object.values(tagsRaw);
+                const paletteB = [
+                    'rgba(2,132,199,0.82)',   'rgba(14,165,233,0.82)',  'rgba(56,189,248,0.82)',
+                    'rgba(6,182,212,0.82)',   'rgba(16,185,129,0.82)',  'rgba(245,158,11,0.82)',
+                    'rgba(249,115,22,0.82)',  'rgba(239,68,68,0.82)',   'rgba(148,163,184,0.82)',
+                ];
+                const tc1 = themeColors();
+                new Chart(document.getElementById('tagDonutChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: tLabels,
+                        datasets: [{
+                            data: tValues,
+                            backgroundColor: paletteB.slice(0, tLabels.length),
+                            borderColor:     paletteB.slice(0, tLabels.length).map(c => c.replace('0.82', '1')),
+                            borderWidth: 2,
+                            hoverOffset: 12,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '52%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 11, padding: 12, font: { size: 11, weight: '500' }, color: tc1.legendColor }
+                            },
+                            tooltip: makeTooltip(tc1),
+                        },
+                        animation: { animateRotate: true, duration: 1000, easing: 'easeOutQuart' },
+                    }
+                });
+
+                /* ── 4. Doughnut: AI Status Distribution ────────────────── */
+                const aiColors = [
+                    ['rgba(16,185,129,0.82)',  'rgba(16,185,129,1)'],
+                    ['rgba(249,115,22,0.82)',  'rgba(249,115,22,1)'],
+                    ['rgba(100,116,139,0.82)', 'rgba(100,116,139,1)']
+                ];
+                const tc2 = themeColors();
+                new Chart(document.getElementById('aiStatusChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Live (Embedded)', 'Draft Chunks Only', 'Unprocessed'],
+                        datasets: [{
+                            data: [{{ ai_embedded_cnt }}, {{ ai_draft_cnt }}, {{ ai_unprocessed_cnt }}],
+                            backgroundColor: aiColors.map(c => c[0]),
+                            borderColor:     aiColors.map(c => c[1]),
+                            borderWidth: 2,
+                            hoverOffset: 12,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '62%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { boxWidth: 11, padding: 12, font: { size: 11, weight: '500' }, color: tc2.legendColor }
+                            },
+                            tooltip: makeTooltip(tc2),
+                        },
+                        animation: { animateRotate: true, duration: 1000, easing: 'easeOutQuart' },
+                    }
+                });
+
+                /* ── Interactive Tab Switching Logic ────────────────────── */
+                const tabBtns = document.querySelectorAll('.db-tab-btn');
+                const tabContents = document.querySelectorAll('.db-tab-content');
+
+                tabBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const targetTab = btn.getAttribute('data-tab');
+                        tabBtns.forEach(b => b.classList.remove('active'));
+                        tabContents.forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        const targetContent = document.getElementById(targetTab);
+                        if (targetContent) targetContent.classList.add('active');
+                        setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 50);
+                    });
+                });
+
+                /* ── Animated number counters ─────────────────────────── */
+                document.querySelectorAll('[data-count]').forEach(el => {
+                    const target = parseInt(el.dataset.count) || 0;
+                    if (target.toLocaleString().length > 8) el.classList.add('value-long');
+                    if (target === 0) return;
+                    const steps = Math.ceil(900 / 16);
+                    let i = 0;
+                    const timer = setInterval(() => {
+                        i++;
+                        const ease = 1 - Math.pow(1 - i / steps, 3);
+                        el.textContent = Math.round(ease * target).toLocaleString();
+                        if (i >= steps) { el.textContent = target.toLocaleString(); clearInterval(timer); }
+                    }, 16);
+                });
+
+                /* ── Live clock ───────────────────────────────────────── */
+                function updateClock() {
+                    const now = new Date();
+                    const h = String(now.getHours()).padStart(2,'0');
+                    const m = String(now.getMinutes()).padStart(2,'0');
+                    const s = String(now.getSeconds()).padStart(2,'0');
+                    const clk = document.getElementById('dbClock');
+                    const dte = document.getElementById('dbDate');
+                    if (clk) clk.textContent = `${h}:${m}:${s}`;
+                    if (dte) dte.textContent = now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                }
+                updateClock();
+                setInterval(updateClock, 1000);
+            });
+        </script>
+
+        {% endblock %}
+    </div>
+
+    <!-- Global Download/Upload Progress Overlay -->
+    <div id="downloadOverlay" style="display:none;">
+        <div class="download-modal">
+            <div class="download-modal-icon" id="downloadIcon">⬇️</div>
+            <h3 id="downloadTitle">Preparing Download...</h3>
+            <p id="downloadDetail" style="color:var(--t-text-muted); font-size:13px; margin:8px 0 18px; white-space: pre-wrap;">Please
+                wait...</p>
+            <div class="download-progress-track">
+                <div class="download-progress-fill" id="downloadFill"></div>
+            </div>
+            <p id="downloadPct" style="font-size:14px; font-weight:600; color:var(--primary-color); margin-top:10px;">0%
+            </p>
+            <p id="downloadStats" style="font-size:12px; color:var(--t-text-muted); margin-top:4px;"></p>
+            <button class="btn btn-danger" id="downloadCancelBtn" onclick="cancelDownload()"
+                style="margin-top:18px;">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        function cancelDownload() {
+            const overlay = document.getElementById('downloadOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script></body>
+
+</html>

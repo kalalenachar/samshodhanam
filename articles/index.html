@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="sa">
+
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Articles — Samshodhana Mandiram</title>
+    <meta name="description" content="Explore scholarly publications bridging traditional Sanskrit wisdom, Vyakarana, Nyaya, and modern research.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+    <link rel="stylesheet" href="style.css?v=100">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+    <style>
+        /* Extra styles to ensure premium design aesthetics */
+
+
+        .search-filter-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 32px;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            box-shadow: var(--shadow);
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border: 1px solid var(--border-light) !important;
+            border-radius: var(--radius-sm);
+            color: var(--text-primary) !important;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 3px var(--t-accent-alpha-25);
+            background: rgba(255, 255, 255, 0.04) !important;
+        }
+
+        .filter-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .category-scroll-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+            -ms-overflow-style: none;  /* Hide scrollbar IE/Edge */
+            flex: 1;
+            padding-bottom: 4px;
+        }
+
+        .category-scroll-container::-webkit-scrollbar {
+            display: none; /* Hide scrollbar Chrome/Safari/Opera */
+        }
+
+        .category-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .category-chip:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+            background: var(--accent-light);
+        }
+
+        .category-chip.active {
+            background: var(--accent-gradient);
+            border-color: transparent;
+            color: var(--t-text-on-accent);
+            box-shadow: 0 4px 12px var(--t-accent-alpha-30);
+        }
+
+        .category-chip-count {
+            font-size: 0.72rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        .category-chip.active .category-chip-count {
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--t-text-on-accent);
+        }
+
+        .sort-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sort-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .sort-dropdown {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .sort-dropdown:focus {
+            border-color: var(--accent);
+        }
+
+        /* Enhanced Card Grid */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 28px;
+        }
+
+        .article-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .article-card:hover {
+            border-color: var(--t-border-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 16px 36px var(--t-accent-alpha-20);
+        }
+
+        .article-cover-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background: #090d1a;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .article-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .article-card:hover .article-cover {
+            transform: scale(1.04);
+        }
+
+        .article-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .article-category-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: var(--t-accent-alpha-15);
+            color: var(--accent);
+            border: 1px solid var(--t-accent-alpha-25);
+            letter-spacing: 0.3px;
+        }
+
+        .article-meta-text {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .article-title-text {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.45;
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .article-summary-text {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .article-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-light);
+            margin-top: auto;
+        }
+
+        .article-author-info {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .article-stats-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .article-stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-light);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .article-stat-pill.likes {
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.15);
+        }
+
+
+
+        @media (max-width: 768px) {
+            .hero-banner {
+                padding: 36px 16px 20px;
+            }
+
+            .hero-banner h1 {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .search-filter-section {
+                padding: 16px;
+            }
+
+            .filter-controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .category-scroll-container {
+                width: 100%;
+            }
+
+            .sort-wrapper {
+                justify-content: space-between;
+            }
+
+            .articles-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <nav class="navbar">
+        <div class="navbar-brand-group">
+            <a href="/" class="navbar-home-btn" title="Main Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+            <a href="/" class="navbar-brand">
+                <img src="/static/images/app_articles.png" class="navbar-logo" alt="Articles Logo">
+                Research <span class="highlight">Articles</span>
+            </a>
+        </div>
+        <div class="navbar-links">
+            <a href="/">Portal Home</a>
+            <a href="/library">Library</a>
+            <div id="userMenu" style="display: none;">
+                <a href="#" class="user-avatar-btn" id="userAvatarBtn" title="View Profile">
+                    <span id="userAvatarEmoji">👤</span>
+                </a>
+            </div>
+            <a href="/login" id="userLoginLink" style="display: none;">Login</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+
+
+
+        <!-- Unified Search & Filter Control Panel -->
+        <div class="search-filter-section">
+            <div class="search-box-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input type="text" id="articleSearch" class="search-input" placeholder="Search research articles by title, summary, or category..." oninput="handleSearch()">
+            </div>
+
+            <div class="filter-controls-row">
+                <!-- Dynamic Category Filters Container -->
+                <div class="category-scroll-container" id="categoryChips">
+                    <button class="category-chip active" id="chip-all" onclick="selectCategory(null)">
+                        <span>All Categories</span>
+                        <span class="category-chip-count" id="count-all">0</span>
+                    </button>
+                    <!-- Loaded dynamically via JavaScript -->
+                </div>
+
+                <!-- Sort Control -->
+                <div class="sort-wrapper">
+                    <span class="sort-label">Sort By:</span>
+                    <select id="articleSort" class="sort-dropdown" onchange="handleSortChange()">
+                        <option value="date_desc" selected>Newest First</option>
+                        <option value="date_asc">Oldest First</option>
+                        <option value="time_asc">Shortest Read</option>
+                        <option value="time_desc">Longest Read</option>
+                        <option value="rating_desc">Top Rated</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Loader -->
+        <div class="loading-spinner" id="mainLoader">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Articles Cards Grid Grid -->
+        <div class="articles-grid" id="articlesGrid" style="display: none;">
+            <!-- Loaded dynamically via JavaScript -->
+        </div>
+
+        <!-- Error / Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <span class="icon">🔍</span>
+            <h3>शोधलेखाः न प्राप्ताः</h3>
+            <p style="color: var(--text-secondary); margin-top: 8px;">No research articles match your filters or search query.</p>
+            <button class="btn btn-secondary mt-2" onclick="resetFilters()">Reset Search &amp; Filters</button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-quote">"ज्ञानं परमं भूषणम्"</div>
+        <div class="footer-links">
+            <a href="/">Portal Home</a> &bull;
+            <a href="/library">Sanskrit Digital Library</a> &bull;
+            <a href="/admin/hub">Admin Hub</a>
+        </div>
+        <div class="footer-copyright">
+            &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = '/sdl/api/v1';
+        let allArticles = [];
+        let activeCategory = null;
+        let searchQuery = '';
+
+        // Initialize Page
+        window.addEventListener('DOMContentLoaded', async () => {
+            await syncSession();
+            await fetchAndRenderData();
+        });
+
+        // ── Toast Notifications ──
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            container.appendChild(t);
+            setTimeout(() => t.remove(), 3500);
+        }
+
+        // ── Fetch and Load Data ──
+        async function fetchAndRenderData() {
+            const loader = document.getElementById('mainLoader');
+            const grid = document.getElementById('articlesGrid');
+            const empty = document.getElementById('emptyState');
+
+            loader.style.display = 'flex';
+            grid.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                // Fetch Articles (Sort value chosen on dropdown)
+                const sortBy = document.getElementById('articleSort').value;
+                const articlesRes = await fetch(`${API_URL}/articles?sort_by=${sortBy}`);
+                const articlesData = await articlesRes.json();
+
+                if (articlesData.success) {
+                    allArticles = articlesData.articles || [];
+                } else {
+                    showToast('Failed to load articles from the database', 'error');
+                }
+
+                // Fetch categories
+                const catRes = await fetch(`${API_URL}/articles/categories`);
+                const catData = await catRes.json();
+                let categories = [];
+                if (catData.success) {
+                    categories = catData.categories || [];
+                }
+
+                renderCategoryChips(categories);
+                applyFiltersAndRender();
+
+            } catch (err) {
+                console.error('Error initializing articles page:', err);
+                showToast('Failed to connect to backend server', 'error');
+                loader.style.display = 'none';
+                empty.style.display = 'block';
+            }
+        }
+
+        // ── Render Category Pills ──
+        function renderCategoryChips(categories) {
+            const container = document.getElementById('categoryChips');
+            if (!container) return;
+
+            // Retain the 'All Categories' chip
+            const allChipHTML = `
+                <button class="category-chip ${activeCategory === null ? 'active' : ''}" id="chip-all" onclick="selectCategory(null)">
+                    <span>All Categories</span>
+                    <span class="category-chip-count" id="count-all">${allArticles.length}</span>
+                </button>
+            `;
+
+            const catMap = {};
+            allArticles.forEach(art => {
+                const cat = art.category || 'सामान्य';
+                catMap[cat] = (catMap[cat] || 0) + 1;
+            });
+
+            const chipsHTML = categories.map(cat => {
+                const count = catMap[cat] || 0;
+                const isActive = activeCategory === cat;
+                return `
+                    <button class="category-chip ${isActive ? 'active' : ''}" id="chip-${escapeId(cat)}" onclick="selectCategory('${escapeJsString(cat)}')">
+                        <span>${escapeHtml(cat)}</span>
+                        <span class="category-chip-count">${count}</span>
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = allChipHTML + chipsHTML;
+            
+            // Set exact count on all chip
+            const countAll = document.getElementById('count-all');
+            if (countAll) countAll.textContent = allArticles.length;
+        }
+
+        // ── Filters & Real-time Search Logic ──
+        function selectCategory(cat) {
+            activeCategory = cat;
+            
+            // Update active state in CSS/classes
+            document.querySelectorAll('.category-chip').forEach(chip => {
+                chip.classList.remove('active');
+            });
+            if (cat === null) {
+                document.getElementById('chip-all').classList.add('active');
+            } else {
+                const chip = document.getElementById(`chip-${escapeId(cat)}`);
+                if (chip) chip.classList.add('active');
+            }
+
+            applyFiltersAndRender();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('articleSearch').value.toLowerCase().trim();
+            applyFiltersAndRender();
+        }
+
+        function handleSortChange() {
+            const sortBy = document.getElementById('articleSort').value;
+            // Sorting can be done client-side to keep interactions lightning-fast
+            sortArticlesList(sortBy);
+            applyFiltersAndRender();
+        }
+
+        function sortArticlesList(sortBy) {
+            if (sortBy === 'date_desc') {
+                allArticles.sort((a, b) => new Date(b.published_at || 0) - new Date(a.published_at || 0));
+            } else if (sortBy === 'date_asc') {
+                allArticles.sort((a, b) => new Date(a.published_at || 0) - new Date(b.published_at || 0));
+            } else if (sortBy === 'time_asc') {
+                allArticles.sort((a, b) => (a.reading_time || 0) - (b.reading_time || 0));
+            } else if (sortBy === 'time_desc') {
+                allArticles.sort((a, b) => (b.reading_time || 0) - (a.reading_time || 0));
+            } else if (sortBy === 'rating_desc') {
+                allArticles.sort((a, b) => {
+                    const rateA = (a.upvotes || 0) - (a.downvotes || 0);
+                    const rateB = (b.upvotes || 0) - (b.downvotes || 0);
+                    return rateB - rateA;
+                });
+            }
+        }
+
+        function applyFiltersAndRender() {
+            const grid = document.getElementById('articlesGrid');
+            const empty = document.getElementById('emptyState');
+            const loader = document.getElementById('mainLoader');
+
+            loader.style.display = 'none';
+
+            // Filter articles list
+            const filtered = allArticles.filter(art => {
+                const matchesCategory = !activeCategory || art.category === activeCategory;
+                const matchesSearch = !searchQuery || 
+                    (art.title && art.title.toLowerCase().includes(searchQuery)) ||
+                    (art.summary && art.summary.toLowerCase().includes(searchQuery)) ||
+                    (art.category && art.category.toLowerCase().includes(searchQuery)) ||
+                    (art.author && art.author.toLowerCase().includes(searchQuery));
+                
+                return matchesCategory && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+            } else {
+                empty.style.display = 'none';
+                grid.innerHTML = filtered.map(art => renderArticleCard(art)).join('');
+                grid.style.display = 'grid';
+            }
+        }
+
+        function renderArticleCard(art) {
+            const readTime = art.reading_time || 5;
+            let dateStr = '—';
+            if (art.published_at) {
+                try {
+                    const d = new Date(art.published_at);
+                    dateStr = d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+                } catch (e) { }
+            }
+
+            const coverUrl = art.cover_image_url || '/static/images/app_articles.png';
+            const likesCount = (art.upvotes || 0) - (art.downvotes || 0);
+            
+            return `
+                <div class="article-card" onclick="window.location.href='reader.html?id=${art.id}'">
+                    <div class="article-cover-wrapper">
+                        <img src="${coverUrl}" alt="${escapeHtml(art.title)}" class="article-cover" onerror="this.src='/static/images/app_articles.png'">
+                    </div>
+                    <div class="article-body">
+                        <div class="article-meta-row">
+                            <span class="article-category-badge">${escapeHtml(art.category || 'सामान्य')}</span>
+                            <span class="article-meta-text">⏱️ ${readTime} min read</span>
+                            <span class="article-meta-text">📅 ${dateStr}</span>
+                        </div>
+                        <h3 class="article-title-text">${escapeHtml(art.title)}</h3>
+                        <p class="article-summary-text">${escapeHtml(art.summary || '')}</p>
+                        <div class="article-footer-row">
+                            <div class="article-author-info">
+                                ✍️ <span>${escapeHtml(art.author || 'Scholarly Article')}</span>
+                            </div>
+                            <div class="article-stats-group">
+                                <span class="article-stat-pill likes" title="Net Upvotes">
+                                    👍 ${likesCount >= 0 ? '+' : ''}${likesCount}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetFilters() {
+            document.getElementById('articleSearch').value = '';
+            document.getElementById('articleSort').value = 'date_desc';
+            searchQuery = '';
+            activeCategory = null;
+
+            // Re-select all
+            document.querySelectorAll('.category-chip').forEach(chip => chip.classList.remove('active'));
+            document.getElementById('chip-all').classList.add('active');
+
+            sortArticlesList('date_desc');
+            applyFiltersAndRender();
+        }
+
+        // ── Helper Utilities ──
+        function escapeHtml(s) {
+            if (!s) return '';
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function escapeId(s) {
+            return s.replace(/[^a-zA-Z0-9-]/g, '_');
+        }
+
+        function escapeJsString(s) {
+            return s.replace(/'/g, "\\'");
+        }
+
+        // ── Auth & Session Sync ──
+        async function syncSession() {
+            const token = localStorage.getItem('user_token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            try {
+                const res = await fetch('/sdl/api/external/session-sync', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'include'
+                });
+                const data = await res.json();
+
+                if (data.logged_in) {
+                    localStorage.setItem('user_token', data.token);
+                    localStorage.setItem('user_profile', JSON.stringify(data.user));
+                } else {
+                    if (token) {
+                        localStorage.removeItem('user_token');
+                        localStorage.removeItem('user_profile');
+                    }
+                }
+            } catch (err) {
+                console.error('Session sync failed:', err);
+            } finally {
+                updateNavbarAuth();
+            }
+        }
+
+        function updateNavbarAuth() {
+            const token = localStorage.getItem('user_token');
+            const userStr = localStorage.getItem('user_profile');
+            const userMenu = document.getElementById('userMenu');
+            const loginLink = document.getElementById('userLoginLink');
+
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (loginLink) loginLink.style.display = 'none';
+                    if (userMenu) userMenu.style.display = 'inline-flex';
+
+                    const avatarBtn = document.getElementById('userAvatarBtn');
+                    const avatarEmoji = document.getElementById('userAvatarEmoji');
+
+                    if (avatarBtn) {
+                        avatarBtn.title = `View Profile (${user.display_name || 'User'})`;
+                        if (user.role === 'super' || user.role === 'admin') {
+                            avatarBtn.href = 'admin-dashboard.html';
+                        } else {
+                            avatarBtn.href = '/user/quiz-profile';
+                        }
+                        if (user.profile_pic) {
+                            const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+                            avatarBtn.style.background = `url("${picUrl}") no-repeat center/cover`;
+                            if (avatarEmoji) avatarEmoji.textContent = '';
+                        } else {
+                            avatarBtn.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+                            if (avatarEmoji) avatarEmoji.textContent = user.avatar_emoji || '👤';
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showGuestNavbar();
+                }
+            } else {
+                showGuestNavbar();
+            }
+        }
+
+        function showGuestNavbar() {
+            const userMenu = document.getElementById('userMenu');
+            const loginLink = document.getElementById('userLoginLink');
+            if (userMenu) userMenu.style.display = 'none';
+            if (loginLink) loginLink.style.display = 'inline-block';
+        }
+    </script>
+    <script src="/sdl/static/js/theme.js?v=35"></script>
+</body>
+
+</html>

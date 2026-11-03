@@ -1,0 +1,618 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SAMSHODHANA MANDIRAM — GITHUB OPEN SOURCE LAUNCH & COUNTDOWN STYLES
+   AIOC 2026 (All India Oriental Conference) Launch Event
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global Header Flex Alignment for GitHub Button & Nav ───────────────── */
+.header-actions,
+header .header-actions,
+.nav-actions,
+header .nav-actions,
+.navbar-links,
+nav .navbar-links,
+.topbar-actions,
+.admin-header-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+}
+
+header .desktop-nav,
+.header-actions .desktop-nav {
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+header .desktop-nav ul,
+.header-actions #navlist {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
+@media (max-width: 768px) {
+  header .desktop-nav,
+  .header-actions .desktop-nav {
+    display: none !important;
+  }
+}
+
+/* ── Header GitHub Launch Button ────────────────────────────────────────── */
+.github-header-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  padding: 0 14px;
+  margin: 0;
+  vertical-align: middle;
+  background: var(--t-glass-bg, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--t-border, rgba(200, 220, 240, 0.18));
+  border-radius: 20px;
+  color: var(--t-text-primary, #e8edf4);
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+  z-index: 100;
+}
+
+.github-header-btn:hover {
+  background: var(--t-bg-surface-hover, rgba(255, 255, 255, 0.15));
+  border-color: var(--t-accent, #d4af37);
+  color: var(--t-accent, #d4af37);
+  box-shadow: 0 4px 18px var(--t-accent-alpha-25, rgba(212, 175, 55, 0.25));
+  transform: translateY(-2px);
+}
+
+.github-header-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.github-header-btn .github-octocat-svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.github-header-btn:hover .github-octocat-svg {
+  transform: scale(1.1) rotate(6deg);
+}
+
+.github-header-btn .github-btn-text {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Pulsing badge dot next to GitHub icon */
+.github-pulse-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  background: var(--t-accent, #d4af37);
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--t-accent, #d4af37);
+}
+
+.github-pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid var(--t-accent, #d4af37);
+  opacity: 0.8;
+  animation: ghLaunchPulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes ghLaunchPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Floating fallback if a page doesn't have a header */
+.github-header-btn.github-btn-floating {
+  position: fixed;
+  top: 18px;
+  right: 80px;
+  z-index: 99990;
+  box-shadow: var(--t-shadow, 0 8px 24px rgba(0, 0, 0, 0.5));
+}
+
+/* ── Modal Backdrop / Overlay ────────────────────────────────────────────── */
+.github-launch-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(3, 5, 14, 0.78);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  z-index: 1000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.github-launch-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* ── Modal Card ──────────────────────────────────────────────────────────── */
+.github-launch-modal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--t-bg-overlay, #070919);
+  border: 1px solid var(--t-border-hover, rgba(212, 175, 55, 0.35));
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+              0 0 30px var(--t-accent-alpha-20, rgba(212, 175, 55, 0.15));
+  padding: 22px 22px 18px;
+  color: var(--t-text-primary, #e8edf4);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transform: scale(0.94) translateY(12px);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s ease;
+}
+
+.github-launch-backdrop.open .github-launch-modal {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Modal Decorative Top Glow */
+.github-launch-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--t-accent, #d4af37), transparent);
+  border-radius: 2px;
+}
+
+/* Modal Close Button */
+.github-modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--t-glass-bg, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--t-border, rgba(200, 220, 240, 0.15));
+  color: var(--t-text-secondary, #b8c8d8);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  line-height: 1;
+  padding: 0;
+  z-index: 10;
+}
+
+.github-modal-close-btn:hover {
+  background: var(--t-hover-bg, rgba(255, 255, 255, 0.12));
+  color: var(--t-accent, #d4af37);
+  border-color: var(--t-accent, #d4af37);
+  transform: rotate(90deg) scale(1.06);
+}
+
+/* ── Modal Header & Branding ─────────────────────────────────────────────── */
+.github-modal-header {
+  text-align: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--t-border, rgba(200, 220, 240, 0.12));
+  position: relative;
+}
+
+.github-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.github-header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.github-badge-icon-wrap {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--t-border-hover, rgba(212, 175, 55, 0.4));
+  box-shadow: 0 6px 18px var(--t-accent-alpha-20, rgba(212, 175, 55, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--t-accent, #d4af37);
+}
+
+.github-badge-icon-wrap svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+.github-modal-sanskrit-title {
+  font-family: 'Noto Sans Devanagari', 'Sanskrit Text', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--t-accent, #d4af37);
+  letter-spacing: 0.4px;
+  line-height: 1.2;
+}
+
+.github-modal-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--t-text-primary, #ffffff);
+  margin: 0;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+}
+
+.github-conference-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--t-accent-alpha-12, rgba(212, 175, 55, 0.12));
+  border: 1px solid var(--t-accent-alpha-30, rgba(212, 175, 55, 0.3));
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--t-accent, #d4af37);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.github-conference-pill .pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Live Countdown Display Section ──────────────────────────────────────── */
+.github-countdown-box {
+  margin: 14px 0;
+  padding: 14px 14px 12px;
+  background: var(--t-bg-surface, rgba(12, 16, 42, 0.6));
+  border: 1px solid var(--t-border, rgba(200, 220, 240, 0.15));
+  border-radius: 14px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.github-countdown-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t-text-muted, #7a9ab8);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.github-countdown-status-badge .status-light {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10b981;
+  animation: ghLaunchPulse 1.8s infinite;
+}
+
+/* Countdown Grid */
+.github-countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.github-timer-card {
+  background: var(--t-bg-elevated, rgba(16, 22, 54, 0.85));
+  border: 1px solid var(--t-border, rgba(200, 220, 240, 0.14));
+  border-radius: 10px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.github-timer-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--t-accent, #d4af37);
+}
+
+.github-timer-card .timer-value {
+  font-family: 'Outfit', 'Inter', monospace;
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--t-accent, #d4af37);
+  text-shadow: 0 0 12px var(--t-accent-alpha-30, rgba(212, 175, 55, 0.3));
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+}
+
+.github-timer-card .timer-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--t-text-muted, #7a9ab8);
+  margin-top: 4px;
+}
+
+.github-countdown-target-note {
+  font-size: 11.5px;
+  color: var(--t-text-secondary, #b8c8d8);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.github-countdown-target-note strong {
+  color: var(--t-accent, #d4af37);
+}
+
+/* ── Conference Information Details (Short & Crisp) ───────────────────────── */
+.github-launch-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.github-summary-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--t-text-secondary, #b8c8d8);
+  text-align: center;
+}
+
+.github-security-note {
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px dashed var(--t-accent-alpha-30, rgba(212, 175, 55, 0.3));
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--t-text-secondary, #b8c8d8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.github-security-note .note-icon {
+  font-size: 13px;
+  color: var(--t-accent, #d4af37);
+  flex-shrink: 0;
+}
+
+/* ── Modal Action Buttons ────────────────────────────────────────────────── */
+.github-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-top: 1px solid var(--t-border, rgba(200, 220, 240, 0.12));
+  padding-top: 14px;
+}
+
+.github-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: var(--t-glass-bg, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--t-border, rgba(200, 220, 240, 0.15));
+  color: var(--t-text-primary, #e8edf4);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.github-btn-secondary:hover {
+  background: var(--t-hover-bg, rgba(255, 255, 255, 0.12));
+  border-color: var(--t-border-hover, rgba(200, 220, 240, 0.3));
+  transform: translateY(-1px);
+}
+
+.github-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: 10px;
+  background: var(--t-accent-gradient, linear-gradient(135deg, #d4af37, #f3e5ab));
+  border: none;
+  color: var(--t-text-on-accent, #0c1a2e);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-shadow: 0 4px 14px var(--t-accent-alpha-30, rgba(212, 175, 55, 0.3));
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.github-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px var(--t-accent-alpha-40, rgba(212, 175, 55, 0.45));
+  filter: brightness(1.06);
+}
+
+.github-btn-primary:active,
+.github-btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Feedback toast inside modal */
+.github-copy-toast {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #10b981;
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.github-copy-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Responsive Mobile Optimizations ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  .github-header-btn {
+    padding: 0 10px;
+    height: 34px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  .github-header-btn .github-btn-text {
+    display: none; /* Icon-only on small mobile navigation headers */
+  }
+
+  .github-launch-modal {
+    padding: 16px 14px 14px;
+    border-radius: 16px;
+    max-height: 94vh;
+  }
+
+  .github-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .github-badge-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    margin: 0;
+  }
+
+  .github-badge-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .github-countdown-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .github-timer-card {
+    padding: 6px 2px;
+  }
+
+  .github-timer-card .timer-value {
+    font-size: 1.35rem;
+  }
+
+  .github-timer-card .timer-label {
+    font-size: 8px;
+    letter-spacing: 0.6px;
+  }
+
+  .github-modal-actions {
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  .github-modal-actions button {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 11.5px;
+    height: 32px;
+  }
+}

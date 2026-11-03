@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="sa">
+
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>कथा — Loading...</title>
+  <meta name="description" content="Read Sanskrit stories — Samshodhana Mandiram">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
+  <link rel="stylesheet" href="style.css?v=100">
+  <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+  <script src="/static/js/mobile-android.js" defer></script>
+  <script src="/static/js/script-transliterate.js?v=6"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="./" class="navbar-brand"><img src="/static/images/app_katha.png" class="navbar-logo" alt="Katha Logo">कथा<span class="highlight">संग्रहः</span></a>
+    </div>
+    <div class="navbar-links">
+      <div id="userMenu" style="display: none;">
+        <a href="#" class="user-avatar-btn" id="userAvatarBtn" title="View Profile">
+          <span id="userAvatarEmoji">👤</span>
+        </a>
+      </div>
+      <a href="/#login" id="userLoginLink" style="display: none;">Login</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Loading -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Story Content -->
+    <div id="storyContainer" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <a href="./" class="back-link" style="margin-bottom: 0;">
+          <span>←</span> सर्वकथासूचिः
+        </a>
+
+        <!-- Interactive Script Changer Component & Info Badge -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div class="script-picker-wrapper" style="position: relative; display: inline-block;">
+            <button onclick="toggleKathaScriptPicker(event)" class="script-picker-btn" id="kathaScriptPickerBtn" title="Change Reading Script (Devanagari, Kannada, Telugu, Tamil, IAST)">
+              <span style="font-size: 13px;">🌐</span>
+              <span id="kathaScriptPickerActiveLabel" style="font-size: 12px; font-weight: 700;">संस्कृतम्</span>
+              <span style="font-size: 9px; opacity: 0.8; margin-left: 2px;">▼</span>
+            </button>
+
+            <div id="kathaScriptPickerPopover" class="script-picker-popover" style="right: 0; left: auto;">
+              <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 10px 4px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px;">Reading Script</div>
+              <div class="script-option-item active" data-script="sa" onclick="changeKathaScript('sa')">
+                <div class="script-info"><div class="script-name">संस्कृतम् (Devanagari)</div><div class="script-desc">Original Sanskrit</div></div>
+                <span class="script-check">✓</span>
+              </div>
+              <div class="script-option-item" data-script="ka" onclick="changeKathaScript('ka')">
+                <div class="script-info"><div class="script-name">ಕನ್ನಡ (Kannada)</div><div class="script-desc">With bindu (ಂ) rule</div></div>
+                <span class="script-check">✓</span>
+              </div>
+              <div class="script-option-item" data-script="te" onclick="changeKathaScript('te')">
+                <div class="script-info"><div class="script-name">తెలుగు (Telugu)</div><div class="script-desc">With sunna (ం) rule</div></div>
+                <span class="script-check">✓</span>
+              </div>
+              <div class="script-option-item" data-script="ta" onclick="changeKathaScript('ta')">
+                <div class="script-info"><div class="script-name">தமிழ் (Tamil)</div><div class="script-desc">Traditional class nasals</div></div>
+                <span class="script-check">✓</span>
+              </div>
+              <div class="script-option-item" data-script="en" onclick="changeKathaScript('en')">
+                <div class="script-info"><div class="script-name">English (IAST)</div><div class="script-desc">Roman with diacritics</div></div>
+                <span class="script-check">✓</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transliteration Info Badge (shown when text is transliterated) -->
+          <div class="translit-info-wrapper" id="kathaTranslitInfoWrapper" style="display: none; position: relative;">
+            <button class="translit-info-btn" id="kathaTranslitInfoBtn" title="Transliteration Details & Reading Guide" aria-label="Transliteration Info" onclick="toggleKathaTranslitInfoPopover(event)">
+              <span class="info-badge-icon">i</span>
+              <span class="info-label" id="kathaTranslitInfoLabel">Tamil Guide</span>
+            </button>
+            <div class="translit-info-popover" id="kathaTranslitInfoPopover"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-reader">
+        <div id="storyPrintableArea" class="story-printable-area">
+          <!-- Album Badge -->
+          <div style="text-align: center; margin-bottom: 12px;">
+            <a class="story-album-badge" id="storyAlbumBadge" style="display: none;"></a>
+          </div>
+
+          <!-- Header -->
+          <div class="story-header" style="margin-bottom: 20px;">
+            <h1 class="story-title" id="storyTitle"></h1>
+          </div>
+
+          <!-- Cover Image -->
+          <img class="story-cover-hero" id="storyCover" src="" alt="">
+
+          <!-- Metadata -->
+          <div class="story-meta" id="storyMeta" style="margin-top: -12px; margin-bottom: 24px;"></div>
+
+          <!-- Summary -->
+          <div class="story-summary" id="storySummary" style="display: none;"></div>
+
+          <!-- Content -->
+          <div class="story-content" id="storyContent"></div>
+        </div>
+
+        <!-- Chapter Navigation -->
+        <div class="chapter-navigation" id="chapterNavigation" style="display: none;">
+          <a href="#" class="nav-btn prev-btn" id="prevChapterBtn">
+            <span class="nav-btn-icon">←</span>
+            <div class="nav-btn-text">
+              <span class="nav-label">Previous Story</span>
+              <span class="nav-title" id="prevChapterTitle">Loading...</span>
+            </div>
+          </a>
+          <a href="#" class="nav-btn next-btn" id="nextChapterBtn">
+            <div class="nav-btn-text">
+              <span class="nav-label">Next Story</span>
+              <span class="nav-title" id="nextChapterTitle">Loading...</span>
+            </div>
+            <span class="nav-btn-icon">→</span>
+          </a>
+        </div>
+
+        <!-- Feedback -->
+        <div class="feedback-section" id="feedbackSection">
+          <span class="feedback-label">कथा कीदृशी आसीत्?</span>
+          <button class="feedback-btn" id="btnUpvote" onclick="submitVote('up')">
+            👍 <span class="feedback-count" id="upCount">0</span>
+          </button>
+          <button class="feedback-btn" id="btnDownvote" onclick="submitVote('down')">
+            👎 <span class="feedback-count" id="downCount">0</span>
+          </button>
+        </div>
+
+        <!-- Feedback Comment Box -->
+        <div class="feedback-comment-box" id="feedbackCommentBox" style="display: none; margin-top: 1.25rem;">
+          <div class="feedback-comment-label">
+            कथायाः विषये किमपि वक्तुम् इच्छति वा? / Any feedback/issue with this story? (Optional)
+          </div>
+          <div class="feedback-comment-suggestions">
+            <button class="suggestion-chip mini" onclick="addFeedbackComment('लेखनदोषः (Spelling/Grammar mistakes)')">लेखनदोषः (Spelling/Grammar)</button>
+            <button class="suggestion-chip mini" onclick="addFeedbackComment('अशुद्धं वृत्तम् (Incorrect information)')">अशुद्धं वृत्तम् (Incorrect info)</button>
+            <button class="suggestion-chip mini" onclick="addFeedbackComment('अन्ये दोषाः (Other issues)')">अन्ये दोषाः (Other issues)</button>
+          </div>
+          <div class="feedback-comment-row">
+            <input type="text" class="feedback-comment-input" id="feedbackCommentInput" placeholder="Describe the issue or write a comment...">
+            <button class="feedback-submit-btn" id="submitFeedbackCommentBtn" onclick="submitCommentFeedback()">Submit</button>
+          </div>
+        </div>
+
+        <!-- Download & Share Section -->
+        <div class="download-section" style="margin-top: 2.5rem; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 2rem;">
+          <button class="btn btn-primary" id="downloadImgBtn" onclick="downloadStoryImage()" style="gap: 8px; padding: 12px 28px; border-radius: 30px; font-weight: 600; box-shadow: 0 4px 15px var(--accent-glow);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Image
+          </button>
+          <button class="btn btn-whatsapp" id="shareWhatsappBtn" onclick="shareStoryWhatsapp()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"></path>
+              <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"></path>
+            </svg>
+            Share on WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="empty-state" id="errorState" style="display: none;">
+      <span class="icon">😔</span>
+      <h3>कथा न प्राप्ता</h3>
+      <p class="mt-1" style="color: var(--text-secondary);">Story not found or unavailable.</p>
+      <a href="./" class="btn btn-primary mt-2" style="margin-top: 16px; display: inline-flex;">← Back to Stories</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-quote">"कथा किल मनोरमा"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull;
+      <a href="/library">Sanskrit Digital Library</a> &bull;
+      <a href="./">All Stories</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <!-- Lightbox Modal -->
+  <div id="imageLightbox" class="lightbox-overlay" onclick="closeLightbox()">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img class="lightbox-content" id="lightboxImage" alt="Fullscreen preview">
+  </div>
+
+  <script>
+    const API_BASE = '/sdl/api/v1';
+    let currentStoryId = null;
+    let currentVote = null;
+    let nextStoryUrl = null;
+
+    // ── Toast ──
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ── Format date ──
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch { return dateStr; }
+    }
+
+    // ── Escape HTML ──
+    function escapeHtml(s) {
+      if (!s) return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Get story ID from URL ──
+    function getStoryId() {
+      const params = new URLSearchParams(window.location.search);
+      return parseInt(params.get('id'));
+    }
+
+    // ── Load Story ──
+    async function loadStory() {
+      const spinner = document.getElementById('loadingSpinner');
+      const container = document.getElementById('storyContainer');
+      const errorState = document.getElementById('errorState');
+
+      const storyId = getStoryId();
+      if (!storyId) {
+        spinner.style.display = 'none';
+        errorState.style.display = 'block';
+        return;
+      }
+
+      currentStoryId = storyId;
+
+
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/stories/${storyId}`);
+        const data = await res.json();
+
+        if (!data.success || !data.story) {
+          spinner.style.display = 'none';
+          errorState.style.display = 'block';
+          return;
+        }
+
+        const story = data.story;
+
+        // Update page title
+        document.title = `${story.title} — कथासंग्रहः`;
+
+        // Cover image
+        const cover = document.getElementById('storyCover');
+        cover.src = story.cover_image_url;
+        cover.alt = story.title;
+        cover.onerror = function() {
+          this.style.display = 'none';
+        };
+
+        // Title
+        document.getElementById('storyTitle').textContent = story.title;
+
+        // Album Badge
+        const urlParams = new URLSearchParams(window.location.search);
+        let albumName = urlParams.get('album');
+        if (!albumName && story.category) {
+          const cat = story.category;
+          let parent = cat.trim();
+          if (cat.includes('/')) {
+            parent = cat.split('/')[0].trim();
+          } else if (cat.includes(' - ')) {
+            parent = cat.split(' - ')[0].trim();
+          }
+          albumName = parent;
+        }
+
+        if (albumName) {
+          const albumBadge = document.getElementById('storyAlbumBadge');
+          if (albumBadge) {
+            albumBadge.textContent = `सम्पुटः / Album: ${albumName}`;
+            albumBadge.href = `./?album=${encodeURIComponent(albumName)}&scroll_to=${storyId}`;
+            albumBadge.style.display = 'inline-flex';
+          }
+          // Update back link to point to this album
+          const backLink = document.querySelector('.back-link');
+          if (backLink) {
+            backLink.href = `./?album=${encodeURIComponent(albumName)}&scroll_to=${storyId}`;
+            backLink.innerHTML = `<span>←</span> ${escapeHtml(albumName)}`;
+          }
+        }
+
+        // Meta
+        let metaHTML = '';
+        if (story.category) {
+          metaHTML += `<span class="badge badge-category">${escapeHtml(story.category)}</span>`;
+        }
+        if (story.author) {
+          metaHTML += `<span>✍️ ${escapeHtml(story.author)}</span>`;
+        }
+        if (story.published_at) {
+          metaHTML += `<span>📅 ${formatDate(story.published_at)}</span>`;
+        }
+        if (story.reading_time) {
+          metaHTML += `<span>⏱️ ${story.reading_time} min read</span>`;
+        }
+        document.getElementById('storyMeta').innerHTML = metaHTML;
+
+        // Summary
+        const summaryEl = document.getElementById('storySummary');
+        if (story.summary && story.summary.trim()) {
+          summaryEl.textContent = story.summary;
+          summaryEl.style.display = 'block';
+        }
+
+        // Content (rendered as raw HTML — supports hyperlinks, images, videos)
+        document.getElementById('storyContent').innerHTML = story.content_html;
+
+        // Feedback
+        document.getElementById('upCount').textContent = story.upvotes || 0;
+        document.getElementById('downCount').textContent = story.downvotes || 0;
+        currentVote = story.current_vote;
+        updateFeedbackButtons();
+
+        const commentBox = document.getElementById('feedbackCommentBox');
+        const commentInput = document.getElementById('feedbackCommentInput');
+        if (currentVote === 'down') {
+          commentBox.style.display = 'block';
+          commentInput.value = story.current_comment || '';
+        } else {
+          commentBox.style.display = 'none';
+          commentInput.value = '';
+        }
+
+        // Show content
+        spinner.style.display = 'none';
+        container.style.display = 'block';
+        setupImageLightbox();
+        applyActiveScriptToKatha();
+
+        // Fetch all stories in the same album for next/prev navigation
+        if (albumName) {
+          try {
+            const listRes = await fetch(`${API_BASE}/katha/stories?sort=title`);
+            const listData = await listRes.json();
+            if (listData.success && listData.stories) {
+              setupNavigation(listData.stories, albumName, storyId);
+            }
+          } catch (navErr) {
+            console.error('Error setting up navigation:', navErr);
+          }
+        }
+
+      } catch (err) {
+        console.error('Error loading story:', err);
+        spinner.style.display = 'none';
+        errorState.style.display = 'block';
+      }
+    }
+
+    // ── Helper to parse hierarchical category strings (e.g. "Parent / Sub" or "Parent - Sub") ──
+    function parseCategory(cat) {
+      if (!cat) return { parent: 'सामान्य', sub: '' };
+      let parent = cat.trim();
+      let sub = '';
+      if (cat.includes('/')) {
+        const parts = cat.split('/');
+        parent = parts[0].trim();
+        sub = parts.slice(1).join('/').trim();
+      } else if (cat.includes(' - ')) {
+        const parts = cat.split(' - ');
+        parent = parts[0].trim();
+        sub = parts.slice(1).join(' - ').trim();
+      }
+      return { parent, sub };
+    }
+
+    // ── Setup next/previous navigation buttons ──
+    function setupNavigation(allStories, albumName, currentStoryId) {
+      // Filter stories by the same parent category (album)
+      const albumStories = allStories.filter(s => parseCategory(s.category).parent === albumName);
+
+      // Sort stories by title to ensure correct sequence of chapters
+      albumStories.sort((a, b) => a.title.localeCompare(b.title, 'sa'));
+
+      // Find current story index
+      const currentIndex = albumStories.findIndex(s => s.id === currentStoryId);
+
+      if (currentIndex === -1) return;
+
+      const prevStory = currentIndex > 0 ? albumStories[currentIndex - 1] : null;
+      const nextStory = currentIndex < albumStories.length - 1 ? albumStories[currentIndex + 1] : null;
+
+      const navContainer = document.getElementById('chapterNavigation');
+      const prevBtn = document.getElementById('prevChapterBtn');
+      const nextBtn = document.getElementById('nextChapterBtn');
+      const prevTitle = document.getElementById('prevChapterTitle');
+      const nextTitle = document.getElementById('nextChapterTitle');
+
+      if (prevStory || nextStory) {
+        navContainer.style.display = 'flex';
+
+        if (prevStory) {
+          prevBtn.href = `story.html?id=${prevStory.id}`;
+          prevTitle.textContent = prevStory.title;
+          prevBtn.style.display = 'flex';
+        } else {
+          prevBtn.style.display = 'none';
+        }
+
+        if (nextStory) {
+          nextStoryUrl = new URL(`story.html?id=${nextStory.id}`, window.location.href).href;
+          nextBtn.href = `story.html?id=${nextStory.id}`;
+          nextTitle.textContent = nextStory.title;
+          nextBtn.style.display = 'flex';
+        } else {
+          nextBtn.style.display = 'none';
+        }
+        applyActiveScriptToKatha();
+      } else {
+        navContainer.style.display = 'none';
+      }
+    }
+
+    // ── Update Feedback Button States ──
+    function updateFeedbackButtons() {
+      const upBtn = document.getElementById('btnUpvote');
+      const downBtn = document.getElementById('btnDownvote');
+
+      upBtn.classList.remove('active-up');
+      downBtn.classList.remove('active-down');
+
+      if (currentVote === 'up') {
+        upBtn.classList.add('active-up');
+      } else if (currentVote === 'down') {
+        downBtn.classList.add('active-down');
+      }
+    }
+
+    // ── Submit Vote ──
+    async function submitVote(vote) {
+      if (!currentStoryId) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/stories/${currentStoryId}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('upCount').textContent = data.upvotes || 0;
+          document.getElementById('downCount').textContent = data.downvotes || 0;
+          currentVote = data.vote;
+          updateFeedbackButtons();
+
+          const commentBox = document.getElementById('feedbackCommentBox');
+          const commentInput = document.getElementById('feedbackCommentInput');
+
+          if (data.vote === null) {
+            commentBox.style.display = 'none';
+            commentInput.value = '';
+            showToast('Vote removed', 'info');
+          } else if (data.vote === 'up') {
+            commentBox.style.display = 'none';
+            commentInput.value = '';
+            showToast('👍 धन्यवादः!', 'success');
+          } else {
+            commentBox.style.display = 'block';
+            commentInput.value = '';
+            commentInput.focus();
+            showToast('Feedback recorded', 'info');
+          }
+        } else {
+          showToast(data.error || 'Failed to submit feedback', 'error');
+        }
+      } catch (err) {
+        console.error('Error submitting vote:', err);
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ── Helper to append/set suggestion text to the comment input ──
+    function addFeedbackComment(text) {
+      const input = document.getElementById('feedbackCommentInput');
+      if (input) {
+        const val = input.value.trim();
+        if (val) {
+          input.value = val + ', ' + text;
+        } else {
+          input.value = text;
+        }
+        input.focus();
+      }
+    }
+
+    // ── Submit feedback comment text ──
+    async function submitCommentFeedback() {
+      if (!currentStoryId || currentVote !== 'down') return;
+      const commentInput = document.getElementById('feedbackCommentInput');
+      const comments = commentInput ? commentInput.value.trim() : '';
+
+      try {
+        const res = await fetch(`${API_BASE}/katha/stories/${currentStoryId}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote: 'down', comments })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Comment submitted. धन्यवादः!', 'success');
+        } else {
+          showToast(data.error || 'Failed to submit comment', 'error');
+        }
+      } catch (err) {
+        console.error('Error submitting feedback comment:', err);
+        showToast('Network error', 'error');
+      }
+    }
+
+    // Bind Enter key press to submit comment
+    document.addEventListener('DOMContentLoaded', () => {
+      const fbInput = document.getElementById('feedbackCommentInput');
+      if (fbInput) {
+        fbInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            submitCommentFeedback();
+          }
+        });
+      }
+    });
+
+    // ── Authentication & Session Sync ──
+    async function syncSession() {
+      const token = localStorage.getItem('user_token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const res = await fetch('/sdl/api/external/session-sync', {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data.logged_in) {
+          localStorage.setItem('user_token', data.token);
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
+          
+          if (data.user.role === 'super' || data.user.role === 'admin') {
+            sessionStorage.setItem('isKathaAdmin', 'true');
+          } else {
+            sessionStorage.removeItem('isKathaAdmin');
+          }
+        } else {
+          if (token) {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_profile');
+          }
+          sessionStorage.removeItem('isKathaAdmin');
+        }
+      } catch (err) {
+        console.error('Session sync failed:', err);
+      } finally {
+        updateNavbarAuth();
+      }
+    }
+
+    function updateNavbarAuth() {
+      const token = localStorage.getItem('user_token');
+      const userStr = localStorage.getItem('user_profile');
+      const userMenu = document.getElementById('userMenu');
+      const loginLink = document.getElementById('userLoginLink');
+
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (loginLink) loginLink.style.display = 'none';
+          if (userMenu) userMenu.style.display = 'inline-flex';
+
+          const avatarBtn = document.getElementById('userAvatarBtn');
+          const avatarEmoji = document.getElementById('userAvatarEmoji');
+
+          if (avatarBtn) {
+            avatarBtn.title = `View Profile (${user.display_name || 'User'})`;
+            if (user.role === 'super' || user.role === 'admin') {
+              avatarBtn.href = 'admin-dashboard.html';
+            } else {
+              avatarBtn.href = '/user/quiz-profile';
+            }
+            if (user.profile_pic) {
+              const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+              avatarBtn.style.background = `url("${picUrl}") no-repeat center/cover`;
+              if (avatarEmoji) avatarEmoji.textContent = '';
+            } else {
+              avatarBtn.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+              if (avatarEmoji) avatarEmoji.textContent = user.avatar_emoji || '👤';
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          showGuestNavbar();
+        }
+      } else {
+        showGuestNavbar();
+      }
+    }
+
+    function showGuestNavbar() {
+      const userMenu = document.getElementById('userMenu');
+      const loginLink = document.getElementById('userLoginLink');
+      if (userMenu) userMenu.style.display = 'none';
+      if (loginLink) {
+        loginLink.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+        loginLink.style.display = 'inline-block';
+      }
+    }
+
+    function handleLogout(e) {
+      if (e) e.preventDefault();
+      window.location.href = '/logout?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
+    }
+
+    // ── Image Lightbox ──
+    function setupImageLightbox() {
+      const cover = document.getElementById('storyCover');
+      const contentImages = document.querySelectorAll('#storyContent img');
+      const lightbox = document.getElementById('imageLightbox');
+      const lightboxImg = document.getElementById('lightboxImage');
+
+      const openLightbox = (src, alt) => {
+        if (!src) return;
+        lightboxImg.src = src;
+        lightboxImg.alt = alt || 'Fullscreen preview';
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      };
+
+      if (cover) {
+        cover.addEventListener('click', () => {
+          if (cover.getAttribute('src')) {
+            openLightbox(cover.src, cover.alt);
+          }
+        });
+      }
+
+      contentImages.forEach(img => {
+        img.addEventListener('click', () => {
+          openLightbox(img.src, img.alt);
+        });
+      });
+    }
+
+    function closeLightbox() {
+      const lightbox = document.getElementById('imageLightbox');
+      if (lightbox) {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = ''; // Restore background scrolling
+      }
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      }
+    });
+
+    // ── Download Story PDF (strictly in single page PDF) ──
+    // ── Download Story Image (strictly as JPEG) ──
+    async function downloadStoryImage() {
+      const btn = document.getElementById('downloadImgBtn');
+      if (!btn || btn.disabled) return;
+
+      const originalBtnText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="spinner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;">
+          <line x1="12" y1="2" x2="12" y2="6"></line>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          <line x1="2" y1="12" x2="6" y2="12"></line>
+          <line x1="18" y1="12" x2="22" y2="12"></line>
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+        Generating...
+      `;
+
+      showToast('चित्रं जन्यते... कृपया प्रतीक्षन्ताम् / Generating Image, please wait...', 'info');
+
+      try {
+        const element = document.getElementById('storyPrintableArea');
+        if (!element) {
+          showToast('कथा न लब्धा / Story element not found', 'error');
+          return;
+        }
+
+        // Get computed style properties for the current theme
+        const htmlStyles = getComputedStyle(document.documentElement);
+        const bgBodyStart = htmlStyles.getPropertyValue('--t-bg-body-start').trim() || '#01010a';
+        const bgBodyMid = htmlStyles.getPropertyValue('--t-bg-body-mid').trim() || '#04040f';
+        const bgBodyEnd = htmlStyles.getPropertyValue('--t-bg-body-end').trim() || '#080818';
+        const textPrimary = htmlStyles.getPropertyValue('--t-text-primary').trim() || '#e8edf4';
+
+        // 1. Create a clone of the printable area to render at high desktop resolution
+        const clone = element.cloneNode(true);
+
+        // Remove metadata section so it is excluded from the image
+        const metaEl = clone.querySelector('#storyMeta');
+        if (metaEl) {
+          metaEl.remove();
+        }
+
+        // Apply styles to the clone for high-quality single-page export
+        clone.style.position = 'absolute';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.width = '850px';
+        clone.style.maxWidth = '850px';
+        clone.style.padding = '50px';
+        clone.style.boxSizing = 'border-box';
+        clone.style.background = `linear-gradient(135deg, ${bgBodyStart} 0%, ${bgBodyMid} 50%, ${bgBodyEnd} 100%)`;
+        clone.style.color = textPrimary;
+        clone.style.borderRadius = '0px';
+        clone.style.boxShadow = 'none';
+        clone.style.border = 'none';
+
+        document.body.appendChild(clone);
+
+        // Wait for all images in the clone to be fully loaded
+        const images = clone.querySelectorAll('img');
+        const imagePromises = Array.from(images).map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        });
+        await Promise.all(imagePromises);
+
+        // Wait a tiny bit more for layout/fonts to settle
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Use html2canvas to capture the clone
+        const canvas = await html2canvas(clone, {
+          useCORS: true,
+          scale: 2, // High resolution (retina-like scale)
+          backgroundColor: null, // Transparent to let the CSS gradient show
+          logging: false
+        });
+
+        // Remove clone from the DOM
+        document.body.removeChild(clone);
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+        // Get file name from title
+        const storyTitle = document.getElementById('storyTitle').textContent.trim() || 'story';
+        
+        const link = document.createElement('a');
+        link.download = `${storyTitle}.jpg`;
+        link.href = imgData;
+        link.click();
+
+        showToast('चित्रं डाउनलोड् कृतम् / Image downloaded successfully!', 'success');
+      } catch (error) {
+        console.error('Image Generation Error:', error);
+        showToast('चित्रजनने दोषः संवृत्तः / Failed to generate Image.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+      }
+    }
+
+    // Helper to get clean plain text of story content
+    function getCleanStoryText() {
+      const contentEl = document.getElementById('storyContent');
+      if (!contentEl) return '';
+      
+      const clone = contentEl.cloneNode(true);
+      
+      // Remove unwanted elements
+      clone.querySelectorAll('script, style, iframe, button, audio, video').forEach(el => el.remove());
+      
+      // Add spacing for block elements to preserve line breaks
+      const blockTags = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'br'];
+      blockTags.forEach(tag => {
+        clone.querySelectorAll(tag).forEach(el => {
+          const space = document.createTextNode('\n');
+          if (el.nextSibling) {
+            el.parentNode.insertBefore(space, el.nextSibling);
+          } else {
+            el.parentNode.appendChild(space);
+          }
+        });
+      });
+      
+      return clone.textContent
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n\n');
+    }
+
+    // ── Share Story on WhatsApp ──
+    async function shareStoryWhatsapp() {
+      const btn = document.getElementById('shareWhatsappBtn');
+      if (!btn || btn.disabled) return;
+
+      const originalBtnText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg class="spinner-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite; margin-right: 8px;">
+          <line x1="12" y1="2" x2="12" y2="6"></line>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          <line x1="2" y1="12" x2="6" y2="12"></line>
+          <line x1="18" y1="12" x2="22" y2="12"></line>
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+        Please wait...
+      `;
+
+      try {
+        const cover = document.getElementById('storyCover');
+        const coverUrl = cover && cover.src && !cover.src.endsWith('story.html') && cover.style.display !== 'none' ? cover.src : null;
+        
+        let filesToShare = [];
+        if (coverUrl) {
+          try {
+            const response = await fetch(coverUrl);
+            const blob = await response.blob();
+            let mimeType = blob.type || 'image/jpeg';
+            let extension = 'jpg';
+            if (mimeType.includes('png')) {
+              extension = 'png';
+            } else if (mimeType.includes('webp')) {
+              extension = 'webp';
+            }
+            const file = new File([blob], `story_cover.${extension}`, { type: mimeType });
+            filesToShare = [file];
+          } catch (err) {
+            console.error("Failed to fetch cover image for sharing:", err);
+          }
+        }
+
+        const storyTitle = document.getElementById('storyTitle').textContent.trim() || 'कथा';
+        const storySummary = document.getElementById('storySummary').textContent.trim() || '';
+        const storyText = getCleanStoryText();
+        const currentUrl = new URL(`story.html?id=${currentStoryId}`, window.location.href).href;
+
+        // Build caption parts
+        let actionText = '';
+        let targetUrl = '';
+        if (nextStoryUrl) {
+          actionText = '⏭️ Read the next story here:';
+          targetUrl = nextStoryUrl;
+        } else {
+          actionText = '📚 Browse more stories here:';
+          targetUrl = new URL('./', window.location.href).href;
+        }
+
+        // 1. Build the full caption for native sharing (Web Share API)
+        let fullCaption = `📚 *${storyTitle}*\n\n`;
+        if (storyText) {
+          fullCaption += `${storyText}\n\n`;
+        } else if (storySummary) {
+          fullCaption += `${storySummary}\n\n`;
+        }
+        fullCaption += `🔗 Read full story on web:\n${currentUrl}\n\n${actionText}\n${targetUrl}`;
+
+        // 2. Build the fallback caption for Click-to-Chat link
+        // Due to browser/WhatsApp URL length limits and UTF-8 encoding multiplier (~9x),
+        // we must keep the fallback encoded string under 3000 chars to avoid truncation ("cut in half").
+        let fallbackCaption = '';
+        const maxEncodedLength = 3000;
+        
+        function makeCaption(text, truncated = false) {
+          let cap = `📚 *${storyTitle}*\n\n`;
+          if (text) {
+            cap += `${text}${truncated ? '...' : ''}\n\n`;
+          } else if (storySummary) {
+            cap += `${storySummary}\n\n`;
+          }
+          cap += `🔗 Read full story on web:\n${currentUrl}\n\n${actionText}\n${targetUrl}`;
+          return cap;
+        }
+
+        let testCaption = makeCaption(storyText);
+        if (encodeURIComponent(testCaption).length <= maxEncodedLength) {
+          fallbackCaption = testCaption;
+        } else {
+          // If too long, calculate the safe number of Sanskrit characters we can include
+          const emptyCaption = makeCaption('');
+          const emptyEncodedLength = encodeURIComponent(emptyCaption).length;
+          // Approximate safe characters (each devanagari character takes about 9 encoded chars)
+          const safeChars = Math.floor((maxEncodedLength - emptyEncodedLength) / 9);
+          
+          let truncatedText = '';
+          if (safeChars > 50) {
+            truncatedText = storyText.slice(0, safeChars);
+            // Trim back to last space/punctuation to not cut in the middle of a word
+            const lastSpace = truncatedText.lastIndexOf(' ');
+            if (lastSpace > 50) {
+              truncatedText = truncatedText.slice(0, lastSpace);
+            }
+          }
+          fallbackCaption = makeCaption(truncatedText, true);
+        }
+
+        let shared = false;
+        
+        // Use Web Share API if supported and has files support
+        if (navigator.share) {
+          try {
+            if (filesToShare.length > 0 && navigator.canShare && navigator.canShare({ files: filesToShare })) {
+              await navigator.share({
+                files: filesToShare,
+                title: storyTitle,
+                text: fullCaption
+              });
+              shared = true;
+            } else {
+              // Fallback to text-only share via navigator.share
+              await navigator.share({
+                title: storyTitle,
+                text: fullCaption
+              });
+              shared = true;
+            }
+          } catch (shareErr) {
+            if (shareErr.name !== 'AbortError') {
+              console.error("Navigator share failed:", shareErr);
+            } else {
+              // User cancelled share, just return
+              return;
+            }
+          }
+        }
+
+        if (!shared) {
+          // Open WhatsApp Click-to-Chat directly with the safe fallback caption
+          const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(fallbackCaption)}`;
+          window.open(whatsappUrl, '_blank');
+        }
+      } catch (error) {
+        console.error('WhatsApp sharing error:', error);
+        showToast('शेयर-करणे दोषः संवृत्तः / Failed to share.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnText;
+      }
+    }
+
+    // ── Script Changer Integration ──
+    let currentKathaScript = 'sa';
+    try { currentKathaScript = localStorage.getItem('smsdl_katha_reader_script') || 'sa'; } catch(e) {}
+
+    const kathaScriptLabelMap = {
+      sa: 'संस्कृतम्',
+      ka: 'ಕನ್ನಡ',
+      te: 'తెలుగు',
+      ta: 'தமிழ்',
+      en: 'IAST'
+    };
+
+    function toggleKathaScriptPicker(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const popover = document.getElementById('kathaScriptPickerPopover');
+      if (!popover) return;
+      popover.style.display = (popover.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function closeKathaScriptPicker() {
+      const popover = document.getElementById('kathaScriptPickerPopover');
+      if (popover) popover.style.display = 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('kathaScriptPickerBtn');
+      const popover = document.getElementById('kathaScriptPickerPopover');
+      if (popover && popover.style.display === 'block') {
+        if ((!btn || !btn.contains(e.target)) && !popover.contains(e.target)) {
+          popover.style.display = 'none';
+        }
+      }
+    });
+
+    function changeKathaScript(scriptCode, save = true) {
+      if (!scriptCode) scriptCode = 'sa';
+      currentKathaScript = scriptCode;
+      if (save) {
+        try { localStorage.setItem('smsdl_katha_reader_script', scriptCode); } catch(e) {}
+      }
+
+      const labelEl = document.getElementById('kathaScriptPickerActiveLabel');
+      if (labelEl) labelEl.textContent = kathaScriptLabelMap[scriptCode] || 'संस्कृतम्';
+
+      document.querySelectorAll('#kathaScriptPickerPopover .script-option-item').forEach(item => {
+        const isMatch = item.getAttribute('data-script') === scriptCode;
+        item.classList.toggle('active', isMatch);
+        const chk = item.querySelector('.script-check');
+        if (chk) chk.style.display = isMatch ? 'inline' : 'none';
+      });
+
+      closeKathaScriptPicker();
+      applyActiveScriptToKatha();
+      updateKathaTranslitInfoButton(scriptCode);
+    }
+
+    function updateKathaTranslitInfoButton(scriptCode) {
+      const wrapper = document.getElementById('kathaTranslitInfoWrapper');
+      const label = document.getElementById('kathaTranslitInfoLabel');
+      const popover = document.getElementById('kathaTranslitInfoPopover');
+      if (!wrapper || !popover) return;
+
+      if (!scriptCode || scriptCode === 'sa') {
+        wrapper.style.display = 'none';
+        popover.classList.remove('show');
+        return;
+      }
+
+      wrapper.style.display = 'inline-flex';
+      const scriptNames = { ta: 'தமிழ் Guide', ka: 'ಕನ್ನಡ Guide', te: 'తెలుగు Guide', en: 'IAST Guide' };
+      if (label) label.textContent = scriptNames[scriptCode] || 'Script Guide';
+
+      if (window.SamshoTranslit && typeof window.SamshoTranslit.getScriptGuideHTML === 'function') {
+        popover.innerHTML = window.SamshoTranslit.getScriptGuideHTML(scriptCode);
+      }
+    }
+
+    function toggleKathaTranslitInfoPopover(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const popover = document.getElementById('kathaTranslitInfoPopover');
+      if (popover) popover.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('kathaTranslitInfoWrapper');
+      const popover = document.getElementById('kathaTranslitInfoPopover');
+      if (wrapper && popover && !wrapper.contains(e.target)) {
+        popover.classList.remove('show');
+      }
+    });
+
+    function applyActiveScriptToKatha() {
+      if (!window.SamshoTranslit) return;
+      const targets = [
+        document.getElementById('storyTitle'),
+        document.getElementById('storySummary'),
+        document.getElementById('storyContent'),
+        document.getElementById('storyAlbumBadge'),
+        document.getElementById('prevChapterTitle'),
+        document.getElementById('nextChapterTitle')
+      ];
+      targets.forEach(el => {
+        if (el) window.SamshoTranslit.transliterateElement(el, currentKathaScript);
+      });
+    }
+
+    // ── Init ──
+    changeKathaScript(currentKathaScript, false);
+    loadStory();
+    syncSession();
+  </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+
+</html>

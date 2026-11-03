@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Sanskrit Digital Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <style>
+        body { background: #f4f7f6; font-family: 'Inter', system-ui, sans-serif; line-height: 1.6; color: var(--t-text-primary); }
+        .docs-container { max-width: 900px; margin: 40px auto; background: var(--t-bg-surface); padding: 50px; border-radius: 16px; box-shadow: var(--t-shadow); }
+        h1 { color: #2c3e50; border-bottom: 2px solid var(--t-accent); padding-bottom: 15px; margin-bottom: 30px; }
+        h2 { margin-top: 40px; color: var(--t-accent); font-size: 1.4rem; }
+        code { background: #f0f0f0; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #d63384; }
+        .endpoint { background: #f8f9fa; border-left: 4px solid var(--t-accent); padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+        .method { font-weight: bold; color: #2e7d32; margin-right: 10px; }
+        .url { font-family: monospace; font-weight: 600; color: #2c3e50; }
+        .params table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .params th, .params td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        pre { background: #2c3e50; color: #fff; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="docs-container">
+        <h1><span class="emoji">📚</span> SDL API v1.0 Documentation</h1>
+        <p>Welcome to the Sanskrit Digital Library API. This API allows you to programmatically access books, search OCR text, and retrieve page contents.</p>
+
+        <h2><span class="emoji">🔒</span> Authentication</h2>
+        <p>All requests must include your API Key in the HTTP header:</p>
+        <pre>X-API-Key: your_api_key_here</pre>
+
+        <h2><span class="emoji">🚀</span> Endpoints</h2>
+
+        <!-- List Books -->
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/api/v1/books</span>
+            <p>Returns a list of all books in the library.</p>
+        </div>
+
+        <!-- Search -->
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/api/v1/search</span>
+            <p>Perform an advanced text search across all books.</p>
+            <div class="params">
+                <table>
+                    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>q</code></td><td>String</td><td>Text to search for (Sanskrit or Roman)</td></tr>
+                    <tr><td><code>tags</code></td><td>String</td><td>Filter by book tags</td></tr>
+                    <tr><td><code>normalize</code></td><td>Bool</td><td><code>true</code> to ignore vowel marks/accents (default: true)</td></tr>
+                    <tr><td><code>logic</code></td><td>String</td><td><code>and</code> or <code>or</code> for multiple terms (default: or)</td></tr>
+                    <tr><td><code>mode</code></td><td>String</td><td><code>contains</code>, <code>exact</code>, <code>starts_with</code>, <code>ends_with</code></td></tr>
+                    <tr><td><code>limit</code></td><td>Int</td><td>Max results per book (default: 0, unlimited)</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="endpoint">
+            <span class="method">GET</span> <span class="url">/api/v1/book/{book_id}/page/{page_num}</span>
+            <p>Retrieve the full text content of a specific page.</p>
+        </div>
+
+        <!-- Submit Suggestion -->
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/api/v1/suggest</span>
+            <p>Submit a general suggestion, correction, or feedback to the Superadmin.</p>
+            <div class="params">
+                <table>
+                    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>content</code></td><td>String</td><td>The text of your suggestion (required)</td></tr>
+                </table>
+            </div>
+            <p><em>Example:</em> <code>{"content": "Add more books on Ayurveda..."}</code></p>
+        </div>
+
+        <!-- Submit Feedback -->
+        <div class="endpoint">
+            <span class="method">POST</span> <span class="url">/api/v1/feedback</span>
+            <p>Submit a "Thumbs Up" or "Thumbs Down" rating and comments for a specific book/page.</p>
+            <div class="params">
+                <table>
+                    <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+                    <tr><td><code>book_id</code></td><td>String</td><td>The exact folder name of the book (required)</td></tr>
+                    <tr><td><code>status</code></td><td>String</td><td>Either <code>"up"</code> or <code>"down"</code> (required)</td></tr>
+                    <tr><td><code>page</code></td><td>Number</td><td>The page number (optional)</td></tr>
+                    <tr><td><code>comment</code></td><td>String</td><td>Additional notes (optional)</td></tr>
+                </table>
+            </div>
+            <p><em>Example:</em> <code>{"book_id": "Rigveda", "status": "down", "page": 5, "comment": "OCR error in line 2"}</code></p>
+        </div>
+
+        <h2><span class="emoji">📦</span> Response Format</h2>
+        <p>All responses are returned in JSON format.</p>
+        <pre>
+{
+  "success": true,
+  "count": 1,
+  "results": [
+    {
+      "book": "Rigveda_Mandala_1",
+      "page": 45,
+      "text": "... context around the match ...",
+      "archive_url": "https://archive.org/details/rigveda1"
+    }
+  ],
+  "time_sec": 0.12
+}</pre>
+
+        <div style="margin-top: 50px; text-align: center; color: #999; font-size: 14px;">
+            Sanskrit Digital Library API &copy; 2026
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script></body>
+</html>

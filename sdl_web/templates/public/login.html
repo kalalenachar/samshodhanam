@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                        sessionStorage.setItem('server_startup_id', currentServerId);
+                    } catch (e) { }
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) { }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sanskrit Digital Library</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            color: var(--t-text-primary);
+            padding: 20px;
+        }
+
+
+
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--t-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            position: relative;
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-area h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: var(--t-accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .logo-area p {
+            color: var(--t-text-muted);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--t-text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            color: var(--t-text-primary);
+            font-size: 15px;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--t-accent);
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15);
+            background: var(--t-bg-elevated);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%);
+            border: none;
+            border-radius: 12px;
+            color: var(--t-text-on-accent);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 12px var(--t-accent-alpha-30);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--t-accent-alpha-40);
+            filter: brightness(1.1);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .footer-links {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--t-text-muted);
+        }
+
+        .footer-links a {
+            color: var(--t-accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--t-text-secondary);
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #a7f3d0;
+        }
+
+        .back-home {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+
+        .back-home:hover {
+            color: var(--t-text-primary);
+        }
+
+        @media (max-width: 480px) {
+            .back-home {
+                position: static !important;
+                margin-bottom: 20px !important;
+                align-self: flex-start !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="{{ url_for('index') }}" class="back-home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to Search
+    </a>
+
+    <div class="login-container">
+        <div class="logo-area">
+            <h1>Sanskrit Digital Library</h1>
+            <p>Login to your account or dashboard</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'error' else 'danger' }}">
+            {% if category == 'error' %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            {% else %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            {% endif %}
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('unified_login') }}" method="POST">
+            <div class="form-group">
+                <label for="email">EMAIL</label>
+                <div class="input-wrapper">
+                    <input type="text" id="email" name="email" placeholder="Enter your email" required autofocus
+                        autocomplete="email">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">PASSWORD</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required
+                        autocomplete="current-password" style="padding-right: 40px;">
+                    <button type="button" onclick="const p=document.getElementById('password'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\'></path><circle cx=\'12\' cy=\'12\' r=\'3\'></circle></svg>' : '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\'></path><line x1=\'1\' y1=\'1\' x2=\'23\' y2=\'23\'></line></svg>'" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Login</button>
+        </form>
+
+        <div class="oauth-signin-wrapper" style="margin-top: 24px; display: none; flex-direction: column; align-items: center; gap: 16px; width: 100%;">
+            <div style="display: flex; align-items: center; width: 100%; gap: 12px; color: var(--t-text-muted); font-size: 13px;">
+                <div style="flex: 1; height: 1px; background: var(--t-border);"></div>
+                <span style="letter-spacing: 0.5px; text-transform: uppercase; font-size: 11px; font-weight: 600;">or continue with</span>
+                <div style="flex: 1; height: 1px; background: var(--t-border);"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                <div id="google-signin-btn" style="width: 100%; display: flex; justify-content: center; min-height: 44px;"></div>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            Don't have an account? <a href="{{ url_for('user_register') }}">Register here</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let googleEnabled = false;
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect') || urlParams.get('next') || '';
+
+            function updateWrapper() {
+                const wrapper = document.querySelector('.oauth-signin-wrapper');
+                if (wrapper) {
+                    if (googleEnabled) {
+                        wrapper.style.display = 'flex';
+                    } else {
+                        wrapper.style.display = 'none';
+                    }
+                }
+            }
+
+            // Google Sign-in
+            window.handleGoogleCredentialResponse = function(response) {
+                fetch('/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        localStorage.setItem('user_token', data.token);
+                        localStorage.setItem('user_profile', JSON.stringify(data.user));
+                        
+                        fetch('/sdl/api/external/session-sync', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${data.token}` },
+                            credentials: 'include'
+                        }).catch(err => console.error(err))
+                        .finally(() => {
+                            window.location.href = data.redirect || '/';
+                        });
+                    } else {
+                        alert('Google Sign-In failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Error during Google Sign-In backend communication:', err);
+                    alert('A connection error occurred. Please try again.');
+                });
+            };
+
+            fetch('/api/auth/google/config')
+                .then(res => res.json())
+                .then(cfg => {
+                    if (cfg.enabled && cfg.google_client_id) {
+                        googleEnabled = true;
+                        updateWrapper();
+
+                        const GSI_URL = 'https://accounts.google.com/gsi/client';
+                        const existingScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+
+                        function onGsiReady() {
+                            google.accounts.id.initialize({
+                                client_id: cfg.google_client_id,
+                                callback: window.handleGoogleCredentialResponse
+                            });
+                            const btnDiv = document.getElementById('google-signin-btn');
+                            if (btnDiv) {
+                                google.accounts.id.renderButton(btnDiv, {
+                                    theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'filled_blue' : 'outline',
+                                    size: 'large',
+                                    width: btnDiv.offsetWidth || '360',
+                                    shape: 'pill'
+                                });
+                            }
+                        }
+
+                        if (existingScript) {
+                            // Script already injected; fire immediately if GSI is already loaded
+                            if (typeof google !== 'undefined' && google.accounts) {
+                                onGsiReady();
+                            }
+                            // Otherwise onload of the existing script will eventually call renderGoogleButtons
+                            return;
+                        }
+
+                        const script = document.createElement('script');
+                        // Use setAttribute to avoid TrustedScriptURL CSP violation
+                        script.setAttribute('src', GSI_URL);
+                        script.async = true;
+                        script.defer = true;
+                        script.onload = onGsiReady;
+                        document.head.appendChild(script);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch Google auth config:', err));
+        })();
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+
+</html>

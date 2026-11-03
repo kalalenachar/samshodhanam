@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synonym Match / पर्याय-मेलनम् - Sanskrit Play</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=100">
+    <link rel="stylesheet" href="style.css?v=100">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+</head>
+<body>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <a href="/play/" class="navbar-home-btn" title="Back to Games">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <h1 class="navbar-title">पर्याय-मेलनम्</h1>
+        </div>
+        <div id="timer-display" class="timer-display" style="display: none;">
+            <span>⏱️</span> <span id="timer-val">00:00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="game-container">
+        
+        <!-- Screen 1: Set Selection -->
+        <div id="screen-selection" class="screen active">
+            <h2 class="screen-title">Choose a Level / क्रीडा-स्तरं चिनोतु</h2>
+            
+
+
+            <!-- Sets Grid -->
+            <div id="sets-grid" class="sets-grid">
+                <div class="no-sets">Loading game levels...</div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Gameplay -->
+        <div id="screen-gameplay" class="screen">
+            <div class="game-info-bar">
+                <div class="info-item" id="info-level-title">स्तरः / Level</div>
+                <div class="info-item" id="info-score">मेलनम् / Matched: 0/0</div>
+            </div>
+
+            <div class="hint-bar">
+                Match the synonyms on both columns! / परस्परं पर्यायपदानि मेलयन्तु
+            </div>
+
+            <!-- Columns -->
+            <div class="synonym-cols">
+                <div>
+                    <div class="column-header">शब्दः / Word</div>
+                    <div id="left-column-list" class="word-list"></div>
+                </div>
+                <div>
+                    <div class="column-header">Synonym / पर्यायः</div>
+                    <div id="right-column-list" class="word-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Results -->
+        <div id="screen-results" class="screen">
+            <div class="results-header">
+                <div class="score-circle">
+                    <span id="result-score-num" class="score-num">0%</span>
+                    <span class="score-label">Score / क्रीडा-अङ्काः</span>
+                </div>
+                <h2 id="result-msg" class="screen-title">अतिसुन्दरम्! / Excellent!</h2>
+            </div>
+
+            <div class="result-stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-correct">0/0</div>
+                    <div class="stat-lbl">शुद्धम् / Correct</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-time">0s</div>
+                    <div class="stat-lbl">समयः / Time Taken</div>
+                </div>
+            </div>
+
+            <div class="items-breakdown">
+                <h3 class="breakdown-title">विवरणम् / Details</h3>
+                <div id="breakdown-list" class="breakdown-list"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action btn-action-primary" onclick="restartGame()">
+                    <span>🔄</span> क्रीडतु / Play Again
+                </button>
+                <button class="btn-action btn-action-secondary" onclick="location.href='/play/'">
+                    <span>🏠</span> Games
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- API JS Helpers -->
+    <script src="play-db.js"></script>
+
+    <!-- Game Logic JS -->
+    <script>
+        let synonymSets = [];
+        let currentSet = null;
+        let selectedTimerSeconds = 300; // default 5 mins
+        let timerInterval = null;
+        let timeRemaining = null;
+        let timeElapsed = 0;
+        let gameActive = false;
+
+        let selectedLeftId = null;
+        let selectedRightId = null;
+        let score = 0;
+        let totalPairsCount = 0;
+
+        // Initialize level select
+        window.addEventListener('load', async () => {
+            await loadSetsList();
+        });
+
+        async function loadSetsList() {
+            const grid = document.getElementById('sets-grid');
+            const res = await getSynonymSets();
+            if (res.success && res.sets.length > 0) {
+                synonymSets = res.sets;
+                grid.innerHTML = '';
+                res.sets.forEach(set => {
+                    const card = document.createElement('div');
+                    card.className = 'set-card';
+                    card.onclick = () => startGame(set.id);
+                    card.innerHTML = `
+                        <img class="set-card-logo" src="/static/images/game_synonym_match.png" alt="Icon">
+                        <div class="set-card-title">${set.title}</div>
+                        <div class="set-card-meta">${set.pair_count} Pairs / पर्याययुग्मम्</div>
+                        <div class="set-card-play">आरम्भः / Play</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = `
+                    <div class="no-sets">
+                        <p>No synonym match sets found.</p>
+                        <p>Go to Admin Panel to import or add sets.</p>
+                    </div>
+                `;
+            }
+        }
+
+
+
+        async function startGame(setId) {
+            const res = await getSynonymSet(setId);
+            if (!res.success || !res.set) {
+                alert("Failed to load set data.");
+                return;
+            }
+
+            currentSet = res.set;
+            if (currentSet.time_limit === null || currentSet.time_limit === 0) {
+                selectedTimerSeconds = null;
+            } else {
+                selectedTimerSeconds = currentSet.time_limit || 300;
+            }
+            const pairs = currentSet.pairs;
+            totalPairsCount = pairs.length;
+            score = 0;
+            selectedLeftId = null;
+            selectedRightId = null;
+            timeElapsed = 0;
+
+            // Update UI headers
+            document.getElementById('info-level-title').textContent = currentSet.title;
+            updateScoreUI();
+
+            // Populate columns
+            const leftColList = document.getElementById('left-column-list');
+            const rightColList = document.getElementById('right-column-list');
+            leftColList.innerHTML = '';
+            rightColList.innerHTML = '';
+
+            // Shuffle left and right columns independently
+            const leftItems = pairs.map(p => ({ id: p.id, text: p.word }));
+            const rightItems = pairs.map(p => ({ id: p.id, text: p.synonym }));
+
+            shuffleArray(leftItems);
+            shuffleArray(rightItems);
+
+            leftItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'match-item';
+                div.id = `left-${item.id}`;
+                div.textContent = item.text;
+                div.onclick = () => selectItem(item.id, 'left');
+                leftColList.appendChild(div);
+            });
+
+            rightItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'match-item';
+                div.id = `right-${item.id}`;
+                div.textContent = item.text;
+                div.onclick = () => selectItem(item.id, 'right');
+                rightColList.appendChild(div);
+            });
+
+            // Switch Screen
+            switchScreen('screen-gameplay');
+            
+            // Start Timer
+            initTimer();
+            gameActive = true;
+        }
+
+        function selectItem(id, column) {
+            if (!gameActive) return;
+
+            // Prevent selecting already matched items
+            const el = document.getElementById(`${column}-${id}`);
+            if (el.classList.contains('matched')) return;
+
+            if (column === 'left') {
+                // Remove previous selected class
+                if (selectedLeftId !== null) {
+                    document.getElementById(`left-${selectedLeftId}`).classList.remove('selected');
+                }
+                if (selectedLeftId === id) {
+                    selectedLeftId = null; // Toggle off
+                } else {
+                    selectedLeftId = id;
+                    el.classList.add('selected');
+                }
+            } else {
+                if (selectedRightId !== null) {
+                    document.getElementById(`right-${selectedRightId}`).classList.remove('selected');
+                }
+                if (selectedRightId === id) {
+                    selectedRightId = null; // Toggle off
+                } else {
+                    selectedRightId = id;
+                    el.classList.add('selected');
+                }
+            }
+
+            // Check match if both sides selected
+            if (selectedLeftId !== null && selectedRightId !== null) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const leftEl = document.getElementById(`left-${selectedLeftId}`);
+            const rightEl = document.getElementById(`right-${selectedRightId}`);
+
+            if (selectedLeftId === selectedRightId) {
+                // Correct Match
+                leftEl.classList.remove('selected');
+                rightEl.classList.remove('selected');
+                leftEl.classList.add('matched');
+                rightEl.classList.add('matched');
+
+                score++;
+                updateScoreUI();
+
+                selectedLeftId = null;
+                selectedRightId = null;
+
+                if (score === totalPairsCount) {
+                    endGame(true);
+                }
+            } else {
+                // Incorrect Match
+                const lId = selectedLeftId;
+                const rId = selectedRightId;
+                
+                leftEl.classList.add('error-flash');
+                rightEl.classList.add('error-flash');
+
+                selectedLeftId = null;
+                selectedRightId = null;
+
+                setTimeout(() => {
+                    const lEl = document.getElementById(`left-${lId}`);
+                    const rEl = document.getElementById(`right-${rId}`);
+                    if (lEl) {
+                        lEl.classList.remove('selected', 'error-flash');
+                    }
+                    if (rEl) {
+                        rEl.classList.remove('selected', 'error-flash');
+                    }
+                }, 400);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('info-score').innerHTML = `मेलनम् / Matched: <b style="color:var(--primary-color)">${score}/${totalPairsCount}</b>`;
+        }
+
+        function initTimer() {
+            const timerBar = document.getElementById('timer-display');
+            const timerVal = document.getElementById('timer-val');
+            
+            clearInterval(timerInterval);
+            timerBar.classList.remove('timer-low');
+
+            if (selectedTimerSeconds === null) {
+                timerBar.style.display = 'none';
+                timeRemaining = null;
+                timerInterval = setInterval(() => {
+                    timeElapsed++;
+                }, 1000);
+            } else {
+                timerBar.style.display = 'flex';
+                timeRemaining = selectedTimerSeconds;
+                timerVal.textContent = formatTime(timeRemaining);
+                
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    timeElapsed++;
+                    timerVal.textContent = formatTime(timeRemaining);
+
+                    if (timeRemaining <= 10) {
+                        timerBar.classList.add('timer-low');
+                    }
+
+                    if (timeRemaining <= 0) {
+                        endGame(false); // Time's up
+                    }
+                }, 1000);
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        async function endGame(completedAll = false) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-display').style.display = 'none';
+
+            const percentage = totalPairsCount > 0 ? Math.round((score / totalPairsCount) * 100) : 0;
+            
+            // Set Results UI
+            document.getElementById('result-score-num').textContent = `${percentage}%`;
+            document.getElementById('stat-correct').textContent = `${score}/${totalPairsCount}`;
+            document.getElementById('stat-time').textContent = `${timeElapsed}s`;
+
+            // Message feedback
+            const msgEl = document.getElementById('result-msg');
+            if (percentage === 100) {
+                msgEl.textContent = "उत्तमम्! / Excellent!";
+                spawnConfetti();
+            } else if (percentage >= 70) {
+                msgEl.textContent = "सुन्दरम्! / Very Good!";
+                spawnConfetti(20);
+            } else {
+                msgEl.textContent = "पुनः क्रीडतु! / Try Again!";
+            }
+
+            // Generate breakdown detail
+            const listEl = document.getElementById('breakdown-list');
+            listEl.innerHTML = '';
+            currentSet.pairs.forEach(p => {
+                const item = document.createElement('div');
+                const matchedElement = document.getElementById(`left-${p.id}`);
+                const isCorrect = matchedElement && matchedElement.classList.contains('matched');
+                
+                item.className = `breakdown-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                item.innerHTML = `
+                    <span>${p.word} ↔ ${p.synonym}</span>
+                    <span class="item-status ${isCorrect ? 'correct' : 'incorrect'}">
+                        ${isCorrect ? '✓ Match' : '✗ Missed'}
+                    </span>
+                `;
+                listEl.appendChild(item);
+            });
+
+            switchScreen('screen-results');
+
+            // Save results to Database
+            await saveGameResult('synonym_match', currentSet.id, currentSet.title, score, totalPairsCount, percentage, timeElapsed);
+        }
+
+        function restartGame() {
+            if (currentSet) {
+                startGame(currentSet.id);
+            } else {
+                switchScreen('screen-selection');
+            }
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => {
+                scr.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Shuffle arrays helper
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        // Confetti Generator
+        function spawnConfetti(count = 60) {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', 'var(--t-accent)', '#ec4899', '#f472b6'];
+            
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.left = `${Math.random() * 100}vw`;
+                piece.style.top = `${-Math.random() * 20}px`;
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                piece.style.animationDelay = `${Math.random() * 0.8}s`;
+                piece.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+                container.appendChild(piece);
+            }
+        }
+    </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

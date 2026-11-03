@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environment and secrets
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs
+*.log
+
+# SQLite Databases (rigveda.db.gz is tracked as compressed archive; uncompressed rigveda.db is ignored)
+*.db
+*.sqlite
+*.sqlite3
+!apps/rigveda/rigveda.db.gz
+
+# Cache and temporary files
+.cache/
+.pytest_cache/
+htmlcov/
+.coverage
+uploads/
+sdl_mobile_catalog_cache.json
+warmup_status.txt
+audit_logs.json
+sdl_browse_cache.json
+tokens/
+chroma_db/
+github_sync_config.json
+
+# OS specific
+.DS_Store
+Thumbs.db

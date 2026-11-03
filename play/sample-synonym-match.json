@@ -1,0 +1,22 @@
+[
+  {
+    "title": "प्राणी-पर्यायाः / Animal Synonyms",
+    "pairs": [
+      {"word": "गजः", "synonym": "हस्ती"},
+      {"word": "सिंहः", "synonym": "केसरी"},
+      {"word": "अश्वः", "synonym": "हयः"},
+      {"word": "व्याघ्रः", "synonym": "शार्दूलः"},
+      {"word": "वानरः", "synonym": "कपिः"}
+    ]
+  },
+  {
+    "title": "देव-पर्यायाः / Deity Synonyms",
+    "pairs": [
+      {"word": "शिवः", "synonym": "शम्भुः"},
+      {"word": "विष्णुः", "synonym": "नारायणः"},
+      {"word": "सूर्यः", "synonym": "भानुः"},
+      {"word": "गणेशः", "synonym": "विनायकः"},
+      {"word": "सरस्वती", "synonym": "शारदा"}
+    ]
+  }
+]

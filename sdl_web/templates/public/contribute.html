@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=37">
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('smsdl-theme');
+                if (!t) {
+                    var match = document.cookie.match(new RegExp('(^| )smsdl-theme=([^;]+)'));
+                    if (match) t = match[2];
+                }
+                t = t || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload a Book — Sanskrit Digital Library</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=39">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--t-bg-body-start, #f8fafc) 0%, var(--t-bg-body-mid, #f1f5f9) 50%, var(--t-bg-body-end, #e2e8f0) 100%);
+            background-attachment: fixed;
+            color: var(--t-text-primary, #1e293b);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 14px 28px;
+            background: var(--t-bg-surface, rgba(255, 255, 255, 0.9));
+            border-bottom: 1px solid var(--t-border, #e2e8f0);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .header-brand h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--t-text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--t-text-secondary, #64748b);
+            font-weight: 500;
+            font-size: 0.92rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--t-accent, #2563eb);
+            background: var(--t-accent-alpha-08, rgba(37, 99, 235, 0.08));
+        }
+
+        .contribute-container {
+            max-width: 860px;
+            width: 100%;
+            margin: 36px auto 60px;
+            padding: 0 20px;
+        }
+
+        .hero-banner {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 999px;
+            background: var(--t-accent-alpha-12, rgba(37, 99, 235, 0.12));
+            color: var(--t-accent, #2563eb);
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 0 10px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--t-accent, #2563eb) 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.05rem;
+            color: var(--t-text-secondary, #64748b);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .card-wrapper {
+            background: var(--t-bg-surface, #ffffff);
+            border-radius: 20px;
+            box-shadow: var(--t-shadow, 0 10px 30px rgba(0, 0, 0, 0.06));
+            border: 1px solid var(--t-border, #e2e8f0);
+            padding: 32px 36px;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-selector {
+            display: flex;
+            background: var(--t-hover-bg, #f1f5f9);
+            padding: 6px;
+            border-radius: 12px;
+            gap: 6px;
+            margin-bottom: 28px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--t-text-muted, #64748b);
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--t-bg-surface, #ffffff);
+            color: var(--t-accent, #2563eb);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-section {
+            margin-bottom: 22px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--t-text-primary, #1e293b);
+            margin-bottom: 8px;
+        }
+
+        .form-label .req {
+            color: #ef4444;
+            margin-left: 3px;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1.5px solid var(--t-border, #cbd5e1);
+            background: var(--t-input-bg, #ffffff);
+            color: var(--t-text-primary, #1e293b);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            border-color: var(--t-accent, #2563eb);
+            box-shadow: 0 0 0 3px var(--t-accent-alpha-15, rgba(37, 99, 235, 0.15));
+        }
+
+        .form-textarea {
+            min-height: 160px;
+            resize: vertical;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 680px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .card-wrapper {
+                padding: 22px 18px;
+            }
+        }
+
+        .tag-pills-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .tag-pill {
+            cursor: pointer;
+            font-size: 0.82rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--t-hover-bg, #f1f5f9);
+            color: var(--t-text-secondary, #475569);
+            border: 1px solid var(--t-border, #cbd5e1);
+            transition: all 0.15s;
+        }
+
+        .tag-pill:hover, .tag-pill.active {
+            background: var(--t-accent, #2563eb);
+            color: #ffffff;
+            border-color: var(--t-accent, #2563eb);
+        }
+
+        /* Upload Dropzone */
+        .dropzone {
+            border: 2px dashed var(--t-accent-alpha-35, rgba(37, 99, 235, 0.35));
+            border-radius: 14px;
+            padding: 36px 20px;
+            text-align: center;
+            background: var(--t-accent-alpha-05, rgba(37, 99, 235, 0.04));
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .dropzone:hover {
+            border-color: var(--t-accent, #2563eb);
+            background: var(--t-accent-alpha-08, rgba(37, 99, 235, 0.08));
+        }
+
+        .dropzone-icon {
+            font-size: 42px;
+            margin-bottom: 8px;
+        }
+
+        .dropzone-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--t-text-primary);
+        }
+
+        .dropzone-sub {
+            font-size: 0.82rem;
+            color: var(--t-text-muted);
+            margin-top: 4px;
+        }
+
+        /* Anti-bot Challenge Card */
+        .challenge-box {
+            background: var(--t-accent-alpha-08, rgba(37, 99, 235, 0.06));
+            border: 1px solid var(--t-accent-alpha-20, rgba(37, 99, 235, 0.2));
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .challenge-label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--t-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .challenge-input {
+            width: 100px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1.5px solid var(--t-border);
+            outline: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--t-accent, #2563eb) 0%, #1d4ed8 100%);
+            color: #ffffff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 14px var(--t-accent-alpha-25, rgba(37, 99, 235, 0.25));
+            transition: all 0.2s ease;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .submit-btn:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--t-accent-alpha-35, rgba(37, 99, 235, 0.35));
+        }
+
+        .notice-card {
+            background: var(--t-hover-bg, #f8fafc);
+            border-left: 4px solid var(--t-accent, #2563eb);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--t-text-secondary);
+            margin-top: 20px;
+            line-height: 1.5;
+        }
+
+        /* Progress Modal */
+        .progress-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .progress-modal {
+            background: var(--t-bg-surface, #ffffff);
+            border-radius: 20px;
+            max-width: 480px;
+            width: 100%;
+            padding: 32px 28px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .progress-bar-wrap {
+            height: 10px;
+            background: var(--t-hover-bg, #e2e8f0);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 20px 0 12px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 15%;
+            background: linear-gradient(90deg, var(--t-accent, #2563eb), #8b5cf6);
+            border-radius: 999px;
+            transition: width 0.4s ease;
+        }
+
+        .spinner {
+            width: 44px;
+            height: 44px;
+            border: 4px solid var(--t-hover-bg, #e2e8f0);
+            border-top-color: var(--t-accent, #2563eb);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <a href="/" class="header-brand">
+            <span style="font-size: 24px;">🏛️</span>
+            <h1>Sanskrit Digital Library</h1>
+        </a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">🏠 Portal Home</a>
+            <a href="/browse" class="nav-link">📚 Library</a>
+            <a href="/upload-book" class="nav-link active">📤 Upload Book</a>
+        </div>
+    </header>
+
+    <div class="contribute-container">
+        <!-- Hero Title -->
+        <div class="hero-banner">
+            <div class="hero-badge">✨ Open Knowledge Upload</div>
+            <h1 class="hero-title">Upload a Sanskrit Book</h1>
+            <p class="hero-desc">Upload timeless Sanskrit texts and manuscripts to the digital library. Anyone can upload a book without logging in.</p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card-wrapper">
+            <!-- Tab Selector -->
+            <div class="tab-selector">
+                <button type="button" class="tab-btn active" id="btnTabPdf" onclick="setTab('pdf')">
+                    <span>📄</span> Upload PDF Document
+                </button>
+                <button type="button" class="tab-btn" id="btnTabTxt" onclick="setTab('text')">
+                    <span>📝</span> Upload Text / Paste E-Text
+                </button>
+            </div>
+
+            <form id="contributeForm" onsubmit="handleContributeSubmit(event)">
+                <!-- Anti-bot Honeypot (hidden from genuine users) -->
+                <input type="text" name="website_url" id="honeypot" style="display:none !important;" tabindex="-1" autocomplete="off">
+                <input type="hidden" name="upload_type" id="uploadType" value="pdf">
+                <input type="hidden" name="tags" id="tagsInput" value="">
+
+                <!-- Book Title & Author -->
+                <div class="form-grid">
+                    <div class="form-section">
+                        <label class="form-label" for="bookName">Book Title (ग्रन्थनाम)<span class="req">*</span></label>
+                        <input type="text" class="form-input" id="bookName" name="book_name" placeholder="e.g. श्रीमद्भगवद्गीता or Tarka Sangraha" required>
+                    </div>
+                    <div class="form-section">
+                        <label class="form-label" for="bookAuthor">Author / Commentator (ग्रन्थकारः / व्याख्याता)</label>
+                        <input type="text" class="form-input" id="bookAuthor" name="author" placeholder="e.g. अन्नम्भट्टः or Vedavyasa">
+                    </div>
+                </div>
+
+                <!-- Category / Taxonomy Tags -->
+                <div class="form-section">
+                    <label class="form-label">Subject &amp; Category Tags (विषयवर्गाः)</label>
+                    <div class="tag-pills-wrap">
+                        <span class="tag-pill" onclick="toggleTag(this, 'वेदान्त')">🕉️ वेदान्त</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'अद्वैत')">अद्वैत</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'द्वैत')">द्वैत</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'विशिष्टाद्वैत')">विशिष्टाद्वैत</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'न्यायशास्त्र')">⚖️ न्यायशास्त्र</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'व्याकरणशास्त्र')">📖 व्याकरणशास्त्र</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'काव्यम्')">📜 काव्यम्</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'पुराणम्')">🔱 पुराणम्</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'स्तोत्रम्')">🙏 स्तोत्रम्</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'साहित्य')">साहित्य</span>
+                        <span class="tag-pill" onclick="toggleTag(this, 'आयुर्वेद')">🌿 आयुर्वेद</span>
+                    </div>
+                </div>
+
+                <!-- PDF Section -->
+                <div id="pdfSection">
+                    <div class="form-section">
+                        <label class="form-label">PDF File<span class="req">*</span></label>
+                        <div class="dropzone" id="pdfDropzone" onclick="document.getElementById('pdfInput').click()">
+                            <div class="dropzone-icon">📥</div>
+                            <div class="dropzone-text" id="pdfFileName">Click or drag &amp; drop a PDF file here</div>
+                            <div class="dropzone-sub">Searchable PDFs are extracted instantly. Scanned PDFs are processed via Google Drive OCR.</div>
+                            <input type="file" id="pdfInput" name="pdf_file" accept=".pdf" style="display:none;" onchange="handlePdfSelected(this)">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Section -->
+                <div id="textSection" style="display: none;">
+                    <div class="form-section">
+                        <label class="form-label" for="textContent">Paste Book Content or Transcribed Text<span class="req">*</span></label>
+                        <textarea class="form-textarea" id="textContent" name="content" placeholder="Paste the Devanagari or transliterated Sanskrit text here. Page markers like {[ (1) ]} will be preserved or auto-generated..."></textarea>
+                    </div>
+                    <div class="form-section">
+                        <label class="form-label">Or Upload .txt / .sdl File</label>
+                        <input type="file" class="form-input" id="textFile" name="text_file" accept=".txt,.sdl" onchange="handleTextFileSelected(this)">
+                    </div>
+                </div>
+
+                <!-- Contributor Info & Source Link -->
+                <div class="form-grid">
+                    <div class="form-section">
+                        <label class="form-label" for="contributor">Your Name / Email (Optional for attribution)</label>
+                        <input type="text" class="form-input" id="contributor" name="contributor" placeholder="e.g. Acharya Ramanathan (optional)">
+                    </div>
+                    <div class="form-section">
+                        <label class="form-label" for="sourceUrl">Source / Archive.org Link (Optional)</label>
+                        <input type="url" class="form-input" id="sourceUrl" name="source" placeholder="e.g. https://archive.org/details/...">
+                    </div>
+                </div>
+
+                <!-- Anti-bot Math Challenge -->
+                <div class="challenge-box">
+                    <div class="challenge-label">
+                        <span>🛡️ Anti-bot verification:</span>
+                        <span>What is <strong id="mathN1">{{ math_n1 }}</strong> + <strong id="mathN2">{{ math_n2 }}</strong> ?</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="number" class="challenge-input" id="mathAnswer" name="math_answer" required placeholder="?">
+                        <button type="button" onclick="refreshMathChallenge()" title="Get new challenge" style="background:none; border:none; cursor:pointer; font-size:18px;">🔄</button>
+                    </div>
+                </div>
+
+                <!-- Notice -->
+                <div class="notice-card">
+                    💡 <strong>Community Contributed Policy:</strong> Your book will be published with a <em>"Community Contributed / Unverified"</em> badge so everyone can read and explore it right away. An administrator will review and verify it for official catalog certification.
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span>🚀</span> Upload &amp; Publish Book
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-modal">
+            <div class="spinner" id="progressSpinner"></div>
+            <h3 style="margin: 0 0 8px; font-size: 1.25rem;" id="progressTitle">Publishing Book...</h3>
+            <p style="font-size: 0.92rem; color: var(--t-text-secondary); margin: 0 0 16px;" id="progressMsg">Extracting pages and preparing digital reader...</p>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--t-text-muted);" id="progressSub">Please do not close this window while processing.</div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'pdf';
+        const selectedTags = new Set();
+
+        function setTab(tab) {
+            currentTab = tab;
+            document.getElementById('uploadType').value = tab;
+            const btnPdf = document.getElementById('btnTabPdf');
+            const btnTxt = document.getElementById('btnTabTxt');
+            const pdfSec = document.getElementById('pdfSection');
+            const txtSec = document.getElementById('textSection');
+
+            if (tab === 'pdf') {
+                btnPdf.classList.add('active');
+                btnTxt.classList.remove('active');
+                pdfSec.style.display = 'block';
+                txtSec.style.display = 'none';
+            } else {
+                btnTxt.classList.add('active');
+                btnPdf.classList.remove('active');
+                pdfSec.style.display = 'none';
+                txtSec.style.display = 'block';
+            }
+        }
+
+        function toggleTag(el, tag) {
+            if (selectedTags.has(tag)) {
+                selectedTags.delete(tag);
+                el.classList.remove('active');
+            } else {
+                selectedTags.add(tag);
+                el.classList.add('active');
+            }
+            document.getElementById('tagsInput').value = Array.from(selectedTags).join(', ');
+        }
+
+        function handlePdfSelected(input) {
+            if (input.files && input.files[0]) {
+                const f = input.files[0];
+                document.getElementById('pdfFileName').textContent = `Selected: ${f.name} (${(f.size / (1024 * 1024)).toFixed(1)} MB)`;
+                
+                // Auto-fill title if empty
+                const titleInput = document.getElementById('bookName');
+                if (!titleInput.value) {
+                    const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+                    titleInput.value = cleanName;
+                }
+            }
+        }
+
+        function handleTextFileSelected(input) {
+            if (input.files && input.files[0]) {
+                const f = input.files[0];
+                const titleInput = document.getElementById('bookName');
+                if (!titleInput.value) {
+                    const cleanName = f.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ");
+                    titleInput.value = cleanName;
+                }
+            }
+        }
+
+        async function refreshMathChallenge() {
+            try {
+                const res = await fetch('/api/contribute/challenge');
+                const data = await res.json();
+                document.getElementById('mathN1').textContent = data.n1;
+                document.getElementById('mathN2').textContent = data.n2;
+                document.getElementById('mathAnswer').value = '';
+            } catch (e) {
+                console.error("Failed to refresh challenge", e);
+            }
+        }
+
+        async function handleContributeSubmit(e) {
+            e.preventDefault();
+            const form = document.getElementById('contributeForm');
+            const btn = document.getElementById('submitBtn');
+            const overlay = document.getElementById('progressOverlay');
+            const title = document.getElementById('progressTitle');
+            const msg = document.getElementById('progressMsg');
+            const bar = document.getElementById('progressBar');
+
+            const bookName = document.getElementById('bookName').value.trim();
+            if (!bookName) {
+                alert('Please enter a book title.');
+                return;
+            }
+
+            if (currentTab === 'pdf') {
+                const pdfInput = document.getElementById('pdfInput');
+                if (!pdfInput.files || !pdfInput.files[0]) {
+                    alert('Please select a PDF file to upload.');
+                    return;
+                }
+            } else {
+                const content = document.getElementById('textContent').value.trim();
+                const textFile = document.getElementById('textFile');
+                if (!content && (!textFile.files || !textFile.files[0])) {
+                    alert('Please provide book content or upload a text file.');
+                    return;
+                }
+            }
+
+            const formData = new FormData(form);
+            overlay.style.display = 'flex';
+            btn.disabled = true;
+            bar.style.width = '30%';
+
+            try {
+                const res = await fetch('/api/contribute/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || 'Failed to submit book');
+                }
+
+                if (data.needs_ocr && data.task_id) {
+                    // Scanned PDF undergoing OCR
+                    title.textContent = "Processing Scanned PDF...";
+                    msg.textContent = "Your document is being transcribed using Google Drive OCR...";
+                    bar.style.width = '50%';
+                    trackOcrTask(data.task_id, data.book_name);
+                } else if (data.redirect_url) {
+                    bar.style.width = '100%';
+                    title.textContent = "Book Published Successfully!";
+                    msg.textContent = "Redirecting to your digital reader...";
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1200);
+                }
+            } catch (err) {
+                overlay.style.display = 'none';
+                btn.disabled = false;
+                alert('Upload failed: ' + err.message);
+                refreshMathChallenge();
+            }
+        }
+
+        async function trackOcrTask(taskId, bookName) {
+            const bar = document.getElementById('progressBar');
+            const msg = document.getElementById('progressMsg');
+            const pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/ocr/status/${taskId}`);
+                    const task = await res.json();
+                    if (task) {
+                        if (task.status) {
+                            msg.textContent = task.status;
+                        }
+                        if (task.total && task.processed) {
+                            const pct = Math.round((task.processed / task.total) * 100);
+                            bar.style.width = `${Math.max(20, pct)}%`;
+                        }
+                        if (task.done) {
+                            clearInterval(pollInterval);
+                            if (task.error) {
+                                alert("OCR processing failed: " + task.error);
+                                document.getElementById('progressOverlay').style.display = 'none';
+                                document.getElementById('submitBtn').disabled = false;
+                            } else {
+                                bar.style.width = '100%';
+                                msg.textContent = "Complete! Book created and ready in reader.";
+                                const readerUrl = task.reader_url || `/reader/${encodeURIComponent(bookName)}`;
+                                setTimeout(() => {
+                                    window.location.href = readerUrl;
+                                }, 1500);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error polling OCR status", e);
+                }
+            }, 2500);
+        }
+    </script>
+</body>
+
+</html>

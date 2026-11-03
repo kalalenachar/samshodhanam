@@ -1,0 +1,403 @@
+<!-- HTML Markup for Shared Login and Register Modals -->
+<div id="loginModal" style="position: fixed; inset: 0; background: var(--t-bg-surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
+    <div style="background: var(--t-bg-overlay); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 36px 30px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: var(--t-text-primary) ; text-align: left; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--t-text-secondary), #e879f9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; font-family: 'Inter', sans-serif;">Login</h2>
+            <button onclick="closeLoginModal()" style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--t-bg-surface); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: var(--t-text-secondary) ; cursor: pointer; font-size: 1rem; transition: all 0.2s;">✕</button>
+        </div>
+        <p style="color: var(--t-text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;">Access your account without leaving this page</p>
+        
+        <div id="loginModalError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 12px; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;"></div>
+        
+        <form id="loginModalForm" onsubmit="handleLoginModalSubmit(event)" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="loginModalEmail" style="display: block; font-size: 0.88rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">EMAIL / USERNAME</label>
+                <input type="text" id="loginModalEmail" placeholder="Enter your email" required style="width: 100%; padding: 12px 14px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.92rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="loginModalPassword" style="display: block; font-size: 0.88rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">PASSWORD</label>
+                <div style="position: relative;">
+                    <input type="password" id="loginModalPassword" placeholder="Enter your password" required style="width: 100%; padding: 12px 14px; padding-right: 40px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.92rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+                    <button type="button" onclick="const p=document.getElementById('loginModalPassword'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\'></path><circle cx=\'12\' cy=\'12\' r=\'3\'></circle></svg>' : '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\'></path><line x1=\'1\' y1=\'1\' x2=\'23\' y2=\'23\'></line></svg>'" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%); border: none; border-radius: 12px; color: var(--t-text-on-accent); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; margin-top: 10px;">Login</button>
+        </form>
+        <div class="oauth-signin-modal-wrapper" style="margin-top: 16px; display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+            <div style="display: flex; align-items: center; width: 100%; gap: 10px; color: var(--t-text-muted); font-size: 11px;">
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+                <span style="letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600;">or continue with</span>
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <div id="google-signin-btn-login-modal" style="width: 100%; display: flex; justify-content: center; min-height: 40px;"></div>
+            </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center; font-size: 0.85rem; color: var(--t-text-muted); font-family: 'Inter', sans-serif;">
+            Don't have an account? <a href="#" onclick="switchToRegister(event)" style="color: var(--t-accent); text-decoration: none; font-weight: 600;">Register here</a>
+        </div>
+    </div>
+</div>
+
+<div id="registerModal" style="position: fixed; inset: 0; background: var(--t-bg-surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;">
+    <div style="background: var(--t-bg-overlay); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 36px 30px; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: var(--t-text-primary) ; text-align: left; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--t-text-secondary), #e879f9); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 0; font-family: 'Inter', sans-serif;">Register</h2>
+            <button onclick="closeRegisterModal()" style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: var(--t-bg-surface); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: var(--t-text-secondary) ; cursor: pointer; font-size: 1rem; transition: all 0.2s;">✕</button>
+        </div>
+        <p style="color: var(--t-text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;">Create your account to start tracking progress</p>
+        
+        <div id="registerModalError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 12px; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;"></div>
+        <div id="registerModalSuccess" style="display: none; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; padding: 12px; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif;"></div>
+        
+        <form id="registerModalForm" onsubmit="handleRegisterModalSubmit(event)" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="registerModalDisplayName" style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">DISPLAY NAME (OPTIONAL)</label>
+                <input type="text" id="registerModalDisplayName" placeholder="Enter display name" style="width: 100%; padding: 10px 12px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="registerModalEmail" style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">EMAIL ADDRESS</label>
+                <input type="email" id="registerModalEmail" placeholder="Enter email address" required style="width: 100%; padding: 10px 12px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="registerModalMobile" style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">MOBILE NUMBER</label>
+                <input type="tel" id="registerModalMobile" placeholder="Enter mobile number" required style="width: 100%; padding: 10px 12px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="registerModalPassword" style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">PASSWORD (MIN 8 CHARACTERS)</label>
+                <div style="position: relative;">
+                    <input type="password" id="registerModalPassword" placeholder="Create a password" required minlength="8" style="width: 100%; padding: 10px 12px; padding-right: 40px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+                    <button type="button" onclick="const p=document.getElementById('registerModalPassword'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\'></path><circle cx=\'12\' cy=\'12\' r=\'3\'></circle></svg>' : '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\'></path><line x1=\'1\' y1=\'1\' x2=\'23\' y2=\'23\'></line></svg>'" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label for="registerModalConfirmPassword" style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--t-text-secondary) ; font-family: 'Inter', sans-serif;">CONFIRM PASSWORD</label>
+                <div style="position: relative;">
+                    <input type="password" id="registerModalConfirmPassword" placeholder="Confirm your password" required style="width: 100%; padding: 10px 12px; padding-right: 40px; background: var(--t-input-bg, var(--t-bg-surface)); border: 1.5px solid var(--t-input-border); border-radius: 12px; color: var(--t-input-text); font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif;">
+                    <button type="button" onclick="const p=document.getElementById('registerModalConfirmPassword'); p.type = p.type === 'password' ? 'text' : 'password'; this.innerHTML = p.type === 'password' ? '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\'></path><circle cx=\'12\' cy=\'12\' r=\'3\'></circle></svg>' : '<svg width=\'20\' height=\'20\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24\'></path><line x1=\'1\' y1=\'1\' x2=\'23\' y2=\'23\'></line></svg>'" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--t-text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%); border: none; border-radius: 12px; color: var(--t-text-on-accent); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; margin-top: 6px;">Register</button>
+        </form>
+        <div class="oauth-signin-modal-wrapper" style="margin-top: 16px; display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+            <div style="display: flex; align-items: center; width: 100%; gap: 10px; color: var(--t-text-muted); font-size: 11px;">
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+                <span style="letter-spacing: 0.5px; text-transform: uppercase; font-weight: 600;">or register with</span>
+                <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <div id="google-signin-btn-register-modal" style="width: 100%; display: flex; justify-content: center; min-height: 40px;"></div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; text-align: center; font-size: 0.85rem; color: var(--t-text-muted); font-family: 'Inter', sans-serif;">
+            Already have an account? <a href="#" onclick="switchToLogin(event)" style="color: var(--t-accent); text-decoration: none; font-weight: 600;">Login here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openLoginModal(e) {
+        if (e) e.preventDefault();
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            const emailInput = document.getElementById('loginModalEmail');
+            if (emailInput) emailInput.focus();
+            setTimeout(() => {
+                if (window.renderGoogleButtons) window.renderGoogleButtons();
+            }, 50);
+        }
+    }
+
+    function closeLoginModal() {
+        const modal = document.getElementById('loginModal');
+        if (modal) {
+            modal.style.display = 'none';
+            const form = document.getElementById('loginModalForm');
+            if (form) form.reset();
+            const err = document.getElementById('loginModalError');
+            if (err) err.style.display = 'none';
+        }
+    }
+
+    function openRegisterModal(e) {
+        if (e) e.preventDefault();
+        const modal = document.getElementById('registerModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            const nameInput = document.getElementById('registerModalDisplayName');
+            if (nameInput) nameInput.focus();
+            setTimeout(() => {
+                if (window.renderGoogleButtons) window.renderGoogleButtons();
+            }, 50);
+        }
+    }
+
+    function closeRegisterModal() {
+        const modal = document.getElementById('registerModal');
+        if (modal) {
+            modal.style.display = 'none';
+            const form = document.getElementById('registerModalForm');
+            if (form) form.reset();
+            const err = document.getElementById('registerModalError');
+            if (err) err.style.display = 'none';
+            const succ = document.getElementById('registerModalSuccess');
+            if (succ) succ.style.display = 'none';
+        }
+    }
+
+    function switchToRegister(e) {
+        closeLoginModal();
+        openRegisterModal(e);
+    }
+
+    function switchToLogin(e) {
+        closeRegisterModal();
+        openLoginModal(e);
+    }
+
+    async function handleLoginModalSubmit(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginModalEmail').value;
+        const password = document.getElementById('loginModalPassword').value;
+        const errorDiv = document.getElementById('loginModalError');
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        try {
+            const res = await fetch('/sdl/api/external/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('user_token', data.token);
+                localStorage.setItem('user_profile', JSON.stringify(data.user));
+                closeLoginModal();
+                window.location.reload();
+            } else if (data.error_type === 'email') {
+                closeLoginModal();
+                openRegisterModal();
+                const regEmailInput = document.getElementById('registerModalEmail');
+                if (regEmailInput) regEmailInput.value = email;
+                const regError = document.getElementById('registerModalError');
+                if (regError) {
+                    regError.textContent = "Account not found with this email. Complete details below to register! 🎉";
+                    regError.style.background = "var(--t-accent-alpha-15)";
+                    regError.style.color = "var(--t-text-secondary)";
+                    regError.style.borderColor = "var(--t-accent-alpha-30)";
+                    regError.style.display = 'block';
+                }
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.style.display = 'block';
+                }
+                const pwInput = document.getElementById('loginModalPassword');
+                if (pwInput) pwInput.value = '';
+            }
+        } catch (err) {
+            console.error(err);
+            if (errorDiv) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+    }
+
+    async function handleRegisterModalSubmit(e) {
+        e.preventDefault();
+        const displayName = document.getElementById('registerModalDisplayName').value;
+        const email = document.getElementById('registerModalEmail').value;
+        const mobile = document.getElementById('registerModalMobile').value;
+        const password = document.getElementById('registerModalPassword').value;
+        const confirmPassword = document.getElementById('registerModalConfirmPassword').value;
+
+        const errorDiv = document.getElementById('registerModalError');
+        const successDiv = document.getElementById('registerModalSuccess');
+        if (errorDiv) errorDiv.style.display = 'none';
+        if (successDiv) successDiv.style.display = 'none';
+
+        if (password !== confirmPassword) {
+            if (errorDiv) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+
+        try {
+            const res = await fetch('/sdl/api/external/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email, mobile, password, confirm_password: confirmPassword, display_name: displayName
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                if (successDiv) {
+                    successDiv.textContent = data.message || 'Registration successful!';
+                    successDiv.style.display = 'block';
+                }
+                const form = document.getElementById('registerModalForm');
+                if (form) form.reset();
+                setTimeout(() => {
+                    switchToLogin();
+                    if (successDiv) successDiv.style.display = 'none';
+                }, 2000);
+            } else {
+                if (errorDiv) {
+                    errorDiv.textContent = data.error || 'Failed to register';
+                    errorDiv.style.display = 'block';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            if (errorDiv) {
+                errorDiv.textContent = 'Connection error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+    }
+
+    // Close modals on outside click
+    window.addEventListener('click', (e) => {
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        if (e.target === loginModal) {
+            closeLoginModal();
+        }
+        if (e.target === registerModal) {
+            closeRegisterModal();
+        }
+    });
+
+    // Google Sign-in integration for Modals
+    (function() {
+        let isGsiLoaded = false;
+        let isInitialized = false;  // Guard: initialize() must only be called once
+        let googleClientId = null;
+        let googleEnabled = false;
+
+        function updateModalWrappers() {
+            const wrappers = document.querySelectorAll('.oauth-signin-modal-wrapper');
+            wrappers.forEach(w => {
+                if (googleEnabled) {
+                    w.style.display = 'flex';
+                } else {
+                    w.style.display = 'none';
+                }
+            });
+        }
+
+        window.handleGoogleModalCredentialResponse = function(response) {
+            fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    localStorage.setItem('user_token', data.token);
+                    localStorage.setItem('user_profile', JSON.stringify(data.user));
+                    
+                    fetch('/sdl/api/external/session-sync', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${data.token}` },
+                        credentials: 'include'
+                    }).catch(err => console.error(err))
+                    .finally(() => {
+                        closeLoginModal();
+                        closeRegisterModal();
+                        window.location.reload();
+                    });
+                } else {
+                    alert('Google Sign-In failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error('Error during Google Sign-In backend communication:', err);
+                alert('A connection error occurred. Please try again.');
+            });
+        };
+
+        window.renderGoogleButtons = function() {
+            if (!isGsiLoaded || !googleClientId) return;
+
+            // Only call initialize() once — calling it multiple times causes GSI warnings
+            if (!isInitialized) {
+                isInitialized = true;
+                google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: window.handleGoogleModalCredentialResponse
+                });
+            }
+
+            const loginBtnDiv = document.getElementById('google-signin-btn-login-modal');
+            if (loginBtnDiv && loginBtnDiv.offsetWidth > 0) {
+                google.accounts.id.renderButton(loginBtnDiv, {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    width: loginBtnDiv.offsetWidth || '360',
+                    shape: 'pill'
+                });
+            }
+
+            const regBtnDiv = document.getElementById('google-signin-btn-register-modal');
+            if (regBtnDiv && regBtnDiv.offsetWidth > 0) {
+                google.accounts.id.renderButton(regBtnDiv, {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    width: regBtnDiv.offsetWidth || '360',
+                    shape: 'pill'
+                });
+            }
+        };
+
+        // Google config — load GSI script via a static <script> tag to avoid TrustedScriptURL CSP errors.
+        // Dynamic script.src assignment is blocked by Trusted Types; appending a pre-built element is not.
+        fetch('/api/auth/google/config')
+            .then(res => res.json())
+            .then(cfg => {
+                if (cfg.enabled && cfg.google_client_id) {
+                    googleClientId = cfg.google_client_id;
+                    googleEnabled = true;
+                    updateModalWrappers();
+
+                    // Check if the GSI script is already present (e.g. loaded by another module)
+                    if (document.querySelector('script[src*="accounts.google.com/gsi/client"]')) {
+                        // Already in DOM — wait for it if not yet loaded
+                        if (typeof google !== 'undefined' && google.accounts) {
+                            isGsiLoaded = true;
+                            window.renderGoogleButtons();
+                        } else {
+                            // Script tag exists but hasn't fired onload yet; will be handled by its onload
+                        }
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    // Use setAttribute to set src — this avoids the TrustedScriptURL assignment
+                    // block that some browsers enforce when Trusted Types is active.
+                    script.setAttribute('src', 'https://accounts.google.com/gsi/client');
+                    script.async = true;
+                    script.defer = true;
+                    script.onload = () => {
+                        isGsiLoaded = true;
+                        window.renderGoogleButtons();
+                    };
+                    document.head.appendChild(script);
+                }
+            })
+            .catch(err => console.error('Failed to fetch Google auth config:', err));
+    })();
+</script>

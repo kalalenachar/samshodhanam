@@ -1,0 +1,1365 @@
+{% extends "admin/dashboard.html" %}
+{% block content %}
+<div class="chunk-tool-container">
+    <div style="margin-bottom: 15px;">
+        <h2>Library Vector & Semantic Search Hub</h2>
+        <p style="margin: 4px 0 0 0; color: var(--t-text-muted); font-size: 13px;">Manage pre-chunked vectors, ChromaDB semantic search embeddings, and authorized user vector downloads.</p>
+    </div>
+
+    <!-- ====== ALREADY EMBEDDED BOOKS SECTION ====== -->
+    <section class="embedded-books-section">
+        <div class="embedded-header" onclick="toggleEmbeddedSection()">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="embedded-toggle-icon" id="embeddedToggleIcon">▶</span>
+                <h4 style="margin: 0;">📚 Already AI-Trained Books in ChromaDB</h4>
+                <span class="embedded-badge" id="embeddedCountBadge">…</span>
+            </div>
+            <span style="font-size: 13px; color: var(--t-text-muted);">Click to expand / collapse</span>
+        </div>
+        <div id="embeddedBooksBody" class="embedded-body" style="display: none;">
+            <!-- Bulk Actions Toolbar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; padding: 10px; background: var(--t-bg-surface); border: 1px solid var(--t-border); border-radius: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="selectAllEmbeddedCheck" onchange="toggleSelectAllEmbedded(this)" style="width: 16px; height: 16px; cursor: pointer;">
+                    <label for="selectAllEmbeddedCheck" style="font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; color: var(--t-text-primary);">Select All</label>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline-primary btn-sm" onclick="bulkExportSelectedBooks(this)" style="font-size: 12px; font-weight: 600; padding: 6px 12px; margin: 0; background-color: var(--t-accent); color: var(--t-text-on-accent); border: none; cursor: pointer;">📦 Bulk Export ZIP</button>
+                    <button class="btn btn-outline-primary btn-sm" onclick="bulkDownloadSelectedVectors()" style="font-size: 12px; font-weight: 600; padding: 6px 12px; margin: 0; background-color: #0d9488; color: white; border: none; cursor: pointer;">📥 Bulk Download Vectors</button>
+                    <button class="btn btn-danger btn-sm" onclick="bulkDeleteSelectedEmbeddings()" style="font-size: 12px; font-weight: 600; padding: 6px 12px; margin: 0; background-color: var(--danger-color, #ef4444); color: white; border: none; cursor: pointer;">🗑️ Bulk Delete</button>
+                </div>
+            </div>
+            <div id="embeddedBooksGrid" class="embedded-grid">
+                <p class="text-muted" style="grid-column: 1/-1; text-align: center; padding: 30px 0;">Loading embedded books...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== IMPORT / EXPORT HUB ====== -->
+    <section class="books-section" style="margin-top: 20px;">
+        <div style="border-bottom: 1px solid var(--t-border); padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: var(--t-text-primary);"><span class="emoji">📤</span> Vector & Chunk Import / Export Hub</h3>
+        </div>
+        <div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                
+                <!-- Left half: Selected Book Actions -->
+                <div style="flex: 1.5; min-width: 300px; background: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 12px;">
+                    <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--text-dark);">📖 Single Book Operations</h4>
+                    
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label for="bookSelect" style="font-size: 13px; color: var(--text-dark); font-weight: 600; margin-bottom: 6px; display: block;">Select Book to Manage:</label>
+                        <select id="bookSelect" class="form-select form-control" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--t-bg-surface); color: var(--t-text-primary); border-radius: 6px; outline: none; font-size: 14px;">
+                            <option value="">Loading library...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="selectedBookHubLabel" style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 25px 10px; border: 1px dashed var(--border-color); border-radius: 6px;">
+                        Select a book from the list below or from the dropdown above to manage visibility, import custom JSON/ZIP chunks, or export active embeddings.
+                    </div>
+                    
+                    <div id="selectedBookActions" style="display: none; flex-direction: column; gap: 12px;">
+                        <!-- Export Row -->
+                        <div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Export Chunks:</div>
+                            <button class="btn btn-outline-primary btn-sm w-100" id="btnExportBookZip" style="background-color: var(--t-accent); color: white; border: none; padding: 8px; font-weight: 600;">📦 Export ZIP (JSON)</button>
+                        </div>
+                        
+                        <!-- Visibility Toggle Row -->
+                        <div style="border-top: 1px dashed var(--border-color); padding-top: 10px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="font-size: 13px; color: var(--text-dark); font-weight: 600;">Public Visibility:</div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span id="txtPublishStatus" class="badge bg-success" style="font-size: 12px; padding: 4px 10px; border-radius: 12px; font-weight: bold; color: white;">Published</span>
+                                <button class="btn btn-sm btn-outline-warning" id="btnTogglePublish" style="width: auto; padding: 4px 10px; font-size: 12px; margin: 0; font-weight: 600;">Unpublish</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Import Row -->
+                        <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                            <div style="font-size: 13px; color: var(--text-dark); font-weight: 600; margin-bottom: 2px;">Import Pre-Chunked Text (.json or .zip):</div>
+                            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Server will generate Gemini embeddings & store in ChromaDB.</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <input type="file" id="importBookFile" accept=".json,.zip" class="form-control form-control-sm" style="background: var(--t-bg-surface); color: var(--t-text-primary); border-color: var(--border-color);">
+                                <button class="btn btn-success btn-sm w-100" id="btnImportBook" style="margin-top: 4px; padding: 8px; font-weight: 600;">📥 Import & Embed</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right half: Bulk Library Actions -->
+                <div style="flex: 1; min-width: 300px; background: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 12px;">
+                    <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; color: var(--text-dark);">📚 Bulk Library Operations</h4>
+                    
+                    <!-- Export Row -->
+                    <div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Export Entire Library Chunks:</div>
+                        <button class="btn btn-outline-primary btn-sm w-100" id="btnExportAllZip" style="background-color: var(--t-accent); color: white; border: none; padding: 8px; font-weight: 600;">📦 Export All (ZIP)</button>
+                    </div>
+                    
+                    <!-- Import Row -->
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                        <div style="font-size: 13px; color: var(--text-dark); font-weight: 600; margin-bottom: 2px;">Import Bulk Pre-Chunked (.zip or .json):</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Embeds all books in batch in the background via Gemini API.</div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="file" id="importBulkFile" accept=".zip,.json" class="form-control form-control-sm" style="background: var(--t-bg-surface); color: var(--t-text-primary); border-color: var(--border-color);">
+                            <button class="btn btn-success btn-sm w-100" id="btnImportBulk" style="margin-top: 4px; padding: 8px; font-weight: 600;">📥 Import & Embed Bulk</button>
+                        </div>
+                    </div>
+
+                    <!-- Import Vector DB Row -->
+                    <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                        <div style="font-size: 13px; color: var(--text-dark); font-weight: 600; margin-bottom: 2px;">Import Pre-Computed Vectors (.json or .zip):</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Directly loads pre-computed embeddings into ChromaDB without API calls.</div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="file" id="importVectorFile" accept=".json,.zip" class="form-control form-control-sm" style="background: var(--t-bg-surface); color: var(--t-text-primary); border-color: var(--border-color);">
+                            <button class="btn btn-success btn-sm w-100" id="btnImportVector" onclick="importVectorDatabase()" style="margin-top: 4px; padding: 8px; font-weight: 600; background-color: #0d9488; color: white; border: none; cursor: pointer;">📥 Load Vectors to ChromaDB</button>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Task Progress Indicator for Background Jobs -->
+            <div id="bulkImportProgressContainer" style="display: none; margin-top: 15px; padding: 12px; background: var(--t-accent-alpha-08); border: 1px solid var(--t-accent-alpha-30); border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-weight: bold; font-size: 13px;" id="bulkImportStatusText">Processing bulk import...</span>
+                    <span style="font-size: 12px;" id="bulkImportStatusPercent">0%</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+                    <div id="bulkImportProgressBar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s ease;"></div>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted);" id="bulkImportProcessedCount">Processed: 0/0 books</div>
+                <div style="margin-top: 6px; font-size: 11px; color: var(--danger-color); display: none; max-height: 80px; overflow-y: auto;" id="bulkImportErrorsList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Semantic Search & Embedding Control -->
+    {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+    <section class="books-section" style="margin-top: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: var(--text-dark);"><span class="emoji">🤖</span> AI Semantic Search Management</h3>
+            <div style="display: flex; gap: 10px;">
+                <a href="/admin/ai-settings" class="btn btn-primary" style="background-color: var(--t-accent); padding: 8px 14px; font-size: 13px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: auto !important; height: auto;">⚙️ Manage AI Settings</a>
+            </div>
+        </div>
+
+        <!-- AI Stats Panel & Actions -->
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 25px;">
+            <!-- Vector DB Stats -->
+            <div style="flex: 1; min-width: 250px; background: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <h4 style="margin: 0 0 12px 0; color: var(--text-dark); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">📊 Vector Database Stats</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted);">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Total Indexed Chunks:</span>
+                        <strong id="aiStatsTotalChunks" style="color: var(--text-dark);">-</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Storage Disk Size:</span>
+                        <strong id="aiStatsSize" style="color: var(--text-dark);">-</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Last Index Update:</span>
+                        <strong id="aiStatsLastUpdated" style="color: var(--text-dark);">-</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Embedding Generator Trigger -->
+            <div style="flex: 2; min-width: 320px; background: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h4 style="margin: 0 0 10px 0; color: var(--text-dark);">🧠 AI Training Operations</h4>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">Train AI on your books to enable Deep Thinking (semantic) search. Select a target book or all books, then choose an operation below. AI training runs in the background.</p>
+                    
+                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <label for="aiBookSelect" style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Target Book:</label>
+                        <select id="aiBookSelect" style="flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border-color); background: var(--t-bg-surface); color: var(--t-text-primary); border-radius: 6px; font-size: 13px; outline: none;">
+                            <option value="">-- Select a Book --</option>
+                            <option value="all">🌐 All Books (Bulk)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="generateSelectedEmbeddings()" style="flex: 1; padding: 12px; font-weight: 600; min-height: 44px; width: auto !important; height: auto;">🧠 Train AI (Generate Vectors)</button>
+                    <button class="btn btn-danger" onclick="deleteSelectedEmbeddings()" style="flex: 1; padding: 12px; font-weight: 600; min-height: 44px; width: auto !important; height: auto;">🗑️ Delete AI Training</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Background Task Progress Overlay (Embedded in Dashboard) -->
+        <div id="aiProgressContainer" style="display: none; background: rgba(250, 173, 20, 0.1); border: 1px solid rgba(250, 173, 20, 0.3); border-radius: 8px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 12px rgba(250, 173, 20, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h4 style="margin: 0; color: var(--warning-color); display: flex; align-items: center; gap: 8px;">
+                    <span class="spinner-mini">⏳</span>
+                    <span>AI Training in Progress...</span>
+                </h4>
+                <button class="btn btn-danger" onclick="cancelAiEmbedding()" style="width: auto !important; height: auto; padding: 6px 14px; font-size: 12px; background-color: #ff4d4f; border-color: #ff4d4f;">🛑 Cancel Task</button>
+            </div>
+            <div style="font-size: 14px; color: var(--text-dark); margin-bottom: 10px;">
+                Currently indexing: <strong id="aiProgressCurrentBook">-</strong> (<span id="aiProgressBookIndex">0</span> of <span id="aiProgressTotalBooks">0</span> books)
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                Processed: <span id="aiProgressProcessedChunks">0</span> / <span id="aiProgressTotalChunks">0</span> chunks for the current book
+            </div>
+            <!-- Progress Bar -->
+            <div style="height: 16px; background: var(--border-color); border-radius: 8px; overflow: hidden; position: relative;">
+                <div id="aiProgressBarFill" style="height: 100%; width: 0%; background: linear-gradient(90deg, #faad14, #ffc069); transition: width 0.4s ease; border-radius: 8px;"></div>
+            </div>
+            <div id="aiProgressPct" style="text-align: right; font-size: 14px; font-weight: bold; color: #d48806; margin-top: 6px;">0%</div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ====== USER VECTOR REQUESTS SECTION ====== -->
+    <section class="books-section" style="margin-top: 25px;">
+        <div style="border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: var(--text-dark);"><span class="emoji">🔑</span> Logged-in Users' Vector DB Download Requests</h3>
+        </div>
+        
+        <div style="background: var(--light-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="btn btn-success btn-sm" onclick="bulkApproveRequests()" style="background-color: var(--primary-color); border: none; font-weight: 600; padding: 6px 14px; color: white;">Approve Selected</button>
+                <button class="btn btn-danger btn-sm" onclick="bulkRejectRequests()" style="background-color: var(--danger-color); border: none; font-weight: 600; padding: 6px 14px; color: white;">Reject Selected</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; color: var(--t-text-primary);">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); font-weight: 600; color: var(--text-muted);">
+                            <th style="padding: 10px 8px; width: 40px;">
+                                <input type="checkbox" id="selectAllRequestsCheck" onchange="toggleSelectAllRequests(this)" style="width: 16px; height: 16px; cursor: pointer;">
+                            </th>
+                            <th style="padding: 10px 8px;">User Email</th>
+                            <th style="padding: 10px 8px;">Book Name</th>
+                            <th style="padding: 10px 8px;">Requested Date</th>
+                            <th style="padding: 10px 8px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userRequestsTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+    /* AI Management styles */
+    .spinner-mini {
+        display: inline-block;
+        animation: spin 2s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .chunk-tool-container { padding: 15px; display: flex; flex-direction: column; }
+    
+    .books-section {
+        background: var(--light-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+    .embedded-books-section {
+        background: var(--light-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        margin-top: 15px;
+    }
+    .embedded-header {
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+    }
+    .embedded-toggle-icon {
+        font-size: 12px;
+        transition: transform 0.2s ease;
+        display: inline-block;
+        color: var(--text-muted);
+    }
+    .embedded-toggle-icon.open {
+        transform: rotate(90deg);
+    }
+    .embedded-badge {
+        background: var(--t-accent-alpha-15);
+        color: var(--primary-color);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+    .embedded-body {
+        border-top: 1px solid var(--border-color);
+        padding: 20px;
+    }
+    .embedded-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+    .embedded-book-card {
+        background: var(--t-bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px 15px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.01);
+    }
+    .embedded-book-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    }
+    .embedded-book-card.active-edit {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--t-accent-alpha-15);
+    }
+    .embedded-book-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-dark);
+        line-height: 1.4;
+    }
+    .embedded-book-stats {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    .embedded-book-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 5px;
+        border-top: 1px solid var(--border-color);
+        padding-top: 10px;
+    }
+    .embedded-book-actions button {
+        flex: 1;
+        font-size: 12px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+        background: var(--t-border-light);
+        color: var(--text-dark);
+    }
+    .btn-load-chunks {
+        color: var(--t-accent) !important;
+        border-color: var(--t-accent-alpha-40) !important;
+    }
+    .btn-load-chunks:hover {
+        background: var(--primary-color) !important;
+        color: var(--t-text-on-accent) !important;
+        border-color: var(--primary-color) !important;
+    }
+    .btn-delete-embed {
+        color: #f87171 !important;
+        border-color: rgba(239, 68, 68, 0.4) !important;
+    }
+    .btn-delete-embed:hover {
+        background: var(--danger-color) !important;
+        color: #fff !important;
+        border-color: var(--danger-color) !important;
+    }
+    .no-embedded-msg {
+        grid-column: 1/-1;
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .no-embedded-msg .emoji-big { font-size: 36px; display: block; margin-bottom: 10px; }
+</style>
+
+<script>
+    let currentBookPublished = true;
+    let bulkImportPollInterval = null;
+
+    function updateSelectedBookImportExportUI(bookName) {
+        const fallback = document.getElementById('selectedBookHubLabel');
+        const actions = document.getElementById('selectedBookActions');
+        
+        if (bookName) {
+            fallback.style.display = 'none';
+            actions.style.display = 'flex';
+        } else {
+            fallback.style.display = 'block';
+            actions.style.display = 'none';
+        }
+    }
+
+    document.getElementById('btnExportBookZip').addEventListener('click', () => {
+        const bookName = document.getElementById('bookSelect').value;
+        if (!bookName) return alert("Select a book first.");
+        
+        const btn = document.getElementById('btnExportBookZip');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Exporting...";
+        
+        fetch('/api/admin/export-book-zip/' + encodeURIComponent(bookName))
+        .then(res => {
+            if (res.ok) return res.blob();
+            throw new Error("Export failed");
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${bookName}_chunks.zip`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            alert("Error during export: " + err.message);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    });
+
+    document.getElementById('btnExportAllZip').addEventListener('click', () => {
+        const btn = document.getElementById('btnExportAllZip');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Exporting...";
+        
+        fetch('/api/admin/export-all-zip')
+        .then(res => {
+            if (res.ok) return res.blob();
+            throw new Error("Export failed");
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "all_books_chunks.zip";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            alert("Error during export: " + err.message);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    });
+
+    function updatePublishUI(isPublished) {
+        currentBookPublished = isPublished;
+        const badge = document.getElementById('txtPublishStatus');
+        const btn = document.getElementById('btnTogglePublish');
+        
+        if (isPublished) {
+            badge.className = "badge bg-success";
+            badge.textContent = "Published";
+            btn.className = "btn btn-sm btn-outline-warning";
+            btn.textContent = "Unpublish";
+        } else {
+            badge.className = "badge bg-secondary";
+            badge.textContent = "Unpublished";
+            btn.className = "btn btn-sm btn-outline-success";
+            btn.textContent = "Publish";
+        }
+    }
+
+    document.getElementById('btnTogglePublish').addEventListener('click', () => {
+        const bookName = document.getElementById('bookSelect').value;
+        if (!bookName) return alert("Select a book first.");
+        
+        const newStatus = !currentBookPublished;
+        const confirmMsg = newStatus 
+            ? `Are you sure you want to publish "${bookName}" to the public library?` 
+            : `Are you sure you want to unpublish "${bookName}"? It will be hidden from the public library and search pages.`;
+            
+        if (!confirm(confirmMsg)) return;
+        
+        const btn = document.getElementById('btnTogglePublish');
+        btn.disabled = true;
+        
+        fetch('/api/admin/set-publish-status', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({book_name: bookName, published: newStatus})
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            if (data.error) {
+                alert("Error toggling publish status: " + data.error);
+                return;
+            }
+            updatePublishUI(data.published);
+            alert(`Book visibility successfully updated to: ${data.published ? "Published" : "Unpublished"}`);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            console.error(err);
+            alert("Network error updating publish status.");
+        });
+    });
+
+    document.getElementById('btnImportBook').addEventListener('click', () => {
+        const bookName = document.getElementById('bookSelect').value;
+        if (!bookName) return alert("Select a book first.");
+        
+        const fileInput = document.getElementById('importBookFile');
+        if (fileInput.files.length === 0) {
+            return alert("Please select a file (.json or .zip) to import.");
+        }
+        
+        const file = fileInput.files[0];
+        
+        if (!confirm(`Are you sure you want to import chunks for "${bookName}"? This will overwrite your existing embeddings.`)) {
+            return;
+        }
+        
+        const btn = document.getElementById('btnImportBook');
+        btn.disabled = true;
+        btn.textContent = "Importing...";
+        
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('commit_directly', 'true');
+        
+        fetch('/api/admin/import-book-chunks/' + encodeURIComponent(bookName), {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = "📥 Import & Embed";
+            if (data.error) {
+                alert("Import error: " + data.error);
+            } else {
+                alert("Chunks imported and committed successfully!");
+                fileInput.value = '';
+                if (embeddedSectionOpen) {
+                    loadEmbeddedBooks();
+                }
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = "📥 Import & Embed";
+            alert("Network error: " + err);
+        });
+    });
+
+    function pollBulkImportStatus(taskId) {
+        fetch('/api/admin/import-tasks/' + taskId)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                clearInterval(bulkImportPollInterval);
+                alert("Bulk import status error: " + data.error);
+                document.getElementById('bulkImportProgressContainer').style.display = 'none';
+                return;
+            }
+            
+            const pct = data.total > 0 ? Math.round((data.progress / data.total) * 100) : 0;
+            document.getElementById('bulkImportProgressBar').style.width = pct + '%';
+            document.getElementById('bulkImportStatusPercent').textContent = pct + '%';
+            document.getElementById('bulkImportProcessedCount').textContent = `Processed: ${data.progress}/${data.total} books`;
+            
+            if (data.status === 'processing') {
+                document.getElementById('bulkImportStatusText').textContent = "Processing bulk import...";
+            } else if (data.status === 'completed') {
+                clearInterval(bulkImportPollInterval);
+                document.getElementById('bulkImportStatusText').textContent = "✅ Bulk import completed!";
+                document.getElementById('btnImportBulk').disabled = false;
+                document.getElementById('btnImportBulk').textContent = "📥 Import & Embed Bulk";
+                
+                const errList = document.getElementById('bulkImportErrorsList');
+                if (data.errors && data.errors.length > 0) {
+                    errList.innerHTML = '<strong>Errors/Warnings:</strong><br>' + data.errors.map(e => escapeHtml(e)).join('<br>');
+                    errList.style.display = 'block';
+                    alert(`Bulk import finished with ${data.errors.length} errors/warnings. Check the hub for details.`);
+                } else {
+                    errList.style.display = 'none';
+                    alert("Bulk import completed successfully!");
+                }
+                
+                if (embeddedSectionOpen) {
+                    loadEmbeddedBooks();
+                }
+            } else if (data.status === 'failed') {
+                clearInterval(bulkImportPollInterval);
+                document.getElementById('bulkImportStatusText').textContent = "❌ Bulk import failed!";
+                document.getElementById('btnImportBulk').disabled = false;
+                document.getElementById('btnImportBulk').textContent = "📥 Import & Embed Bulk";
+                
+                const errList = document.getElementById('bulkImportErrorsList');
+                if (data.errors && data.errors.length > 0) {
+                    errList.innerHTML = '<strong>Errors:</strong><br>' + data.errors.map(e => escapeHtml(e)).join('<br>');
+                    errList.style.display = 'block';
+                }
+                alert("Bulk import failed. Check the error list.");
+            }
+        })
+        .catch(err => {
+            console.error("Polling error:", err);
+        });
+    }
+
+    document.getElementById('btnImportBulk').addEventListener('click', () => {
+        const fileInput = document.getElementById('importBulkFile');
+        if (fileInput.files.length === 0) {
+            return alert("Please select a file (.zip or .json) to import.");
+        }
+        
+        const file = fileInput.files[0];
+        
+        if (!confirm("Are you sure you want to perform a bulk import? This will overwrite matching embeddings for the books in the file.")) {
+            return;
+        }
+        
+        const btn = document.getElementById('btnImportBulk');
+        btn.disabled = true;
+        btn.textContent = "Uploading...";
+        
+        document.getElementById('bulkImportProgressBar').style.width = '0%';
+        document.getElementById('bulkImportStatusPercent').textContent = '0%';
+        document.getElementById('bulkImportProcessedCount').textContent = 'Processed: 0/0 books';
+        document.getElementById('bulkImportStatusText').textContent = "Uploading file...";
+        document.getElementById('bulkImportErrorsList').style.display = 'none';
+        document.getElementById('bulkImportProgressContainer').style.display = 'block';
+        
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('commit_directly', 'true');
+        
+        fetch('/api/admin/import-bulk-chunks', {
+            method: 'POST',
+            body: fd
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                btn.disabled = false;
+                btn.textContent = "📥 Import & Embed Bulk";
+                document.getElementById('bulkImportProgressContainer').style.display = 'none';
+                alert("Upload error: " + data.error);
+            } else if (data.task_id) {
+                btn.textContent = "Processing...";
+                fileInput.value = '';
+                clearInterval(bulkImportPollInterval);
+                bulkImportPollInterval = setInterval(() => {
+                    pollBulkImportStatus(data.task_id);
+                }, 1000);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = "📥 Import & Embed Bulk";
+            document.getElementById('bulkImportProgressContainer').style.display = 'none';
+            alert("Network error: " + err);
+        });
+    });
+
+    // ====== EMBEDDED BOOKS SECTION ======
+    let embeddedSectionOpen = false;
+
+    function toggleEmbeddedSection() {
+        embeddedSectionOpen = !embeddedSectionOpen;
+        const body = document.getElementById('embeddedBooksBody');
+        const icon = document.getElementById('embeddedToggleIcon');
+        if (embeddedSectionOpen) {
+            body.style.display = 'block';
+            icon.classList.add('open');
+            loadEmbeddedBooks();
+        } else {
+            body.style.display = 'none';
+            icon.classList.remove('open');
+        }
+    }
+
+    function loadEmbeddedBooks() {
+        const grid = document.getElementById('embeddedBooksGrid');
+        grid.innerHTML = '<p class="text-muted" style="grid-column:1/-1; text-align:center; padding:30px 0;">⏳ Loading embedded books list...</p>';
+        
+        fetch('/api/admin/embedded-books')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('embeddedCountBadge');
+                if (!data.embedded_books || data.embedded_books.length === 0) {
+                    badge.textContent = '0';
+                    grid.innerHTML = '<div class="no-embedded-msg"><span class="emoji-big">📭</span>No books have been embedded yet.</div>';
+                    return;
+                }
+                badge.textContent = data.embedded_books.length;
+                renderEmbeddedBooks(data.embedded_books);
+            })
+            .catch(err => {
+                grid.innerHTML = '<p style="color:#d9534f; grid-column:1/-1; text-align:center;">Error loading embedded books.</p>';
+            });
+    }
+
+    function renderEmbeddedBooks(books) {
+        const grid = document.getElementById('embeddedBooksGrid');
+        grid.innerHTML = '';
+        books.forEach(book => {
+            const card = document.createElement('div');
+            card.className = 'embedded-book-card';
+            card.id = `emb-card-${CSS.escape(book.name)}`;
+            
+            card.innerHTML = `
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+                    <div class="embedded-book-name" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                        <input type="checkbox" class="embedded-book-check" data-book-name="${escapeHtml(book.name)}" onchange="updateSelectAllStatus()" style="width: 16px; height: 16px; cursor: pointer; margin: 0;">
+                        <span style="word-break: break-all;">📖 ${escapeHtml(book.name)}</span>
+                    </div>
+                </div>
+                <div class="embedded-book-stats" style="margin-top: 5px;">
+                    <span>🧩 ${book.chunk_count} chunks</span>
+                </div>
+                <div class="embedded-book-actions">
+                    <button class="btn-load-chunks" onclick="selectBookForOperations('${escapeJs(book.name)}')">🛠️ Manage Book</button>
+                    <button class="btn-delete-embed" onclick="deleteEmbedding('${escapeJs(book.name)}')">🗑️ Delete</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function escapeJs(text) {
+        return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    function selectBookForOperations(bookName) {
+        // Highlight the card
+        document.querySelectorAll('.embedded-book-card').forEach(c => c.classList.remove('active-edit'));
+        const cardId = `emb-card-${CSS.escape(bookName)}`;
+        const card = document.getElementById(cardId);
+        if (card) card.classList.add('active-edit');
+
+        // Set book select to this book if it exists
+        const sel = document.getElementById('bookSelect');
+        sel.value = bookName;
+        handleBookSelectionChange(bookName);
+    }
+
+    function handleBookSelectionChange(bookName) {
+        updateSelectedBookImportExportUI(bookName);
+        if (!bookName) return;
+        
+        // Fetch published status of this book using load-embedded-chunks
+        fetch('/api/admin/load-embedded-chunks', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({book_name: bookName})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.error) {
+                updatePublishUI(data.published !== false);
+            }
+        });
+    }
+
+    function deleteEmbedding(bookName) {
+        if (!confirm(`Are you sure you want to delete all embeddings for "${bookName}" from ChromaDB? This action cannot be undone.`)) {
+            return;
+        }
+
+        fetch('/api/admin/delete-embedding', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({book_name: bookName})
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                alert(`Embeddings for "${bookName}" deleted successfully.`);
+                loadEmbeddedBooks();
+                // Clear selection if deleted
+                const sel = document.getElementById('bookSelect');
+                if (sel.value === bookName) {
+                    sel.value = "";
+                    handleBookSelectionChange("");
+                }
+            }
+        })
+        .catch(err => alert("Network Error: " + err));
+    }
+
+    // ====== LIBRARY LOAD ======
+    fetch('/api/admin/library-books')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('bookSelect');
+            select.innerHTML = '<option value="">-- Select a Book --</option>';
+            const aiSelect = document.getElementById('aiBookSelect');
+            if (aiSelect) {
+                aiSelect.innerHTML = '<option value="">-- Select a Book --</option><option value="all">🌐 All Books (Bulk)</option>';
+            }
+            if(data.books) {
+                data.books.forEach(b => {
+                    select.innerHTML += `<option value="${b}">${b}</option>`;
+                    if (aiSelect) {
+                        aiSelect.innerHTML += `<option value="${b}">${b}</option>`;
+                    }
+                });
+            }
+            
+            document.getElementById('bookSelect').addEventListener('change', (e) => {
+                const bookName = e.target.value;
+                // Highlight active card
+                document.querySelectorAll('.embedded-book-card').forEach(c => c.classList.remove('active-edit'));
+                const cardId = `emb-card-${CSS.escape(bookName)}`;
+                const card = document.getElementById(cardId);
+                if (card) card.classList.add('active-edit');
+
+                handleBookSelectionChange(bookName);
+            });
+        });
+
+    // ---- AI Semantic Search & Embedding Operations ----
+    let aiPollInterval = null;
+    let currentAiTaskId = null;
+
+    function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+    }
+
+    function loadAiStats() {
+        const totalChunksEl = document.getElementById('aiStatsTotalChunks');
+        const sizeEl = document.getElementById('aiStatsSize');
+        const lastUpdatedEl = document.getElementById('aiStatsLastUpdated');
+        if (!totalChunksEl && !sizeEl && !lastUpdatedEl) return;
+
+        fetch('/admin/ai/stats')
+            .then(res => res.json())
+            .then(data => {
+                if (totalChunksEl) totalChunksEl.innerText = data.total_chunks.toLocaleString();
+                if (sizeEl) sizeEl.innerText = data.storage_size;
+                if (lastUpdatedEl) lastUpdatedEl.innerText = data.last_updated;
+            })
+            .catch(e => console.error("Error loading stats", e));
+    }
+
+    function getSelectedBooksArray() {
+        const val = document.getElementById('aiBookSelect').value;
+        if (val === 'all') {
+            return 'all';
+        }
+        return val ? [val] : [];
+    }
+
+    function generateSelectedEmbeddings() {
+        const books = getSelectedBooksArray();
+        if (books !== 'all' && books.length === 0) {
+            alert("Please select a target book to generate embeddings.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to generate/update embeddings for the selected book(s)? This will call the AI API and may take some time.`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('books', books === 'all' ? 'all' : JSON.stringify(books));
+
+        fetch('/admin/ai/embed', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else if (data.task_id) {
+                startAiPolling(data.task_id);
+            }
+        })
+        .catch(e => {
+            alert("Failed to start embedding generation.");
+            console.error(e);
+        });
+    }
+
+    function deleteSelectedEmbeddings() {
+        const books = getSelectedBooksArray();
+        if (books !== 'all' && books.length === 0) {
+            alert("Please select a target book to delete embeddings.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to delete embeddings for the selected book(s)? This will clean them up from the vector database.`)) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('books', books === 'all' ? 'all' : JSON.stringify(books));
+
+        fetch('/admin/ai/delete_embeddings', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                loadAiStats();
+                loadEmbeddedBooks();
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(e => {
+            alert("Failed to delete embeddings.");
+            console.error(e);
+        });
+    }
+
+    function startAiPolling(taskId) {
+        currentAiTaskId = taskId;
+        const container = document.getElementById('aiProgressContainer');
+        if (container) {
+            container.style.display = 'block';
+        }
+        
+        if (aiPollInterval) clearInterval(aiPollInterval);
+        
+        pollAiStatus();
+        aiPollInterval = setInterval(pollAiStatus, 2000);
+    }
+
+    function pollAiStatus() {
+        if (!currentAiTaskId) return;
+        
+        fetch(`/admin/ai/embed_progress/${currentAiTaskId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                stopAiPolling();
+                alert("Embedding task failed: " + data.error);
+                return;
+            }
+            
+            const status = data.status;
+            const progress = data.progress;
+            
+            const currentBookNameEl = document.getElementById('aiProgressCurrentBook');
+            const bookIndexEl = document.getElementById('aiProgressBookIndex');
+            const totalBooksEl = document.getElementById('aiProgressTotalBooks');
+            const processedChunksEl = document.getElementById('aiProgressProcessedChunks');
+            const totalChunksEl = document.getElementById('aiProgressTotalChunks');
+            const progressBarFillEl = document.getElementById('aiProgressBarFill');
+            const progressPctEl = document.getElementById('aiProgressPct');
+
+            if (currentBookNameEl) currentBookNameEl.innerText = data.current_book_name || 'Preparing...';
+            if (bookIndexEl) bookIndexEl.innerText = data.current_book_index + 1;
+            if (totalBooksEl) totalBooksEl.innerText = data.total_books;
+            if (processedChunksEl) processedChunksEl.innerText = data.processed_chunks;
+            if (totalChunksEl) totalChunksEl.innerText = data.total_chunks;
+            
+            if (progressBarFillEl) progressBarFillEl.style.width = progress + '%';
+            if (progressPctEl) progressPctEl.innerText = progress + '%';
+            
+            if (status === 'done') {
+                stopAiPolling();
+                alert("Embedding generation completed successfully!");
+                loadAiStats();
+                loadEmbeddedBooks();
+            } else if (status === 'cancelled') {
+                stopAiPolling();
+                alert("Embedding generation was cancelled.");
+                loadAiStats();
+                loadEmbeddedBooks();
+            } else if (status === 'error') {
+                stopAiPolling();
+                alert("Error in embedding task: " + data.error);
+                loadAiStats();
+                loadEmbeddedBooks();
+            }
+        })
+        .catch(e => {
+            console.error("Error polling AI status", e);
+        });
+    }
+
+    function stopAiPolling() {
+        if (aiPollInterval) {
+            clearInterval(aiPollInterval);
+            aiPollInterval = null;
+        }
+        currentAiTaskId = null;
+        const container = document.getElementById('aiProgressContainer');
+        if (container) {
+            container.style.display = 'none';
+        }
+    }
+
+    function cancelAiEmbedding() {
+        if (!currentAiTaskId) return;
+        if (!confirm("Are you sure you want to cancel the embedding process? Some books might remain partially embedded.")) {
+            return;
+        }
+        
+        fetch(`/admin/ai/cancel_embed/${currentAiTaskId}`, {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("Cancellation requested.");
+            } else {
+                alert("Error requesting cancellation: " + data.error);
+            }
+        })
+        .catch(e => console.error("Error cancelling task", e));
+    }
+
+    // =========================================================================
+    // MULTI-SELECT & BULK ACTIONS FOR EMBEDDED BOOKS
+    // =========================================================================
+    function toggleSelectAllEmbedded(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.embedded-book-check');
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+    }
+
+    function updateSelectAllStatus() {
+        const checkboxes = document.querySelectorAll('.embedded-book-check');
+        const master = document.getElementById('selectAllEmbeddedCheck');
+        if (checkboxes.length === 0) {
+            master.checked = false;
+            return;
+        }
+        let allChecked = true;
+        checkboxes.forEach(cb => {
+            if (!cb.checked) allChecked = false;
+        });
+        master.checked = allChecked;
+    }
+
+    function getSelectedEmbeddedBooks() {
+        const checkboxes = document.querySelectorAll('.embedded-book-check:checked');
+        const books = [];
+        checkboxes.forEach(cb => {
+            books.push(cb.getAttribute('data-book-name'));
+        });
+        return books;
+    }
+
+    function bulkExportSelectedBooks(btn) {
+        const selectedBooks = getSelectedEmbeddedBooks();
+        if (selectedBooks.length === 0) {
+            alert("Please select at least one book to export.");
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to export the chunks for ${selectedBooks.length} books?`)) {
+            let originalText = "";
+            if (btn) {
+                originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = "⏳ Exporting...";
+            }
+            fetch('/api/admin/bulk-export-zip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ books: selectedBooks })
+            })
+            .then(res => {
+                if (res.ok) return res.blob();
+                throw new Error("Bulk export failed");
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "bulk_books_chunks.zip";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(err => {
+                alert("Error during bulk export: " + err.message);
+            })
+            .finally(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        }
+    }
+
+    function bulkDownloadSelectedVectors() {
+        const selectedBooks = getSelectedEmbeddedBooks();
+        if (selectedBooks.length === 0) {
+            alert("Please select at least one book to download vectors.");
+            return;
+        }
+        
+        if (selectedBooks.length === 1) {
+            window.location.href = '/api/admin/download-vector-db/' + encodeURIComponent(selectedBooks[0]);
+            return;
+        }
+        
+        alert("Downloading vectors for " + selectedBooks.length + " books. Your browser may open multiple downloads.");
+        selectedBooks.forEach((book, idx) => {
+            setTimeout(() => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = '/api/admin/download-vector-db/' + encodeURIComponent(book);
+                document.body.appendChild(iframe);
+                setTimeout(() => iframe.remove(), 2000);
+            }, idx * 1000);
+        });
+    }
+
+    function bulkDeleteSelectedEmbeddings() {
+        const selectedBooks = getSelectedEmbeddedBooks();
+        if (selectedBooks.length === 0) {
+            alert("Please select at least one book to delete.");
+            return;
+        }
+        
+        if (confirm(`⚠️ WARNING: Are you sure you want to delete embeddings and verified chunk training data for the ${selectedBooks.length} selected books?\nThis cannot be undone!`)) {
+            fetch('/api/admin/bulk-delete-embeddings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ books: selectedBooks })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Successfully deleted embeddings for ${data.deleted} of ${data.total} books.`);
+                    document.getElementById('selectAllEmbeddedCheck').checked = false;
+                    loadAiStats();
+                    loadEmbeddedBooks();
+                } else {
+                    alert("Delete failed: " + (data.error || "Unknown error"));
+                }
+            })
+            .catch(err => alert("Error bulk deleting: " + err.message));
+        }
+    }
+
+    // =========================================================================
+    // USER VECTOR REQUESTS APPROVALS
+    // =========================================================================
+    function loadVectorRequests() {
+        const tbody = document.getElementById('userRequestsTableBody');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">⏳ Loading requests...</td></tr>';
+        
+        fetch('/api/admin/vector-download-requests')
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (!data.requests || data.requests.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-muted);">📭 No download requests found.</td></tr>';
+                    return;
+                }
+                
+                data.requests.forEach(req => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid var(--border-color)';
+                    
+                    let statusStyle = '';
+                    if (req.status === 'pending') {
+                        statusStyle = 'color: #facc15; font-weight: bold;';
+                    } else if (req.status === 'approved') {
+                        statusStyle = 'color: #4ade80;';
+                    } else if (req.status === 'rejected') {
+                        statusStyle = 'color: #fca5a5;';
+                    }
+                    
+                    const checkboxHtml = req.status === 'pending' 
+                        ? `<input type="checkbox" class="request-check" data-id="${req.id}" style="width: 16px; height: 16px; cursor: pointer;">`
+                        : '';
+                    
+                    const dateStr = new Date(req.requested_at).toLocaleString();
+                    
+                    tr.innerHTML = `
+                        <td style="padding: 10px 8px; text-align: center;">${checkboxHtml}</td>
+                        <td style="padding: 10px 8px; font-weight: 500;">${escapeHtml(req.user_email)}</td>
+                        <td style="padding: 10px 8px;">📖 ${escapeHtml(req.book_name)}</td>
+                        <td style="padding: 10px 8px; color: var(--text-muted); font-size: 13px;">${dateStr}</td>
+                        <td style="padding: 10px 8px; ${statusStyle}">${req.status.toUpperCase()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                
+                document.getElementById('selectAllRequestsCheck').checked = false;
+            })
+            .catch(err => {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #ff4d4f;">⚠️ Failed to load requests.</td></tr>';
+            });
+    }
+
+    function toggleSelectAllRequests(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.request-check');
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+    }
+
+    function getSelectedRequestIds() {
+        const checkboxes = document.querySelectorAll('.request-check:checked');
+        const ids = [];
+        checkboxes.forEach(cb => {
+            ids.push(parseInt(cb.getAttribute('data-id')));
+        });
+        return ids;
+    }
+
+    function bulkApproveRequests() {
+        const ids = getSelectedRequestIds();
+        if (ids.length === 0) {
+            alert("Please select at least one pending request to approve.");
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to APPROVE ${ids.length} requests? This will email decryption keys immediately.`)) {
+            fetch('/api/admin/approve-vector-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ request_ids: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || "Approved requests successfully.");
+                    loadVectorRequests();
+                } else {
+                    alert("Approval failed: " + (data.error || "Unknown error"));
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+    }
+
+    function bulkRejectRequests() {
+        const ids = getSelectedRequestIds();
+        if (ids.length === 0) {
+            alert("Please select at least one pending request to reject.");
+            return;
+        }
+        
+        if (confirm(`Are you sure you want to REJECT ${ids.length} requests?`)) {
+            fetch('/api/admin/reject-vector-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ request_ids: ids })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Rejected requests successfully.");
+                    loadVectorRequests();
+                } else {
+                    alert("Rejection failed: " + (data.error || "Unknown error"));
+                }
+            })
+            .catch(err => alert("Error: " + err.message));
+        }
+    }
+
+    function importVectorDatabase(resetCollection = false) {
+        const fileInput = document.getElementById('importVectorFile');
+        if (!fileInput || !fileInput.files.length) {
+            alert("Please select a vector database file (.json or .zip) to import.");
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        if (!resetCollection) {
+            if (!confirm(`Are you sure you want to load vectors from "${file.name}" directly into ChromaDB?\nExisting vectors with matching chunk IDs will be overwritten.`)) {
+                return;
+            }
+        }
+        
+        const btn = document.getElementById('btnImportVector');
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = resetCollection ? "⌛ Resetting & Importing..." : "⌛ Importing Vectors...";
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        if (resetCollection) {
+            formData.append('reset_collection', 'true');
+        }
+        
+        fetch('/api/admin/import-vector-db', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            if (data.success) {
+                alert(data.message || "Vectors imported successfully!");
+                fileInput.value = "";
+                
+                loadAiStats();
+                loadEmbeddedBooks();
+            } else if (data.dimension_mismatch) {
+                if (confirm(`⚠️ Dimension Mismatch!\nThe database collection currently expects ${data.expected} dimensions, but your file contains ${data.got} dimensions.\n\nTo load this file, the collection must be reset (this will delete all other active embeddings in ChromaDB).\n\nDo you want to reset the collection and proceed?`)) {
+                    importVectorDatabase(true);
+                }
+            } else {
+                alert("Import failed: " + (data.error || "Unknown error"));
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = originalText;
+            alert("Error uploading vector file: " + err.message);
+        });
+    }
+
+    // ====== AUTO-LOAD EMBEDDED SECTION ON PAGE LOAD ======
+    // Auto-expand the embedded section so users see their books immediately
+    document.addEventListener('DOMContentLoaded', () => {
+        toggleEmbeddedSection();
+        loadVectorRequests();
+        
+        const hasAiPerm = {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}true{% else %}false{% endif %};
+        if (hasAiPerm) {
+            loadAiStats();
+        }
+    });
+</script>
+{% endblock %}

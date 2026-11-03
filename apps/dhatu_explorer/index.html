@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhatu Explorer — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="/static/css/theme.css?v=35">
+    <script src="/static/js/theme.js?v=35" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            padding: 30px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            transform: translateX(-3px);
+        }
+        .app-title-block {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+        .app-title-block h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #34d399, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        .app-title-block p {
+            color: var(--t-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .glass-panel {
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--t-shadow);
+        }
+
+        .sanskrit-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .search-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--t-text-secondary);
+        }
+        .search-input-box {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--t-text-primary);
+            font-size: 16px;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input-box:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 10000;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: none;
+            text-align: left;
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--t-border);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover {
+            background: var(--t-hover-bg);
+        }
+
+        .selected-dhatu-badge {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 16px;
+            padding: 18px 24px;
+            margin-bottom: 24px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        .dhatu-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: var(--t-text-secondary);
+            margin-top: 6px;
+        }
+
+        .parameter-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .parameter-col {
+            flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+        }
+        .parameter-col label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--t-text-secondary);
+            margin-bottom: 8px;
+        }
+        select, input[type="text"] {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--t-border);
+            background: var(--t-input-bg, rgba(255, 255, 255, 0.03));
+            color: var(--t-text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        select option, select optgroup {
+            background-color: var(--t-select-option-bg, #070a1e);
+            color: var(--t-text-primary);
+        }
+        select:focus, input[type="text"]:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+        }
+
+        .btn-derive {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+        }
+        .btn-derive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+        }
+
+        .output-columns {
+            display: none;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+            margin-top: 30px;
+        }
+        @media (max-width: 900px) {
+            .output-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #10b981;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .conjugation-grid {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--t-border);
+            margin-bottom: 24px;
+        }
+        .conjugation-grid th, .conjugation-grid td {
+            padding: 14px 12px;
+            border: 1px solid var(--t-border);
+            font-size: 14px;
+        }
+        .conjugation-grid th {
+            background: var(--t-hover-bg);
+            color: var(--t-text-secondary);
+            font-weight: 600;
+        }
+        .conjugation-grid td.cell-active {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            transition: all 0.2s;
+        }
+        .conjugation-grid td.cell-active:hover, .conjugation-grid td.cell-selected {
+            background: rgba(16, 185, 129, 0.12);
+            color: #10b981;
+        }
+        .conjugation-grid td.highlighted-cell {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border: 1.5px solid #f59e0b !important;
+            color: #f59e0b !important;
+        }
+
+        .derivation-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+        }
+        .derivation-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 10px;
+            color: var(--t-text-primary);
+        }
+        .step-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--t-border);
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .step-row:hover {
+            background: var(--t-hover-bg);
+            border-bottom-color: transparent;
+        }
+        .step-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 75%;
+            text-align: left;
+        }
+        .step-code {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--t-text-secondary);
+        }
+        .step-sutra {
+            font-weight: 600;
+            color: #10b981;
+        }
+        .step-result {
+            font-weight: 700;
+            color: var(--t-text-primary);
+            white-space: nowrap;
+        }
+
+        /* Sutra Detail Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            width: 92%; max-width: 950px; max-height: 85vh;
+            background: var(--t-bg-elevated);
+            border: 1px solid var(--t-glass-border);
+            border-radius: 20px; box-shadow: var(--t-shadow);
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.92); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px; border-bottom: 1px solid var(--t-border); background: rgba(0, 0, 0, 0.15);
+        }
+        .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.45rem; font-weight: 800; color: #10b981; margin: 0; }
+        .modal-subtitle { font-size: 12.5px; color: var(--t-text-muted); margin-top: 4px; }
+        .modal-close-btn {
+            background: none; border: none; color: var(--t-text-secondary); font-size: 1.4rem;
+            cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; transition: all 0.2s ease;
+        }
+        .modal-close-btn:hover { background: var(--t-hover-bg); color: var(--t-text-primary); transform: rotate(90deg); }
+        .modal-body { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+        .modal-sutra-header-info {
+            background: rgba(255, 255, 255, 0.015); border: 1px solid var(--t-border-light);
+            border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .modal-sutra-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .modal-sutra-type-tag {
+            background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+        .modal-sutra-padachheda { font-size: 13px; color: var(--t-text-secondary); }
+        .modal-sutra-translation { font-size: 14px; line-height: 1.5; color: var(--t-text-primary); }
+        .modal-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .modal-sections { grid-template-columns: 1fr; } }
+        .modal-card {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid var(--t-border-light);
+            border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+        }
+        .modal-card-title {
+            font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700;
+            border-bottom: 2px solid var(--t-border); padding-bottom: 8px; margin-bottom: 2px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-card-title-sa { font-size: 11px; color: var(--t-text-muted); font-weight: 500; }
+        .modal-card-content { font-size: 14.5px; line-height: 1.6; color: var(--t-text-secondary); overflow-y: auto; max-height: 42vh; padding-right: 6px; }
+        .modal-card-content p.no-data { color: var(--t-text-muted); font-style: italic; padding: 10px 0; }
+
+        /* Export Toolbar Styles */
+        .export-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--t-bg-surface);
+            color: var(--t-text-primary);
+            border: 1px solid var(--t-border);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-export:hover {
+            background: var(--t-hover-bg);
+            border-color: #10b981;
+            color: #10b981;
+            transform: translateY(-2px);
+        }
+        .btn-export-json { border-color: rgba(59, 130, 246, 0.4); }
+        .btn-export-excel { border-color: rgba(16, 185, 129, 0.4); }
+        .btn-export-pdf { border-color: rgba(239, 68, 68, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top bar -->
+        <div class="header">
+            <a href="/" class="back-btn">
+                <span>←</span> Back to Hub
+            </a>
+            <div class="app-title-block">
+                <div style="font-size: 0.8rem; font-weight: 600; color: #10b981; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Samshodhana Mandiram</div>
+                <h1>धातु Explorer (धातु-रूपाणि)</h1>
+                <p>Explore Sanskrit verb roots, conjugations, sanadi extensions &amp; Paninian derivation steps</p>
+            </div>
+            <div class="sanskrit-toggle-container">
+                <label class="switch">
+                    <input type="checkbox" id="globalSanskrit">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-size: 13px; font-weight: 600; color: var(--t-text-secondary); white-space: nowrap;">Type in संस्कृत (ITRANS)</span>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <!-- Search Group -->
+            <div class="search-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label for="dhatu-search-input" style="margin-bottom: 0;">Search संस्कृत धातु (Devanagari or SLP1):</label>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: var(--t-text-secondary); cursor: pointer; margin-bottom: 0;">
+                        <input type="checkbox" id="dhatu-exact-toggle" style="width: 13px; height: 13px; cursor: pointer;" onchange="dhatu_triggerSearch()" checked>
+                        <span>Exact Match Only</span>
+                    </label>
+                </div>
+                <input type="text" id="dhatu-search-input" class="search-input-box sanskrit-enabled" data-sanskrit-id="globalSanskrit" placeholder="Type verb root (e.g. भू, गम्, कृ, पठ्...)" oninput="dhatu_handleSearch(event)" autocomplete="off">
+                <div class="autocomplete-dropdown" id="dhatu-search-dropdown">
+                    <!-- Dropdown results -->
+                </div>
+            </div>
+
+            <!-- Selected Dhatu Info -->
+            <div class="selected-dhatu-badge" id="dhatu-selected-badge">
+                <div>
+                    <h2 id="dhatu-badge-dhatu" style="font-size:1.5rem; font-weight:800; color:#10b981;">भू (BU)</h2>
+                    <div class="dhatu-meta">
+                        <span><strong>गणः:</strong> <span id="dhatu-meta-gana">Bhvadi (भ्वादिगणः)</span></span>
+                        <span><strong>Meaning:</strong> <span id="dhatu-meta-artha">सत्त्वम् (sattAyAm)</span></span>
+                        <span><strong>Code:</strong> <span id="dhatu-meta-code">01.0001</span></span>
+                    </div>
+                </div>
+                <button class="back-btn" onclick="dhatu_clearSelectedDhatu()" style="padding: 6px 12px; font-size:13px;">✕ Clear</button>
+            </div>
+
+            <!-- Parameters select panel -->
+            <div id="dhatu-parameter-panel">
+                <div class="parameter-row">
+                    <div class="parameter-col">
+                        <label for="dhatu-mode-select">Derivation Type (व्युत्पत्ति-प्रकारः):</label>
+                        <select id="dhatu-mode-select" onchange="dhatu_toggleMode()">
+                            <option value="Tinanta">तिङन्तरूपम् - तिङन्त (Verb Conjugations)</option>
+                            <option value="Krdanta">कृदन्तरूपम् - कृदन्त (Participles/Nouns)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="parameter-col">
+                        <label for="dhatu-sanadi-select">Verb Extension (सनादि-प्रत्ययः):</label>
+                        <select id="dhatu-sanadi-select">
+                            <option value="Mula">मूलधातुः - Base Root (मूल)</option>
+                            <option value="Nic">णिजन्तः (प्रेरणार्थः) - Causative (णिजन्त)</option>
+                            <option value="San">सन्नन्तः (इच्छार्थः) - Desiderative (सन्नन्त)</option>
+                            <option value="Yan">यङन्तः (पौनःपुन्यार्थः) - Intensive (यङन्त)</option>
+                            <option value="Yanluk">यङ्लुगन्तः - Intensive with Elision (यङ्लुगन्त)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="parameter-row">
+                    <div class="parameter-col">
+                        <label for="dhatu-upasarga1-select">उपसर्गः 1:</label>
+                        <select id="dhatu-upasarga1-select">
+                            <option value="None">None (नास्ति)</option>
+                            <option value="pra">प्र</option>
+                            <option value="parA">परा</option>
+                            <option value="apa">अप</option>
+                            <option value="sam">सम्</option>
+                            <option value="anu">अनु</option>
+                            <option value="ava">अव</option>
+                            <option value="nis">निस्</option>
+                            <option value="nir">निर्</option>
+                            <option value="dus">दुस्</option>
+                            <option value="dur">दुर्</option>
+                            <option value="vi">वि</option>
+                            <option value="A">आ</option>
+                            <option value="ni">नि</option>
+                            <option value="aDi">अधि</option>
+                            <option value="api">अपि</option>
+                            <option value="pi">पि</option>
+                            <option value="ati">अति</option>
+                            <option value="su">su (सु)</option>
+                            <option value="ud">ud (उद्)</option>
+                            <option value="aBi">abhi (अभि)</option>
+                            <option value="prati">prati (प्रति)</option>
+                            <option value="pari">pari (परि)</option>
+                            <option value="upa">upa (उप)</option>
+                        </select>
+                    </div>
+                    <div class="parameter-col">
+                        <label for="dhatu-upasarga2-select">उपसर्गः 2:</label>
+                        <select id="dhatu-upasarga2-select">
+                            <option value="None">None (नास्ति)</option>
+                            <option value="pra">प्र</option>
+                            <option value="parA">परा</option>
+                            <option value="apa">अप</option>
+                            <option value="sam">सम्</option>
+                            <option value="anu">अनु</option>
+                            <option value="ava">अव</option>
+                            <option value="nis">निस्</option>
+                            <option value="nir">निर्</option>
+                            <option value="dus">दुस्</option>
+                            <option value="dur">दुर्</option>
+                            <option value="vi">वि</option>
+                            <option value="A">आ</option>
+                            <option value="ni">नि</option>
+                            <option value="aDi">अधि</option>
+                            <option value="api">अपि</option>
+                            <option value="pi">पि</option>
+                            <option value="ati">अति</option>
+                            <option value="su">su (सु)</option>
+                            <option value="ud">ud (उद्)</option>
+                            <option value="aBi">abhi (अभि)</option>
+                            <option value="prati">prati (प्रति)</option>
+                            <option value="pari">pari (परि)</option>
+                            <option value="upa">upa (उप)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="parameter-row" id="dhatu-verb-params-row">
+                    <div class="parameter-col">
+                        <label for="dhatu-lakara-select">Choose लकारः (Tense/Mood):</label>
+                        <select id="dhatu-lakara-select">
+                            <option value="All">सर्वे लकाराः (All)</option>
+                            <option value="Lat">लट् - Present Tense</option>
+                            <option value="Lit">लिट् - Perfect Tense</option>
+                            <option value="Lut">लुट् - Periphrastic Future</option>
+                            <option value="Lrt">लृट् - Simple Future</option>
+                            <option value="Lot">लोट् - Imperative Mood</option>
+                            <option value="Lan">लङ् - Imperfect Tense</option>
+                            <option value="VidhiLin">विधिलिङ् - Optative Mood</option>
+                            <option value="AshirLin">आशीर्लिङ् - Benedictive Mood</option>
+                            <option value="Lun">लुङ् - Aorist Tense</option>
+                            <option value="Lrn">लृङ् - Conditional Mood</option>
+                            <option value="Let">लेट् - Subjunctive Mood (Vedic)</option>
+                        </select>
+                    </div>
+
+                    <div class="parameter-col">
+                        <label for="dhatu-prayoga-select">Choose प्रयोगः (Voice):</label>
+                        <select id="dhatu-prayoga-select">
+                            <option value="Kartari">कर्तरि प्रयोगः - Active Voice</option>
+                            <option value="Karmani">कर्मणि/भावे प्रयोगः - Passive/Impersonal Voice</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <button class="btn-derive" onclick="dhatu_generateParadigms()">Generate Forms</button>
+                </div>
+            </div>
+
+            <!-- Export Options Toolbar -->
+            <div class="export-toolbar" id="dhatu-export-bar" style="display: none;">
+                <span style="font-size: 13px; font-weight: 600; color: var(--t-text-secondary); margin-right: auto;">Export Generated Forms:</span>
+                <button class="btn-export btn-export-json" onclick="dhatu_exportJSON()">
+                    <span>📥</span> Export JSON
+                </button>
+                <button class="btn-export btn-export-excel" onclick="dhatu_exportExcel()">
+                    <span>📊</span> Export Excel
+                </button>
+                <button class="btn-export btn-export-pdf" onclick="dhatu_exportPDF()">
+                    <span>📄</span> Export PDF
+                </button>
+            </div>
+
+            <!-- Output Columns -->
+            <div class="output-columns" id="dhatu-output-cols">
+                <!-- Left column: grids -->
+                <div id="dhatu-grids-col">
+                    <!-- Parasmaipada and Atmanepada grids -->
+                </div>
+
+                <!-- Right column: derivation tree steps -->
+                <div class="derivation-panel" id="dhatu-derivation-panel" style="display: none;">
+                    <div class="derivation-title" id="dhatu-derivation-panel-title">Derivation History</div>
+                    <div id="dhatu-derivation-steps-container">
+                        <!-- Step rows -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sutra Detail Popup Modal -->
+    <div id="sutra-modal" class="modal-backdrop" onclick="dhatu_closeSutraModalOnBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-sutra-title" class="modal-title">Sutra Details</h2>
+                    <div id="modal-sutra-subtitle" class="modal-subtitle">Loading...</div>
+                </div>
+                <button class="modal-close-btn" onclick="dhatu_closeSutraModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-sutra-body">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cleanHTML(text) {
+            if (!text) return '';
+            text = text.replace(/<w>(.*?)<\/w>/gi, '<span style="color:#60a5fa;font-weight:700;">$1</span>');
+            text = text.replace(/<<(.*?)>>/g, '<span style="color:#f472b6;font-weight:600;">$1</span>');
+            text = text.replace(/\[\[(\d+\.\d+\.\d+)\]\]/g, '<span style="color:#10b981;font-weight:600;cursor:pointer;" title="Sutra $1">[$1]</span>');
+            return text;
+        }
+
+        let dhatu_selectedDhatu = null;
+        let dhatu_searchTimeout = null;
+
+        function dhatu_toggleMode() {
+            const mode = document.getElementById('dhatu-mode-select').value;
+            const verbRow = document.getElementById('dhatu-verb-params-row');
+            if (mode === 'Krdanta') {
+                verbRow.style.display = 'none';
+            } else {
+                verbRow.style.display = 'flex';
+            }
+        }
+
+        function dhatu_triggerSearch() {
+            const input = document.getElementById('dhatu-search-input');
+            if (input) {
+                dhatu_handleSearch({ target: input });
+            }
+        }
+
+        function dhatu_handleSearch(e) {
+            clearTimeout(dhatu_searchTimeout);
+            const query = e.target.value.trim();
+            const dropdown = document.getElementById('dhatu-search-dropdown');
+            
+            if (!query) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            dhatu_searchTimeout = setTimeout(async () => {
+                try {
+                    const exact = document.getElementById('dhatu-exact-toggle').checked;
+                    const res = await fetch(`/apps/api/dhatu/search?query=${encodeURIComponent(query)}&exact=${exact}`);
+                    const data = await res.json();
+                    
+                    if (data.length > 0) {
+                        window.dhatuSearchResults = data;
+                        const DHATU_GANA_LABELS = {
+                            "Bhvadi": "भ्वादिगणः",
+                            "Adadi": "अदादिगणः",
+                            "Juhotyadi": "जुहोत्यादिगणः",
+                            "Divadi": "दिवादिगणः",
+                            "Svadi": "स्वादिगणः",
+                            "Tudadi": "तुदादिगणः",
+                            "Rudhadi": "रुधादिगणः",
+                            "Tanadi": "तनादिगणः",
+                            "Kryadi": "क्र्यादिगणः",
+                            "Curadi": "चुरादिगणः"
+                        };
+                        dropdown.innerHTML = data.map((item, index) => {
+                            if (item.is_inflected) {
+                                const label = item.is_krdanta ? 'कृदन्तरूपम्' : 'तिङन्तरूपम्';
+                                const subLabel = item.is_krdanta ? 'कृदन्त रूप of' : 'रूप of';
+                                return `
+                                    <div class="dropdown-item" onclick="dhatu_selectDhatuByIndex(${index})" style="border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); font-weight: 500;">
+                                        <span><strong>${item.word}</strong> <span style="font-size:12px; color:var(--t-text-secondary);">(${subLabel} <strong>${item.dhatu}</strong>)</span></span>
+                                        <span style="font-size:13px; color:#10b981; font-weight:700;">${label}</span>
+                                    </div>
+                                `;
+                            }
+                            return `
+                                <div class="dropdown-item" onclick="dhatu_selectDhatuByIndex(${index})">
+                                    <span><strong>${item.dhatu}</strong> (${item.dhatu_slp1})</span>
+                                    <span style="font-size:13px; color:var(--t-text-secondary);">${item.artha} — ${DHATU_GANA_LABELS[item.gana] || item.gana} (${item.code})</span>
+                                </div>
+                            `;
+                        }).join('');
+                        dropdown.style.display = 'block';
+                    } else {
+                        dropdown.innerHTML = `<div style="padding:12px 16px; font-size:14px; color:var(--t-text-secondary); text-align:center;">No verb roots matched.</div>`;
+                        dropdown.style.display = 'block';
+                    }
+                } catch(err) {
+                    console.error(err);
+                }
+            }, 250);
+        }
+
+        function dhatu_selectDhatuByIndex(index) {
+            if (window.dhatuSearchResults && window.dhatuSearchResults[index]) {
+                dhatu_selectDhatu(window.dhatuSearchResults[index]);
+            }
+        }
+
+        function dhatu_selectDhatu(item) {
+            dhatu_selectedDhatu = item;
+            
+            document.getElementById('dhatu-search-dropdown').style.display = 'none';
+            document.getElementById('dhatu-search-input').value = '';
+            document.querySelector('.search-group').style.display = 'none';
+            
+            const DHATU_GANA_LABELS = {
+                "Bhvadi": "भ्वादिगणः",
+                "Adadi": "अदादिगणः",
+                "Juhotyadi": "जुहोत्यादिगणः",
+                "Divadi": "दिवादिगणः",
+                "Svadi": "स्वादिगणः",
+                "Tudadi": "तुदादिगणः",
+                "Rudhadi": "रुधादिगणः",
+                "Tanadi": "तनादिगणः",
+                "Kryadi": "क्र्यादिगणः",
+                "Curadi": "चुरादिगणः"
+            };
+            document.getElementById('dhatu-badge-dhatu').textContent = `${item.dhatu} (${item.dhatu_slp1})`;
+            document.getElementById('dhatu-meta-gana').textContent = DHATU_GANA_LABELS[item.gana] || item.gana;
+            document.getElementById('dhatu-meta-artha').textContent = item.artha;
+            document.getElementById('dhatu-meta-code').textContent = item.code;
+            
+            if (item.is_inflected) {
+                if (item.is_krdanta) {
+                    document.getElementById('dhatu-mode-select').value = 'Krdanta';
+                } else {
+                    document.getElementById('dhatu-mode-select').value = 'Tinanta';
+                }
+                dhatu_toggleMode();
+                
+                document.getElementById('dhatu-upasarga1-select').value = 'None';
+                document.getElementById('dhatu-upasarga2-select').value = 'None';
+                if (item.upasargas && item.upasargas.length > 0) {
+                    document.getElementById('dhatu-upasarga1-select').value = item.upasargas[0];
+                }
+                if (item.upasargas && item.upasargas.length > 1) {
+                    document.getElementById('dhatu-upasarga2-select').value = item.upasargas[1];
+                }
+                if (item.lakara && !item.is_krdanta) {
+                    document.getElementById('dhatu-lakara-select').value = item.lakara;
+                }
+                if (item.prayoga && !item.is_krdanta) {
+                    document.getElementById('dhatu-prayoga-select').value = item.prayoga;
+                }
+                window.dhatuHighlightWord = item.highlight;
+            } else {
+                window.dhatuHighlightWord = null;
+            }
+            
+            document.getElementById('dhatu-selected-badge').style.display = 'flex';
+            dhatu_generateParadigms();
+        }
+
+        function dhatu_clearSelectedDhatu() {
+            dhatu_selectedDhatu = null;
+            window.dhatu_lastResultData = null;
+            document.getElementById('dhatu-selected-badge').style.display = 'none';
+            document.getElementById('dhatu-export-bar').style.display = 'none';
+            document.getElementById('dhatu-output-cols').style.display = 'none';
+            document.querySelector('.search-group').style.display = 'block';
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('dhatu-search-dropdown');
+            const input = document.getElementById('dhatu-search-input');
+            if (dropdown && input && e.target !== dropdown && e.target !== input) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        async function dhatu_generateParadigms() {
+            if (!dhatu_selectedDhatu) return;
+            
+            const mode = document.getElementById('dhatu-mode-select').value;
+            const sanadi = document.getElementById('dhatu-sanadi-select').value;
+            const upa1 = document.getElementById('dhatu-upasarga1-select').value;
+            const upa2 = document.getElementById('dhatu-upasarga2-select').value;
+            const upasargas = [upa1, upa2].filter(u => u !== 'None');
+            
+            const lakara = document.getElementById('dhatu-lakara-select').value;
+            const prayoga = document.getElementById('dhatu-prayoga-select').value;
+            const gridsCol = document.getElementById('dhatu-grids-col');
+            const outputCols = document.getElementById('dhatu-output-cols');
+            const exportBar = document.getElementById('dhatu-export-bar');
+            
+            document.getElementById('dhatu-derivation-panel').style.display = 'none';
+            exportBar.style.display = 'none';
+            gridsCol.innerHTML = '<p style="color:var(--t-text-secondary); text-align:center; padding: 20px;">Computing Paninian rules...</p>';
+            outputCols.style.display = 'grid';
+
+            try {
+                if (mode === 'Tinanta') {
+                    const res = await fetch('/apps/api/dhatu/derive', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            dhatu: dhatu_selectedDhatu.dhatu_slp1,
+                            gana: dhatu_selectedDhatu.gana,
+                            sanadi: sanadi,
+                            upasargas: upasargas,
+                            lakara: lakara,
+                            prayoga: prayoga
+                        })
+                    });
+                    const data = await res.json();
+                
+                    if (data.success) {
+                        const PADA_LABELS = {
+                            "Parasmaipada": "परस्मैपदम्",
+                            "Atmanepada": "आत्मनेपदम्"
+                        };
+                        const renderGridTable = (pada, grid) => {
+                            const padaLabel = PADA_LABELS[pada] || pada;
+                            return `
+                                <div class="table-title">${padaLabel} Conjugations (तिङन्तरूपाणि)</div>
+                                <table class="conjugation-grid">
+                                    <thead>
+                                        <tr>
+                                            <th>Person / वचनम्</th>
+                                            <th>Singular (एक.)</th>
+                                            <th>Dual (द्वि.)</th>
+                                            <th>Plural (बहु.)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${grid.map((row, rIdx) => {
+                                            const labels = ["प्रथमः (3rd)", "मध्यमः (2nd)", "उत्तमः (1st)"];
+                                            return `
+                                                <tr>
+                                                    <td style="font-weight:600; background:var(--t-hover-bg); text-align:left;">${labels[rIdx]}</td>
+                                                    ${row.map(cell => {
+                                                        if (cell.word === '-') {
+                                                            return `<td>-</td>`;
+                                                        }
+                                                        const forms = cell.word.split('/').map(w => w.trim());
+                                                        const isHighlighted = window.dhatuHighlightWord && forms.some(f => f === window.dhatuHighlightWord.trim() || f.startsWith(window.dhatuHighlightWord.trim()) || window.dhatuHighlightWord.trim().startsWith(f));
+                                                        const cellJson = JSON.stringify(cell).replace(/'/g, "&#39;");
+                                                        return `
+                                                            <td class="cell-active ${isHighlighted ? 'highlighted-cell' : ''}" onclick='dhatu_showDerivationSteps(${cellJson}, this)'>
+                                                                ${cell.word}
+                                                            </td>
+                                                        `;
+                                                    }).join('')}
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            `;
+                        };
+
+                        let html = '';
+                        if (data.is_all) {
+                            const LAKARA_LABELS = {
+                                "Lat": "लट् (Present Tense)",
+                                "Lit": "लिट् (Perfect Tense)",
+                                "Lut": "लुट् (Periphrastic Future)",
+                                "Lrt": "लृट् (Simple Future)",
+                                "Let": "लेट् (Subjunctive Mood - Vedic)",
+                                "Lot": "लोट् (Imperative Mood)",
+                                "Lan": "लङ् (Imperfect Tense)",
+                                "VidhiLin": "विधिलिङ् (Optative Mood)",
+                                "AshirLin": "आशीर्लिङ् (Benedictive Mood)",
+                                "Lun": "लुङ् (Aorist Tense)",
+                                "Lrn": "लृङ् (Conditional Mood)"
+                            };
+                            const LAKARA_ORDER = ["Lat", "Lit", "Lut", "Lrt", "Lot", "Lan", "VidhiLin", "AshirLin", "Lun", "Lrn", "Let"];
+                            for (const lakName of LAKARA_ORDER) {
+                                if (!data.grids[lakName]) continue;
+                                const grids = data.grids[lakName];
+                                const label = LAKARA_LABELS[lakName] || lakName;
+                                html += `
+                                    <div class="lakara-section-header" style="margin-top: 30px; margin-bottom: 15px; font-size: 1.25rem; font-weight: 800; color: #10b981; border-bottom: 2px solid var(--t-border); padding-bottom: 8px;">
+                                        ${label}
+                                    </div>
+                                `;
+                                for (const [pada, grid] of Object.entries(grids)) {
+                                    html += renderGridTable(pada, grid);
+                                }
+                            }
+                        } else {
+                            for (const [pada, grid] of Object.entries(data.grids)) {
+                                html += renderGridTable(pada, grid);
+                            }
+                        }
+                        gridsCol.innerHTML = html || `<p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">No forms derived. This combination is invalid for the dhatu.</p>`;
+                        if (html) {
+                            window.dhatu_lastResultData = { dhatu: dhatu_selectedDhatu, mode, sanadi, upasargas, lakara, prayoga, data };
+                            exportBar.style.display = 'flex';
+                        }
+                        outputCols.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        
+                        setTimeout(() => {
+                            if (window.dhatuHighlightWord) {
+                                const highlightedCell = document.querySelector('#dhatu-grids-col td.highlighted-cell');
+                                if (highlightedCell) {
+                                    highlightedCell.click();
+                                    highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    window.dhatuHighlightWord = null;
+                                    return;
+                                }
+                            }
+                            const firstCell = document.querySelector('#dhatu-grids-col td.cell-active');
+                            if (firstCell) firstCell.click();
+                        }, 200);
+                    } else {
+                        gridsCol.innerHTML = `<p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">No forms derived. This combination is invalid for the dhatu.</p>`;
+                        outputCols.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                
+                } else if (mode === 'Krdanta') {
+                    const res = await fetch('/apps/api/dhatu/derive_krt', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            dhatu: dhatu_selectedDhatu.dhatu_slp1,
+                            gana: dhatu_selectedDhatu.gana,
+                            sanadi: sanadi,
+                            upasargas: upasargas
+                        })
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success && data.results && data.results.length > 0) {
+                        let html = `
+                            <div class="table-title">कृदन्त Forms (कृदन्तरूपाणि - प्रथमा विभक्तिः)</div>
+                            <table class="conjugation-grid">
+                                <thead>
+                                    <tr>
+                                        <th>कृत् Affix (प्रत्ययः)</th>
+                                        <th>Masculine (पुंल्लिङ्गम्)</th>
+                                        <th>Feminine (स्त्रीलिङ्गम्)</th>
+                                        <th>Neuter (नपुंसकलिङ्गम्)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        data.results.forEach((item) => {
+                            html += `
+                                <tr>
+                                    <td style="font-weight:600; background:var(--t-hover-bg);">${item.affix}</td>
+                            `;
+                            
+                            ['pum', 'stri', 'napumsaka'].forEach(gender => {
+                                const cell = item.genders[gender];
+                                const isSelectable = cell.word !== "-";
+                                const forms = cell.word.split('/').map(w => w.trim());
+                                const isHighlighted = window.dhatuHighlightWord && forms.some(f => f === window.dhatuHighlightWord.trim() || f.startsWith(window.dhatuHighlightWord.trim()) || window.dhatuHighlightWord.trim().startsWith(f));
+                                
+                                const cellJson = JSON.stringify({
+                                    word: cell.word,
+                                    steps: cell.steps
+                                }).replace(/'/g, "&#39;");
+                                
+                                html += `
+                                    <td class="${isSelectable ? 'cell-active' : ''} ${isHighlighted ? 'highlighted-cell' : ''}"
+                                        onclick='${isSelectable ? `dhatu_showDerivationSteps(${cellJson}, this)` : ""}'>
+                                        ${cell.word}
+                                    </td>
+                                `;
+                            });
+                            
+                            html += `</tr>`;
+                        });
+                        
+                        html += `
+                                </tbody>
+                            </table>
+                        `;
+                        
+                        gridsCol.innerHTML = html;
+                        window.dhatu_lastResultData = { dhatu: dhatu_selectedDhatu, mode, sanadi, upasargas, lakara: 'N/A', prayoga: 'N/A', data };
+                        exportBar.style.display = 'flex';
+                        outputCols.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        
+                        setTimeout(() => {
+                            if (window.dhatuHighlightWord) {
+                                const highlightedCell = document.querySelector('#dhatu-grids-col td.highlighted-cell');
+                                if (highlightedCell) {
+                                    highlightedCell.click();
+                                    highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    window.dhatuHighlightWord = null;
+                                    return;
+                                }
+                            }
+                            const firstCell = document.querySelector('#dhatu-grids-col td.cell-active');
+                            if (firstCell) firstCell.click();
+                        }, 200);
+                    } else {
+                        gridsCol.innerHTML = `<p style="color:#ef4444; font-weight:600; text-align:center; padding: 20px;">No valid Kridanta forms could be derived for this root and extension.</p>`;
+                        outputCols.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+                gridsCol.innerHTML = '<p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">Connection failed.</p>';
+            }
+        }
+
+        function dhatu_showDerivationSteps(cell, element) {
+            if (element) {
+                document.querySelectorAll('#dhatu-grids-col td').forEach(td => {
+                    td.classList.remove('cell-selected');
+                });
+                element.classList.add('cell-selected');
+            }
+            const panel = document.getElementById('dhatu-derivation-panel');
+            document.getElementById('dhatu-derivation-panel-title').textContent = `Derivation steps for "${cell.word}"`;
+            
+            const container = document.getElementById('dhatu-derivation-steps-container');
+            if (!cell.steps || cell.steps.length === 0) {
+                container.innerHTML = `<p style="color:var(--t-text-secondary); font-size:14px;">No derivation logs available.</p>`;
+            } else {
+                container.innerHTML = cell.steps.map((step, idx) => `
+                    <div class="step-row" onclick="dhatu_openSutraModal('${step.code}')">
+                        <div class="step-left">
+                            <span class="step-code">Step ${idx + 1} — Sutra ${step.code}</span>
+                            <span class="step-sutra">${step.sutra || 'Rule Reference'}</span>
+                        </div>
+                        <span class="step-result">${step.result}</span>
+                    </div>
+                `).join('');
+            }
+            
+            panel.style.display = 'block';
+        }
+
+        async function dhatu_openSutraModal(sutraRef) {
+            const modal = document.getElementById('sutra-modal');
+            const title = document.getElementById('modal-sutra-title');
+            const subtitle = document.getElementById('modal-sutra-subtitle');
+            const body = document.getElementById('modal-sutra-body');
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+            
+            title.textContent = `Sutra ${sutraRef}`;
+            subtitle.textContent = "Loading rule details...";
+            body.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--t-text-secondary);">
+                    <div style="margin-bottom: 12px; font-weight: 600;">Fetching commentaries from database...</div>
+                </div>
+            `;
+            
+            try {
+                const res = await fetch(`/apps/api/ashtadhyayi/sutra_by_ref/${sutraRef}`);
+                const data = await res.json();
+                
+                if (data.success && data.sutra) {
+                    const s = data.sutra;
+                    title.textContent = `${s.sutra} (${sutraRef})`;
+                    subtitle.textContent = `${s.sutra_slp1 || ''} | ${s.type || 'Sūtra'} Reference`;
+                    
+                    const padRef = s.padachheda || '-';
+                    const engMeaning = s.sutrartha_english || s.sutrartha_sa || '-';
+                    
+                    const kaumudiContent = cleanHTML(s.kaumudi) || '<p class="no-data">Commentary not available in database.</p>';
+                    const kashikaContent = cleanHTML(s.kashika) || '<p class="no-data">Commentary not available in database.</p>';
+                    
+                    body.innerHTML = `
+                        <div class="modal-sutra-header-info">
+                            <div class="modal-sutra-meta">
+                                <span class="modal-sutra-type-tag">${s.type || 'Sutra'}</span>
+                                <span class="modal-sutra-padachheda"><strong>पदच्छेदः:</strong> ${padRef}</span>
+                            </div>
+                            <div class="modal-sutra-translation"><strong>अर्थः:</strong> ${engMeaning}</div>
+                        </div>
+                        <div class="modal-sections">
+                            <div class="modal-card">
+                                <div class="modal-card-title">
+                                    <span>Siddhānta Kaumudī (सिद्धान्तकौमुदी)</span>
+                                    <span class="modal-card-title-sa">भट्टोजिदीक्षितकृता</span>
+                                </div>
+                                <div class="modal-card-content">${kaumudiContent}</div>
+                            </div>
+                            <div class="modal-card">
+                                <div class="modal-card-title">
+                                    <span>Kāśikā Vṛtti (काशिकावृत्तिः)</span>
+                                    <span class="modal-card-title-sa">जयादित्य-वामनकृता</span>
+                                </div>
+                                <div class="modal-card-content">${kashikaContent}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    subtitle.textContent = "Error";
+                    body.innerHTML = `
+                        <p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">
+                            ${data.error || 'Sutra not found in database.'}
+                        </p>
+                    `;
+                }
+            } catch(e) {
+                console.error(e);
+                subtitle.textContent = "Error";
+                body.innerHTML = '<p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">Failed to load commentary from server.</p>';
+            }
+        }
+        
+        function dhatu_closeSutraModal() {
+            const modal = document.getElementById('sutra-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 250);
+        }
+        
+        function dhatu_closeSutraModalOnBackdrop(event) {
+            if (event.target === document.getElementById('sutra-modal')) {
+                dhatu_closeSutraModal();
+            }
+        }
+
+        /* Export Handlers */
+        function dhatu_exportJSON() {
+            if (!window.dhatu_lastResultData) return;
+            const res = window.dhatu_lastResultData;
+            const exportObj = {
+                app: "Dhatu Explorer — Samshodhana Mandiram",
+                timestamp: new Date().toISOString(),
+                dhatu: res.dhatu,
+                parameters: {
+                    mode: res.mode,
+                    sanadi: res.sanadi,
+                    upasargas: res.upasargas,
+                    lakara: res.lakara,
+                    prayoga: res.prayoga
+                },
+                results: res.data
+            };
+            const jsonStr = JSON.stringify(exportObj, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            const dhatuName = res.dhatu ? (res.dhatu.dhatu_slp1 || res.dhatu.dhatu) : "dhatu";
+            a.href = url;
+            a.download = `dhatu_${dhatuName}_forms.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function dhatu_exportExcel() {
+            if (!window.dhatu_lastResultData) return;
+            const res = window.dhatu_lastResultData;
+            const dhatu = res.dhatu || {};
+            const mode = res.mode;
+            const data = res.data;
+
+            const DHATU_GANA_LABELS = {
+                "Bhvadi": "भ्वादिगणः", "Adadi": "अदादिगणः", "Juhotyadi": "जुहोत्यादिगणः",
+                "Divadi": "दिवादिगणः", "Svadi": "स्वादिगणः", "Tudadi": "तुदादिगणः",
+                "Rudhadi": "रुधादिगणः", "Tanadi": "तनादिगणः", "Kryadi": "क्र्यादिगणः", "Curadi": "चुरादिगणः"
+            };
+
+            const rows = [];
+            rows.push(["Samshodhana Mandiram — Dhatu Explorer"]);
+            rows.push(["Verb Root (धातुः):", `${dhatu.dhatu || ''} (${dhatu.dhatu_slp1 || ''})`, "Gana:", DHATU_GANA_LABELS[dhatu.gana] || dhatu.gana || '', "Meaning:", dhatu.artha || '', "Code:", dhatu.code || '']);
+            rows.push(["Derivation Type:", mode, "Sanadi:", res.sanadi, "Upasargas:", res.upasargas.join(', ') || 'None']);
+            rows.push([]);
+
+            if (mode === 'Tinanta' && data.grids) {
+                const PADA_LABELS = { "Parasmaipada": "परस्मैपदम्", "Atmanepada": "आत्मनेपदम्" };
+                const LAKARA_LABELS = {
+                    "Lat": "लट् (Present Tense)", "Lit": "लिट् (Perfect Tense)", "Lut": "लुट् (Periphrastic Future)",
+                    "Lrt": "लृट् (Simple Future)", "Let": "लेट् (Subjunctive Mood - Vedic)", "Lot": "लोट् (Imperative Mood)",
+                    "Lan": "लङ् (Imperfect Tense)", "VidhiLin": "विधिलिङ् (Optative Mood)", "AshirLin": "आशीर्लिङ् (Benedictive Mood)",
+                    "Lun": "लुङ् (Aorist Tense)", "Lrn": "लृङ् (Conditional Mood)"
+                };
+                const PERSON_LABELS = ["प्रथमः (3rd Person)", "मध्यमः (2nd Person)", "उत्तमः (1st Person)"];
+
+                const renderGridToRows = (lakLabel, pada, grid) => {
+                    rows.push([`${lakLabel ? lakLabel + ' - ' : ''}${PADA_LABELS[pada] || pada}`]);
+                    rows.push(["Person / Vacana", "Singular (एकवचनम्)", "Dual (द्विवचनम्)", "Plural (बहुवचनम्)"]);
+                    grid.forEach((r, rIdx) => {
+                        rows.push([PERSON_LABELS[rIdx], r[0].word, r[1].word, r[2].word]);
+                    });
+                    rows.push([]);
+                };
+
+                if (data.is_all) {
+                    const LAKARA_ORDER = ["Lat", "Lit", "Lut", "Lrt", "Lot", "Lan", "VidhiLin", "AshirLin", "Lun", "Lrn", "Let"];
+                    for (const lakName of LAKARA_ORDER) {
+                        if (!data.grids[lakName]) continue;
+                        const grids = data.grids[lakName];
+                        const label = LAKARA_LABELS[lakName] || lakName;
+                        for (const [pada, grid] of Object.entries(grids)) {
+                            renderGridToRows(label, pada, grid);
+                        }
+                    }
+                } else {
+                    for (const [pada, grid] of Object.entries(data.grids)) {
+                        renderGridToRows('', pada, grid);
+                    }
+                }
+            } else if (mode === 'Krdanta' && data.results) {
+                rows.push(["Krdanta Forms (कृदन्तरूपाणि - प्रथमा विभक्तिः)"]);
+                rows.push(["Krt Affix (प्रत्ययः)", "Masculine (पुंल्लिङ्गम्)", "Feminine (स्त्रीलिङ्गम्)", "Neuter (नपुंसकलिङ्गम्)"]);
+                data.results.forEach(item => {
+                    rows.push([
+                        item.affix,
+                        item.genders.pum ? item.genders.pum.word : '-',
+                        item.genders.stri ? item.genders.stri.word : '-',
+                        item.genders.napumsaka ? item.genders.napumsaka.word : '-'
+                    ]);
+                });
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "Dhatu Forms");
+            const dhatuName = dhatu.dhatu_slp1 || dhatu.dhatu || "dhatu";
+            XLSX.writeFile(wb, `dhatu_${dhatuName}_forms.xlsx`);
+        }
+
+        function dhatu_exportPDF() {
+            if (!window.dhatu_lastResultData) return;
+            const res = window.dhatu_lastResultData;
+            const dhatu = res.dhatu || {};
+            const mode = res.mode;
+            const data = res.data;
+
+            const DHATU_GANA_LABELS = {
+                "Bhvadi": "भ्वादिगणः", "Adadi": "अदादिगणः", "Juhotyadi": "जुहोत्यादिगणः",
+                "Divadi": "दिवादिगणः", "Svadi": "स्वादिगणः", "Tudadi": "तुदादिगणः",
+                "Rudhadi": "रुधादिगणः", "Tanadi": "तनादिगणः", "Kryadi": "क्र्यादिगणः", "Curadi": "चुरादिगणः"
+            };
+
+            let html = `
+                <div style="font-family: 'Noto Sans Devanagari', 'Outfit', 'Inter', sans-serif; padding: 30px; background: #ffffff; color: #1e293b; width: 800px; max-width: 100%; box-sizing: border-box;">
+                    <div style="text-align: center; border-bottom: 3px solid #10b981; padding-bottom: 14px; margin-bottom: 20px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;">Samshodhana Mandiram — Sri Trayee Vidya Gurukulam</div>
+                        <h1 style="margin: 0; font-size: 24px; color: #065f46; font-weight: 800;">धातु Explorer (धातु-रूपाणि Report)</h1>
+                    </div>
+
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dcfce7; padding-bottom: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 20px; font-weight: 800; color: #047857;">${dhatu.dhatu || ''} (${dhatu.dhatu_slp1 || ''})</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #059669; background: #d1fae5; padding: 4px 10px; border-radius: 6px;">Code: ${dhatu.code || ''}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #334155;">
+                            <div><strong>गणः (Gana):</strong> ${DHATU_GANA_LABELS[dhatu.gana] || dhatu.gana || ''}</div>
+                            <div><strong>अर्थः (Meaning):</strong> ${dhatu.artha || ''}</div>
+                            <div><strong>व्युत्पत्ति-प्रकारः (Mode):</strong> ${mode === 'Tinanta' ? 'तिङन्त (Conjugation)' : 'कृदन्त (Participle)'}</div>
+                            <div><strong>सनादि-प्रत्ययः:</strong> ${res.sanadi}</div>
+                            <div><strong>उपसर्गः:</strong> ${res.upasargas.join(', ') || 'None'}</div>
+                            ${mode === 'Tinanta' ? `<div><strong>प्रयोगः (Voice):</strong> ${res.prayoga}</div>` : ''}
+                        </div>
+                    </div>
+            `;
+
+            if (mode === 'Tinanta' && data.grids) {
+                const PADA_LABELS = { "Parasmaipada": "परस्मैपदम्", "Atmanepada": "आत्मनेपदम्" };
+                const LAKARA_LABELS = {
+                    "Lat": "लट् (Present Tense)", "Lit": "लिट् (Perfect Tense)", "Lut": "लुट् (Periphrastic Future)",
+                    "Lrt": "लृट् (Simple Future)", "Let": "लेट् (Subjunctive Mood - Vedic)", "Lot": "लोट् (Imperative Mood)",
+                    "Lan": "लङ् (Imperfect Tense)", "VidhiLin": "विधिलिङ् (Optative Mood)", "AshirLin": "आशीर्लिङ् (Benedictive Mood)",
+                    "Lun": "लुङ् (Aorist Tense)", "Lrn": "लृङ् (Conditional Mood)"
+                };
+                const PERSON_LABELS = ["प्रथमः (3rd)", "मध्यमः (2nd)", "उत्तमः (1st)"];
+
+                const renderTableHTML = (pada, grid) => `
+                    <div style="page-break-inside: avoid; margin-bottom: 20px;">
+                        <div style="font-size: 14px; font-weight: 700; color: #065f46; background: #ecfdf5; border-left: 4px solid #10b981; padding: 6px 12px; margin-bottom: 8px; border-radius: 0 6px 6px 0;">
+                            ${PADA_LABELS[pada] || pada} Conjugations (तिङन्तरूपाणि)
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #1e293b;">
+                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left; width: 25%;">Person / वचनम्</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 25%;">Singular (एक.)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 25%;">Dual (द्वि.)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 25%;">Plural (बहु.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${grid.map((row, rIdx) => `
+                                    <tr>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 600; background: #f8fafc; color: #475569;">${PERSON_LABELS[rIdx]}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[0].word}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[1].word}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[2].word}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                if (data.is_all) {
+                    const LAKARA_ORDER = ["Lat", "Lit", "Lut", "Lrt", "Lot", "Lan", "VidhiLin", "AshirLin", "Lun", "Lrn", "Let"];
+                    for (const lakName of LAKARA_ORDER) {
+                        if (!data.grids[lakName]) continue;
+                        const grids = data.grids[lakName];
+                        const label = LAKARA_LABELS[lakName] || lakName;
+                        html += `
+                            <div style="page-break-inside: avoid; margin-top: 24px; margin-bottom: 12px; font-size: 16px; font-weight: 800; color: #047857; border-bottom: 2px solid #a7f3d0; padding-bottom: 6px;">
+                                ${label}
+                            </div>
+                        `;
+                        for (const [pada, grid] of Object.entries(grids)) {
+                            html += renderTableHTML(pada, grid);
+                        }
+                    }
+                } else {
+                    for (const [pada, grid] of Object.entries(data.grids)) {
+                        html += renderTableHTML(pada, grid);
+                    }
+                }
+            } else if (mode === 'Krdanta' && data.results) {
+                html += `
+                    <div style="page-break-inside: avoid;">
+                        <div style="font-size: 15px; font-weight: 800; color: #065f46; border-bottom: 2px solid #a7f3d0; padding-bottom: 6px; margin-bottom: 12px;">
+                            कृदन्त Forms (कृदन्तरूपाणि - प्रथमा विभक्तिः)
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #1e293b;">
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: left;">कृत् Affix (प्रत्ययः)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center;">Masculine (पुंल्लिङ्गम्)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center;">Feminine (स्त्रीलिङ्गम्)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center;">Neuter (नपुंसकलिङ्गम्)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.results.map(item => `
+                                    <tr>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 700; background: #f8fafc; color: #047857;">${item.affix}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${item.genders.pum ? item.genders.pum.word : '-'}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${item.genders.stri ? item.genders.stri.word : '-'}</td>
+                                        <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${item.genders.napumsaka ? item.genders.napumsaka.word : '-'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            html += `
+                    <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 11px; color: #94a3b8;">
+                        Generated by Samshodhana Mandiram — Dhatu Explorer
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin:       10,
+                filename:     `dhatu_${dhatu.dhatu_slp1 || dhatu.dhatu || 'dhatu'}_forms.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const element = document.createElement('div');
+            element.innerHTML = html;
+            
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+
+    <script src="/static/js/keymanweb.js?v=100"></script>
+    <script src="/static/js/sanskrit_keyboard.js"></script>
+    <footer style="margin-top: 40px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; color: var(--t-text-secondary);">
+        Samshodhana Mandiram — Sri Trayee Vidya Gurukulam
+    </footer>
+</body>
+</html>

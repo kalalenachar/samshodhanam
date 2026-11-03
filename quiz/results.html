@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizMaster — Results</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=100">
+  <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+  <script src="/static/js/mobile-android.js" defer></script>
+  <script src="db.js?v=32"></script>
+</head>
+<body>
+  <div class="ambient-blobs-container">
+    <div class="ambient-blob ambient-blob-1"></div>
+    <div class="ambient-blob ambient-blob-2"></div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="index.html" class="navbar-brand"><img src="/static/images/app_quiz.png" class="navbar-logo" alt="QuizMaster Logo">Quiz<span class="highlight">Master</span></a>
+    </div>
+    <div class="navbar-links">
+      <a href="index.html">Quiz Home</a>
+      <div id="quizUserMenu" style="display: none;">
+        <a href="/user/quiz-profile" class="quiz-user-avatar-btn" id="quizAvatarBtn" title="View Profile">
+          <span id="quizAvatarEmoji">👤</span>
+        </a>
+      </div>
+      <div class="lang-dropdown-container" style="margin-right: 0.5rem;">
+        <button class="lang-dropdown-btn" type="button">
+          🌐 <span id="currentLangLabel">संस्कृतम्</span> ▾
+        </button>
+        <div class="lang-dropdown-menu">
+          <a href="#" class="lang-option" data-lang="sa">संस्कृतम्</a>
+          <a href="#" class="lang-option" data-lang="en">English</a>
+          <a href="#" class="lang-option" data-lang="hi">हिन्दी</a>
+          <a href="#" class="lang-option" data-lang="kn">ಕನ್ನಡ</a>
+          <a href="#" class="lang-option" data-lang="te">తెలుగు</a>
+        </div>
+      </div>
+      <select id="langSelect" style="display: none;">
+        <option value="sa">संस्कृतम्</option>
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+        <option value="kn">ಕನ್ನಡ</option>
+        <option value="te">తెలుగు</option>
+      </select>
+      <a href="/login?redirect=/quiz/results.html" id="userLoginLink">Login</a>
+    </div>
+  </nav>
+
+  <!-- ── Results Hero Banner ── -->
+  <div class="results-hero" id="resultsHero">
+    <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+    <div class="results-hero-inner">
+      <div class="results-hero-emoji" id="heroEmoji">🏆</div>
+      <h1 class="results-hero-name" id="heroName">Your Results</h1>
+      <p class="results-hero-sub" id="heroSub">Here's how you performed</p>
+
+      <!-- Score ring — hero size -->
+      <div class="results-hero-ring-wrap">
+        <div class="score-ring results-hero-ring">
+          <svg viewBox="0 0 200 200" width="180" height="180">
+            <defs>
+              <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#818cf8" />
+                <stop offset="100%" stop-color="#34d399" />
+              </linearGradient>
+            </defs>
+            <circle class="bg" cx="100" cy="100" r="88"></circle>
+            <circle class="fill" id="scoreCircle" cx="100" cy="100" r="88"
+              stroke="url(#scoreGrad)" stroke-linecap="round"
+              stroke-dasharray="552.92" stroke-dashoffset="552.92"></circle>
+          </svg>
+          <div class="score-value" id="scoreValue">0/0</div>
+        </div>
+      </div>
+
+      <div class="results-hero-message" id="scoreMessage"></div>
+      <div class="results-hero-pct" id="scorePercent">0% correct</div>
+
+      <!-- Stat pills row -->
+      <div class="results-stats-row" id="statsRow">
+        <div class="rstat-card rstat-correct">
+          <div class="rstat-val" id="statCorrect">—</div>
+          <div class="rstat-label">✅ Correct</div>
+        </div>
+        <div class="rstat-card rstat-wrong">
+          <div class="rstat-val" id="statWrong">—</div>
+          <div class="rstat-label">❌ Wrong</div>
+        </div>
+        <div class="rstat-card rstat-skip">
+          <div class="rstat-val" id="statSkipped">—</div>
+          <div class="rstat-label">⏭️ Skipped</div>
+        </div>
+      </div>
+
+      <!-- Meta badges row -->
+      <div class="results-meta-pills" id="metaBadges"></div>
+    </div>
+  </div>
+
+  <!-- ── Action Bar (desktop: inline; mobile: sticky bottom) ── -->
+  <div class="results-action-bar" id="resultsActionBar">
+    <button onclick="shareQuizResult()" class="btn share-result-btn rab-btn" id="shareResultBtn">
+      <span class="share-btn-content"><span class="share-btn-icon">🚀</span> Flex Score!</span>
+      <span class="share-btn-sparkles"><span class="sparkle">✨</span><span class="sparkle">💫</span><span class="sparkle">⭐</span></span>
+    </button>
+    <a href="index.html" class="btn btn-primary rab-btn">🔄 Retake</a>
+    <a href="/user/quiz-profile" class="btn btn-secondary rab-btn">👤 History</a>
+  </div>
+
+  <!-- ── Main Content: Review list ── -->
+  <div class="container container-lg results-review-container">
+    <div class="premium-card results-review-card">
+      <div class="results-review-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" style="flex-shrink:0">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Detailed Review</span>
+        <span class="results-review-sub">प्रश्न-विवरणम्</span>
+
+        <!-- Filter tabs -->
+        <div class="results-filter-tabs" id="reviewFilterTabs">
+          <button class="rfilter-btn active" data-filter="all" onclick="filterReview('all',this)">All</button>
+          <button class="rfilter-btn" data-filter="correct" onclick="filterReview('correct',this)">✅ Correct</button>
+          <button class="rfilter-btn" data-filter="incorrect" onclick="filterReview('incorrect',this)">❌ Wrong</button>
+          <button class="rfilter-btn" data-filter="skipped" onclick="filterReview('skipped',this)">⏭️ Skipped</button>
+        </div>
+      </div>
+
+      <div id="resultsList">
+        <!-- Dynamically populated review items -->
+      </div>
+    </div>
+  </div>
+
+  <div style="height: 5rem;"></div>
+  <footer class="footer">
+    <div class="footer-quote">"ज्ञानेन सदृशं पवित्रमिह विद्यते"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull; 
+      <a href="/library">Sanskrit Digital Library</a> &bull; 
+      <a href="/#contact">Contact Us</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'error') icon = '❌';
+      if (type === 'warning') icon = '⚠️';
+      t.innerHTML = `<span style="font-size: 1.1rem; display: flex; align-items: center;">${icon}</span> <span>${msg}</span>`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(20px)';
+        t.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    // Check for pending session toasts
+    const pendingToast = sessionStorage.getItem('pending_toast');
+    if (pendingToast) {
+      try {
+        const toastData = JSON.parse(pendingToast);
+        showToast(toastData.message, toastData.type);
+      } catch (e) {}
+      sessionStorage.removeItem('pending_toast');
+    }
+
+    function renderResults(data, chosenLang) {
+      const { name, subject, level, score, total, percentage, results } = data;
+
+      // ── Hero section
+      const fun = getFunMessageSimple(percentage);
+      const heroEmoji = document.getElementById('heroEmoji');
+      const heroName  = document.getElementById('heroName');
+      const heroSub   = document.getElementById('heroSub');
+      if (heroEmoji) heroEmoji.textContent = fun.emoji;
+      if (heroName)  heroName.textContent  = `Great job, ${name}!`;
+      if (heroSub)   heroSub.textContent   = fun.sub;
+
+      const langNames = { en: 'English', sa: 'Sanskrit (संस्कृतम्)', hi: 'Hindi (हिन्दी)', kn: 'Kannada (ಕನ್ನಡ)', te: 'Telugu (తెలుగు)' };
+      const langName = langNames[chosenLang] || 'English';
+
+      // ── Meta pills (inline horizontal)
+      document.getElementById('metaBadges').innerHTML = `
+        <span class="rmeta-pill">📚 ${subject || 'General'}</span>
+        <span class="rmeta-pill rmeta-green">📊 ${level || 'Default'}</span>
+        <span class="rmeta-pill rmeta-accent">🌐 ${langName}</span>
+      `;
+
+      // ── Score ring (new circumference: 2π×88 = 552.92)
+      const circumference = 2 * Math.PI * 88;
+      const offset = circumference - (percentage / 100) * circumference;
+      document.getElementById('scoreValue').textContent = `${score}/${total}`;
+      document.getElementById('scorePercent').textContent = `${percentage}% correct`;
+      document.getElementById('scoreMessage').textContent = fun.msg;
+
+      setTimeout(() => {
+        document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+      }, 400);
+
+      // ── Stats row
+      const correct = results.filter(r => r.isCorrect).length;
+      const wrong   = results.filter(r => !r.isCorrect && !r.isSkipped).length;
+      const skipped = results.filter(r => r.isSkipped).length;
+      const sc = document.getElementById('statCorrect');
+      const sw = document.getElementById('statWrong');
+      const ss = document.getElementById('statSkipped');
+      if (sc) sc.textContent = correct;
+      if (sw) sw.textContent = wrong;
+      if (ss) ss.textContent = skipped;
+
+      // ── Confetti for good scores
+      if (percentage >= 70) setTimeout(launchConfetti, 600);
+
+      // ── Save badge placeholder
+      window._metaBadgesEl = document.getElementById('metaBadges');
+
+      const list = document.getElementById('resultsList');
+      list.innerHTML = '';
+      results.forEach((r, i) => {
+        const div = document.createElement('div');
+        div.className = `result-item ${r.isCorrect ? 'correct' : (r.isSkipped ? 'skipped' : 'incorrect')}`;
+
+        let optionsHtml = r.options.map(opt => {
+          let cls = '';
+          const isCorrectOpt = opt === r.correctAnswer;
+          const isUserPick = opt === r.userAnswer;
+
+          if (isCorrectOpt) cls = 'is-correct';
+          else if (isUserPick && !r.isCorrect) cls = 'is-wrong';
+
+          let icon = '';
+          if (isCorrectOpt) icon = '<span style="color: var(--success); font-weight: 800; font-size: 1.1rem; margin-right: 0.4rem;">✓</span>';
+          else if (isUserPick && !r.isCorrect) icon = '<span style="color: var(--danger); font-weight: 800; font-size: 1.1rem; margin-right: 0.4rem;">✕</span>';
+
+          let tag = '';
+          if (isCorrectOpt) tag = ' <span style="font-size: 0.72rem; opacity: 0.85; margin-left: auto; background: rgba(52, 211, 153, 0.15); padding: 0.1rem 0.5rem; border-radius: 99px;">Correct</span>';
+          if (isUserPick && !isCorrectOpt) tag = ' <span style="font-size: 0.72rem; opacity: 0.85; margin-left: auto; background: rgba(248, 113, 113, 0.15); padding: 0.1rem 0.5rem; border-radius: 99px;">Your Answer</span>';
+          if (isUserPick && isCorrectOpt) tag = ' <span style="font-size: 0.72rem; opacity: 0.85; margin-left: auto; background: rgba(52, 211, 153, 0.25); padding: 0.1rem 0.5rem; border-radius: 99px;">Your Answer ✓</span>';
+
+          return `<div class="result-option ${cls}">${icon}<span>${opt}</span>${tag}</div>`;
+        }).join('');
+
+
+
+        window.quizDetailedResults = results;
+        const cleanUserAnswer = r.userAnswer ? r.userAnswer.replace(/'/g, "\\'") : '';
+
+        div.innerHTML = `
+          <div class="result-question">
+            <span>${i + 1}. ${r.question}</span>
+            <span class="result-status ${r.isCorrect ? 'correct' : (r.isSkipped ? 'skipped' : 'incorrect')}">
+              ${r.isCorrect ? '✓ Correct' : (r.isSkipped ? '⊘ Skipped' : '✗ Wrong')}
+            </span>
+          </div>
+          <div class="result-options">${optionsHtml}</div>
+          <div class="explanation-box"><strong>💡 Explanation:</strong> ${r.explanation}</div>
+          <div class="vyakhya-section">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
+              <div class="question-feedback-area" id="feedbackArea-${i}" style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.02); padding: 0.35rem 0.65rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 500;">Rate Question:</span>
+                <button class="feedback-thumb-btn up" id="thumbUp-${i}" onclick="submitThumbFeedback(${i}, ${r.id}, 'up')" title="Thumbs Up">👍</button>
+                <button class="feedback-thumb-btn down" id="thumbDown-${i}" onclick="submitThumbFeedback(${i}, ${r.id}, 'down')" title="Thumbs Down">👎</button>
+              </div>
+            </div>
+            
+            <div class="feedback-comment-box" id="feedbackCommentBox-${i}" style="display: none;">
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem; font-weight: 500;">What is the issue with this question? (Optional)</div>
+              <div class="feedback-comment-suggestions">
+                <button class="suggestion-chip mini" onclick="addFeedbackComment(${i}, 'Spell mistakes')">Spell mistakes</button>
+                <button class="suggestion-chip mini" onclick="addFeedbackComment(${i}, 'wrong answer/explanation')">wrong answer/explanation</button>
+                <button class="suggestion-chip mini" onclick="addFeedbackComment(${i}, 'insufficient explanation')">insufficient explanation</button>
+              </div>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <input type="text" class="feedback-comment-input" id="feedbackCommentInput-${i}" placeholder="Describe the issue...">
+                <button class="feedback-submit-btn" onclick="submitCommentFeedback(${i}, ${r.id})">Submit</button>
+              </div>
+            </div>
+
+</div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    async function submitThumbFeedback(index, questionId, vote) {
+      const upBtn = document.getElementById(`thumbUp-${index}`);
+      const downBtn = document.getElementById(`thumbDown-${index}`);
+      const commentBox = document.getElementById(`feedbackCommentBox-${index}`);
+
+      if (!upBtn || !downBtn) return;
+
+      if (vote === 'up') {
+        upBtn.classList.add('active');
+        downBtn.classList.remove('active');
+        if (commentBox) commentBox.style.display = 'none';
+      } else {
+        downBtn.classList.add('active');
+        upBtn.classList.remove('active');
+        if (commentBox) {
+          commentBox.style.display = 'block';
+          const input = document.getElementById(`feedbackCommentInput-${index}`);
+          if (input) input.focus();
+        }
+      }
+
+      try {
+        const token = localStorage.getItem('user_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch('/api/user/quiz-feedback', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ question_id: questionId, vote: vote })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (vote === 'up') {
+            showToast('Thank you for your feedback!', 'success');
+          }
+        } else {
+          console.error('Feedback save failed:', data.message);
+        }
+      } catch (err) {
+        console.error('Error submitting feedback:', err);
+      }
+    }
+
+    function addFeedbackComment(index, text) {
+      const input = document.getElementById(`feedbackCommentInput-${index}`);
+      if (input) {
+        if (input.value) {
+          input.value += ', ' + text;
+        } else {
+          input.value = text;
+        }
+        input.focus();
+      }
+    }
+
+    async function submitCommentFeedback(index, questionId) {
+      const input = document.getElementById(`feedbackCommentInput-${index}`);
+      if (!input) return;
+      const comment = input.value.trim();
+
+      try {
+        const token = localStorage.getItem('user_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch('/api/user/quiz-feedback', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ question_id: questionId, vote: 'down', comments: comment })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Feedback submitted. Thank you!', 'success');
+          const commentBox = document.getElementById(`feedbackCommentBox-${index}`);
+          if (commentBox) commentBox.style.display = 'none';
+          input.value = '';
+        } else {
+          showToast(data.message || 'Failed to submit feedback.', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('Network error while submitting feedback.', 'error');
+      }
+    }
+
+    function handleQuizLogout(e) {
+      if (e) e.preventDefault();
+      window.location.href = '/logout?redirect=/quiz/results.html';
+    }
+
+    let scoreSubmitted = false;
+
+    async function syncSession() {
+      const token = localStorage.getItem('user_token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const res = await fetch('/sdl/api/external/session-sync', {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data.logged_in) {
+          localStorage.setItem('user_token', data.token);
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
+        } else {
+          if (token) {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_profile');
+          }
+        }
+      } catch (err) {
+        console.error('Session sync failed:', err);
+      } finally {
+        checkQuizAuth();
+      }
+    }
+
+    function checkQuizAuth() {
+      const token = localStorage.getItem('user_token');
+      const userStr = localStorage.getItem('user_profile');
+      const userMenu = document.getElementById('quizUserMenu');
+      const loginLink = document.getElementById('userLoginLink');
+
+      if (token && userStr) {
+        if (loginLink) loginLink.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'inline-flex';
+
+        try {
+          const user = JSON.parse(userStr);
+
+          // Update avatar details
+          const avatarBtn = document.getElementById('quizAvatarBtn');
+          const avatarEmoji = document.getElementById('quizAvatarEmoji');
+
+          if (avatarBtn) {
+            avatarBtn.title = `View Profile (${user.display_name || 'User'})`;
+            if (user.profile_pic) {
+              const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+              avatarBtn.style.background = `url("${picUrl}") no-repeat center/cover`;
+              if (avatarEmoji) avatarEmoji.textContent = '';
+            } else {
+              avatarBtn.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+              if (avatarEmoji) avatarEmoji.textContent = user.avatar_emoji || '👤';
+            }
+
+            if (user.role === 'super' || user.role === 'admin' || user.display_name === 'SUPERADMIN') {
+              sessionStorage.setItem('isAdmin', 'true');
+              avatarBtn.href = 'admin-dashboard.html';
+            } else {
+              avatarBtn.href = '/user/quiz-profile';
+            }
+          }
+
+          // Automatically submit score if not done yet
+          const raw = sessionStorage.getItem('quizResults');
+          if (raw && !scoreSubmitted) {
+            scoreSubmitted = true;
+            const data = JSON.parse(raw);
+            const answers = data.answers || {};
+            const chosenLang = sessionStorage.getItem('quizLanguage') || 'sa';
+            const initialData = calculateResults(data.name, answers, data.subject, data.level, chosenLang);
+            submitQuizScore(token, initialData.score, initialData.total, data.subject, data.level, chosenLang);
+          }
+        } catch (e) {
+          console.error(e);
+          if (userMenu) userMenu.style.display = 'none';
+          if (loginLink) {
+            loginLink.style.display = 'inline-block';
+            loginLink.href = '/login?redirect=/quiz/results.html';
+          }
+        }
+      } else {
+        if (userMenu) userMenu.style.display = 'none';
+        if (loginLink) {
+          loginLink.style.display = 'inline-block';
+          loginLink.href = '/login?redirect=/quiz/results.html';
+        }
+        
+        // Auto-submit score anonymously for guests
+        try {
+          const raw = sessionStorage.getItem('quizResults');
+          if (raw && !scoreSubmitted) {
+            scoreSubmitted = true;
+            const data = JSON.parse(raw);
+            const answers = data.answers || {};
+            const chosenLang = sessionStorage.getItem('quizLanguage') || 'sa';
+            const initialData = calculateResults(data.name, answers, data.subject, data.level, chosenLang);
+            submitQuizScore(null, initialData.score, initialData.total, data.subject, data.level, chosenLang, data.name);
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    function submitQuizScore(token, score, total, subject, level, lang, guestName = null) {
+      const API_BASE_URL = '/sdl';
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const body = {
+        subject: subject,
+        level: level,
+        score: score,
+        total: total,
+        lang: lang
+      };
+      if (guestName) {
+        body['guest_name'] = guestName;
+      }
+
+      fetch(`${API_BASE_URL}/api/external/quiz/submit`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(body)
+      })
+      .then(res => res.json())
+      .then(resData => {
+        if (resData.success) {
+          const metaBadges = document.getElementById('metaBadges');
+          if (metaBadges) {
+            if (!document.getElementById('saveSuccessBadge')) {
+              const saveBadge = document.createElement('span');
+              saveBadge.id = 'saveSuccessBadge';
+              saveBadge.className = 'rmeta-pill rmeta-green';
+              saveBadge.style.cssText = 'font-weight: 600;';
+              saveBadge.textContent = token ? '✓ Score saved to profile' : '✓ Score saved anonymously';
+              metaBadges.appendChild(saveBadge);
+            }
+          }
+        }
+      })
+      .catch(err => console.error("Error saving quiz results:", err));
+    }
+
+    // ── Helper: score message for hero ──────────────────────────────
+    function getFunMessageSimple(pct) {
+      if (pct === 100) return { emoji: '👑', msg: '👑 Absolute Legend!', sub: 'Flawless! You are basically a guru now.' };
+      if (pct >= 90)  return { emoji: '🔥', msg: '🔥 On Fire!', sub: 'Scorching performance. Respect!' };
+      if (pct >= 80)  return { emoji: '🚀', msg: '🚀 Rocketing Up!', sub: 'Houston, we have a smartypants.' };
+      if (pct >= 70)  return { emoji: '🎯', msg: '🎯 Sharp Shooter!', sub: 'Bullseye after bullseye!' };
+      if (pct >= 60)  return { emoji: '💪', msg: '💪 Solid Effort!', sub: 'Above average and climbing!' };
+      if (pct >= 50)  return { emoji: '🧠', msg: '🧠 Brain Warming Up!', sub: 'Halfway there — keep going!' };
+      if (pct >= 30)  return { emoji: '🌱', msg: '🌱 Growing!', sub: 'Every expert was once a beginner.' };
+      return          { emoji: '😅', msg: '😅 Keep Practicing!', sub: 'You showed up — that is already winning.' };
+    }
+
+    // ── Confetti burst ────────────────────────────────────────────────
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+
+      const colors = ['#818cf8','#34d399','#f59e0b','#f472b6','#60a5fa','#a78bfa','#fb7185'];
+      const particles = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 0.4,
+        r: 3 + Math.random() * 5,
+        d: 1 + Math.random() * 3,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        tilt: Math.random() * 360,
+        tiltSpeed: 0.5 + Math.random() * 1.5,
+        opacity: 0.8 + Math.random() * 0.2
+      }));
+
+      let frame = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          ctx.globalAlpha = p.opacity * Math.max(0, 1 - frame / 120);
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y, p.r, p.r * 0.5, p.tilt * Math.PI / 180, 0, Math.PI * 2);
+          ctx.fill();
+          p.y += p.d;
+          p.tilt += p.tiltSpeed;
+          p.x += Math.sin(frame * 0.05 + p.tilt) * 0.8;
+        });
+        frame++;
+        if (frame < 130) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+
+    // ── Filter review questions ───────────────────────────────────────
+    function filterReview(filter, btn) {
+      document.querySelectorAll('.rfilter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      document.querySelectorAll('.result-item').forEach(el => {
+        if (filter === 'all') {
+          el.style.display = '';
+        } else {
+          el.style.display = el.classList.contains(filter) ? '' : 'none';
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const raw = sessionStorage.getItem('quizResults');
+      if (!raw) { window.location.href = 'index.html'; return; }
+
+      const data = JSON.parse(raw);
+      const answers = data.answers || {};
+      const chosenLang = sessionStorage.getItem('quizLanguage') || 'sa';
+
+      // Setup the language dropdown
+      const langSelect = document.getElementById('langSelect');
+      const langLabel = document.getElementById('currentLangLabel');
+      const langOptions = document.querySelectorAll('.lang-option');
+      const langNames = { sa: 'संस्कृतम्', en: 'English', hi: 'हिन्दी', kn: 'ಕನ್ನಡ', te: 'తెలుగు' };
+      const dropdownBtn = document.querySelector('.lang-dropdown-btn');
+      const dropdownContainer = document.querySelector('.lang-dropdown-container');
+
+      function updateCustomDropdown(lang) {
+        if (langLabel) langLabel.textContent = langNames[lang] || 'English';
+        langOptions.forEach(opt => {
+          if (opt.getAttribute('data-lang') === lang) {
+            opt.classList.add('active');
+          } else {
+            opt.classList.remove('active');
+          }
+        });
+      }
+
+      if (langSelect) {
+        langSelect.value = chosenLang;
+        updateCustomDropdown(chosenLang);
+        langSelect.addEventListener('change', (e) => {
+          const newLang = e.target.value;
+          sessionStorage.setItem('quizLanguage', newLang);
+          const updatedData = calculateResults(data.name, answers, data.subject, data.level, newLang);
+          updatedData.answers = answers;
+          renderResults(updatedData, newLang);
+          updateCustomDropdown(newLang);
+        });
+      }
+
+      langOptions.forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.preventDefault();
+          const chosen = opt.getAttribute('data-lang');
+          if (langSelect) {
+            langSelect.value = chosen;
+            langSelect.dispatchEvent(new Event('change'));
+          }
+        });
+      });
+
+      if (dropdownBtn && dropdownContainer) {
+        dropdownBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdownContainer.classList.toggle('active');
+        });
+
+        document.addEventListener('click', () => {
+          dropdownContainer.classList.remove('active');
+        });
+      }
+
+
+      // Initial render
+      const initialData = calculateResults(data.name, answers, data.subject, data.level, chosenLang);
+      initialData.answers = answers;
+      renderResults(initialData, chosenLang);
+
+      syncSession();
+    });
+  </script>
+
+  <script>
+    // ── Share Result Feature ─────────────────────────────────────────
+    // Generates a fun canvas image card and shares via Web Share API
+
+    function getShareData() {
+      const raw = sessionStorage.getItem('quizResults');
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      const answers = data.answers || {};
+      const chosenLang = sessionStorage.getItem('quizLanguage') || 'sa';
+      return calculateResults(data.name, answers, data.subject, data.level, chosenLang);
+    }
+
+    function getFunMessage(pct) {
+      if (pct === 100) return { emoji: '👑', title: 'ABSOLUTE LEGEND!', sub: 'Flawless victory. You\'re basically a guru now.', vibe: 'legendary' };
+      if (pct >= 90) return { emoji: '🔥', title: 'ON FIRE!', sub: 'Is it hot in here, or is it just your score?', vibe: 'fire' };
+      if (pct >= 80) return { emoji: '🚀', title: 'ROCKETING UP!', sub: 'Houston, we have a smartypants.', vibe: 'rocket' };
+      if (pct >= 70) return { emoji: '🎯', title: 'SHARP SHOOTER!', sub: 'Bullseye after bullseye. Respect.', vibe: 'target' };
+      if (pct >= 60) return { emoji: '💪', title: 'SOLID EFFORT!', sub: 'Above average & climbing. Keep going!', vibe: 'strong' };
+      if (pct >= 50) return { emoji: '🧠', title: 'BRAIN WARMING UP!', sub: 'Halfway there — one more quiz & you\'ll crush it!', vibe: 'brain' };
+      if (pct >= 30) return { emoji: '🌱', title: 'GROWING!', sub: 'Every expert was once a beginner. Keep at it!', vibe: 'grow' };
+      return { emoji: '😅', title: 'OOF, BUT HEY...', sub: 'You showed up. That\'s already winning. Try again!', vibe: 'oof' };
+    }
+
+    function drawShareCard(data) {
+      const canvas = document.createElement('canvas');
+      const W = 720, H = 960;
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      const pct = data.percentage;
+      const fun = getFunMessage(pct);
+
+      // ── Background gradient
+      const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+      bgGrad.addColorStop(0, '#0f0b2e');
+      bgGrad.addColorStop(0.5, '#1a1145');
+      bgGrad.addColorStop(1, '#0d1f3c');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // ── Decorative circles (soft glowing orbs)
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = '#818cf8';
+      ctx.beginPath(); ctx.arc(120, 180, 200, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath(); ctx.arc(600, 750, 250, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(650, 200, 150, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // ── Confetti dots
+      const confettiColors = ['#818cf8', '#34d399', '#f59e0b', '#f472b6', '#60a5fa', '#a78bfa'];
+      for (let i = 0; i < 40; i++) {
+        ctx.globalAlpha = 0.15 + Math.random() * 0.25;
+        ctx.fillStyle = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+        const x = Math.random() * W;
+        const y = Math.random() * H;
+        const size = 2 + Math.random() * 5;
+        ctx.beginPath(); ctx.arc(x, y, size, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // ── Top section: "QuizMaster" branding
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '500 14px Inter, sans-serif';
+      ctx.fillText('samshodhanamandiram.in/quiz', W / 2, 40);
+
+      // ── Big emoji
+      ctx.font = '72px sans-serif';
+      ctx.fillText(fun.emoji, W / 2, 120);
+
+      // ── Fun title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px Inter, sans-serif';
+      ctx.fillText(fun.title, W / 2, 175);
+
+      // ── Fun subtitle
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '500 16px Inter, sans-serif';
+      ctx.fillText(fun.sub, W / 2, 210);
+
+      // ── Score ring
+      const cx = W / 2, cy = 370, radius = 100;
+      // Background ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // Score fill ring
+      const scoreAngle = (pct / 100) * Math.PI * 2;
+      const ringGrad = ctx.createLinearGradient(cx - radius, cy - radius, cx + radius, cy + radius);
+      ringGrad.addColorStop(0, '#818cf8');
+      ringGrad.addColorStop(1, '#34d399');
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, -Math.PI / 2, -Math.PI / 2 + scoreAngle);
+      ctx.strokeStyle = ringGrad;
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+
+      // Score text inside ring
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 48px Inter, sans-serif';
+      ctx.fillText(`${data.score}/${data.total}`, cx, cy + 8);
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '600 18px Inter, sans-serif';
+      ctx.fillText(`${pct}% correct`, cx, cy + 38);
+
+      // ── Player name
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px Inter, sans-serif';
+      ctx.fillText(data.name || 'Quiz Taker', cx, 530);
+
+      // ── Info pills
+      const pills = [
+        { icon: '📚', label: data.subject || 'General' },
+        { icon: '📊', label: `Level: ${data.level || 'Default'}` }
+      ];
+      const pillY = 580;
+      const pillGap = 20;
+      const pillHeight = 36;
+      ctx.font = '500 15px Inter, sans-serif';
+
+      // Measure total pills width
+      let totalPillWidth = 0;
+      const pillWidths = pills.map(p => {
+        const tw = ctx.measureText(`${p.icon} ${p.label}`).width + 30;
+        totalPillWidth += tw;
+        return tw;
+      });
+      totalPillWidth += (pills.length - 1) * pillGap;
+      let pillX = (W - totalPillWidth) / 2;
+
+      pills.forEach((p, idx) => {
+        const pw = pillWidths[idx];
+        // Pill background
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY - pillHeight / 2, pw, pillHeight, 18);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Pill text
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${p.icon} ${p.label}`, pillX + pw / 2, pillY + 5);
+        pillX += pw + pillGap;
+      });
+
+      // ── Stats breakdown bar
+      const correct = data.results.filter(r => r.isCorrect).length;
+      const wrong = data.results.filter(r => !r.isCorrect && !r.isSkipped).length;
+      const skipped = data.results.filter(r => r.isSkipped).length;
+
+      const statsY = 650;
+      const statItems = [
+        { label: 'Correct', value: correct, color: '#34d399' },
+        { label: 'Wrong', value: wrong, color: '#f87171' },
+        { label: 'Skipped', value: skipped, color: '#fbbf24' }
+      ];
+
+      const statBoxW = 150, statBoxH = 70, statBoxGap = 20;
+      const totalStatW = statItems.length * statBoxW + (statItems.length - 1) * statBoxGap;
+      let statX = (W - totalStatW) / 2;
+
+      statItems.forEach(s => {
+        // Box
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        ctx.beginPath();
+        ctx.roundRect(statX, statsY, statBoxW, statBoxH, 14);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        // Value
+        ctx.fillStyle = s.color;
+        ctx.font = 'bold 26px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.value, statX + statBoxW / 2, statsY + 35);
+        // Label
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '500 12px Inter, sans-serif';
+        ctx.fillText(s.label, statX + statBoxW / 2, statsY + 56);
+
+        statX += statBoxW + statBoxGap;
+      });
+
+      // ── Challenge banner
+      const bannerY = 775;
+      ctx.fillStyle = 'rgba(129, 140, 248, 0.12)';
+      ctx.beginPath();
+      ctx.roundRect(60, bannerY, W - 120, 60, 16);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(129, 140, 248, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.font = '600 16px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎮 Think you can beat this? Take the quiz!', W / 2, bannerY + 35);
+
+      // ── Bottom branding
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      ctx.font = '400 13px Inter, sans-serif';
+      ctx.fillText('QuizMaster by Samshodhana Mandiram', W / 2, H - 45);
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '400 11px Inter, sans-serif';
+      ctx.fillText('Sanskrit Learning • Made with ❤️', W / 2, H - 25);
+
+      return canvas;
+    }
+
+    function buildShareCaption(data) {
+      const fun = getFunMessage(data.percentage);
+      const correct = data.results.filter(r => r.isCorrect).length;
+      const wrong = data.results.filter(r => !r.isCorrect && !r.isSkipped).length;
+      const skipped = data.results.filter(r => r.isSkipped).length;
+
+      return [
+        `${fun.emoji} ${fun.title}`,
+        ``,
+        `I scored ${data.score}/${data.total} (${data.percentage}%) on QuizMaster!`,
+        `📚 Subject: ${data.subject}`,
+        `📊 Level: ${data.level}`,
+        `✅ ${correct} correct · ❌ ${wrong} wrong · ⏭️ ${skipped} skipped`,
+        ``,
+        `${fun.sub}`,
+        ``,
+        `🎮 Think you can beat me? Try it:`,
+        `https://samshodhanamandiram.in/quiz`
+      ].join('\n');
+    }
+
+    async function shareQuizResult() {
+      const btn = document.getElementById('shareResultBtn');
+      if (!btn) return;
+
+      const data = getShareData();
+      if (!data) {
+        showToast('No quiz data found to share!', 'error');
+        return;
+      }
+
+      // Show generating state
+      const originalContent = btn.innerHTML;
+      btn.innerHTML = '<span class="share-btn-content"><span class="share-btn-icon spinning">⚡</span> Generating...</span>';
+      btn.disabled = true;
+
+      try {
+        // Small delay for the animation feel
+        await new Promise(r => setTimeout(r, 300));
+
+        const canvas = drawShareCard(data);
+        const caption = buildShareCaption(data);
+
+        // Convert canvas to blob
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], 'quiz-result.png', { type: 'image/png' });
+
+        // Try Web Share API (works great on mobile)
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'My QuizMaster Score!',
+            text: caption,
+            files: [file]
+          });
+          showToast('Shared successfully! 🎉', 'success');
+        } else {
+          // Fallback: Download image + copy caption
+          const link = document.createElement('a');
+          link.download = `quizmaster-score-${data.percentage}pct.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+
+          // Copy caption to clipboard
+          try {
+            await navigator.clipboard.writeText(caption);
+            showToast('📸 Image downloaded & caption copied! Paste it when sharing.', 'success');
+          } catch {
+            showToast('📸 Image downloaded! Share it with friends.', 'success');
+          }
+        }
+
+        // Fun celebration animation on button
+        btn.innerHTML = '<span class="share-btn-content"><span class="share-btn-icon">🎉</span> Shared!</span>';
+        setTimeout(() => {
+          btn.innerHTML = originalContent;
+          btn.disabled = false;
+        }, 2000);
+
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          showToast('Could not share. Try again!', 'error');
+        }
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

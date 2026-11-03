@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=105">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) { }
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) { }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse by Tag - Sanskrit Digital Library</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=105">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=105">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=105" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .browse-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 30px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section {
+            background: var(--t-bg-surface);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--t-shadow);
+        }
+
+        .sidebar-section h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--t-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--t-border-light);
+        }
+
+        .collection-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .collection-list li {
+            margin-bottom: 8px;
+        }
+
+        .collection-list a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: var(--t-text-primary);
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .collection-list a:hover {
+            background: var(--t-hover-bg);
+            color: var(--t-accent);
+        }
+
+        .collection-list a.active {
+            background: var(--t-accent-gradient);
+            color: var(--t-text-on-accent, white);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+        }
+
+        .browse-header {
+            background: var(--t-bg-surface);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--t-shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .browse-header h1 {
+            font-size: 24px;
+            color: var(--t-text-primary);
+        }
+
+        .browse-header .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .browse-header select {
+            padding: 10px 15px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: var(--t-bg-surface);
+            cursor: pointer;
+        }
+
+        /* Items Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .item-card {
+            background: var(--t-bg-surface);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--t-shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .item-thumbnail {
+            width: 100%;
+            height: 180px;
+            background: var(--t-accent-gradient) !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+        }
+
+        .item-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-content {
+            padding: 20px;
+        }
+
+        .item-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--t-text-primary);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .item-meta {
+            font-size: 13px;
+            color: var(--t-text-muted);
+            margin-bottom: 10px;
+        }
+
+        .item-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+            padding: 20px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 10px 16px;
+            background: var(--t-bg-surface);
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--t-text-primary);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .pagination a:hover {
+            border-color: var(--t-accent);
+            color: var(--t-accent);
+        }
+
+        .pagination .active {
+            background: var(--t-accent);
+            border-color: var(--t-accent);
+            color: var(--t-text-on-accent);
+        }
+
+        /* Mobile Toggle & Drawer Styles */
+        .mobile-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--t-hover-bg);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-primary);
+            cursor: pointer;
+            padding: 0;
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            flex-shrink: 0;
+        }
+
+        .mobile-toggle:active {
+            transform: scale(0.92);
+            background: var(--t-accent-alpha-20);
+        }
+
+        .nav-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 19998;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .nav-backdrop.open {
+            display: block !important;
+            opacity: 1 !important;
+        }
+
+        .mobile-drawer {
+            position: fixed !important;
+            top: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: min(320px, 86vw) !important;
+            background: var(--t-bg-overlay, #161822) !important;
+            border-left: 1px solid var(--t-border) !important;
+            box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5) !important;
+            z-index: 19999 !important;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+        }
+
+        .mobile-drawer.open {
+            transform: translateX(0) !important;
+        }
+
+        .drawer-header {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 16px 14px !important;
+            border-bottom: 1px solid var(--t-border) !important;
+            background: var(--t-hover-bg) !important;
+        }
+
+        .drawer-brand {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+        }
+
+        .drawer-title {
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            color: var(--t-text-primary) !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .drawer-sub {
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            color: var(--t-accent) !important;
+            line-height: 1.2 !important;
+        }
+
+        .drawer-close-btn {
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 50% !important;
+            background: var(--t-bg-surface) !important;
+            border: 1px solid var(--t-border) !important;
+            color: var(--t-text-secondary) !important;
+            font-size: 15px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+            flex-shrink: 0 !important;
+        }
+
+        .drawer-close-btn:active {
+            transform: scale(0.92) !important;
+        }
+
+        .drawer-content {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding: 12px 10px 32px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+        }
+
+        .drawer-section-title {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            color: var(--t-text-muted) !important;
+            padding: 8px 10px 4px !important;
+        }
+
+        .drawer-link {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            padding: 10px 12px !important;
+            border-radius: 12px !important;
+            color: var(--t-text-secondary) !important;
+            text-decoration: none !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+            min-height: 44px !important;
+        }
+
+        .drawer-link:hover, .drawer-link:active {
+            background: var(--t-hover-bg) !important;
+            color: var(--t-accent) !important;
+        }
+
+        .drawer-link.active {
+            background: var(--t-accent-gradient) !important;
+            color: var(--t-text-on-accent, white) !important;
+            font-weight: 600 !important;
+        }
+
+        .drawer-icon {
+            font-size: 18px !important;
+            width: 24px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Taxonomy Hero Cards */
+        .tax-hero-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .tax-hero-card {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 16px;
+            text-decoration: none;
+            color: var(--t-text-primary);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--t-shadow);
+        }
+
+        .tax-hero-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--t-accent);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .tax-hero-card.active {
+            background: var(--t-accent-alpha-15);
+            border-color: var(--t-accent);
+        }
+
+        .tax-hero-icon {
+            font-size: 1.8rem;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: var(--t-hover-bg);
+            flex-shrink: 0;
+        }
+
+        .tax-hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .tax-hero-count {
+            font-size: 0.75rem;
+            color: var(--t-text-muted);
+            margin-top: 2px;
+        }
+
+        /* View Mode Toggle */
+        .view-mode-toggle {
+            display: inline-flex;
+            background: var(--t-hover-bg);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--t-border);
+        }
+
+        .view-mode-btn {
+            padding: 6px 14px;
+            border-radius: 7px;
+            border: none;
+            background: transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--t-text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .view-mode-btn.active {
+            background: var(--t-bg-surface);
+            color: var(--t-text-primary);
+            box-shadow: var(--t-shadow);
+        }
+
+        /* Category Tree Explorer */
+        .tree-explorer-container {
+            display: none;
+            background: var(--t-bg-surface);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--t-shadow);
+            border: 1px solid var(--t-border);
+        }
+
+        .tree-explorer-container.active {
+            display: block;
+        }
+
+        .tree-branch-group {
+            margin-bottom: 20px;
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .tree-branch-header {
+            background: var(--t-hover-bg);
+            padding: 14px 18px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+
+        .tree-branch-content {
+            padding: 15px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Star Tag */
+        .star-tag {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            border: 1px solid #c8e6c9;
+        }
+
+        /* Inside Tags Container */
+        .inside-tags-container {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 25px;
+            box-shadow: var(--t-shadow);
+            transition: all 0.3s ease;
+        }
+
+        .inside-tags-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--t-border-light);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .inside-tags-pills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag-pill-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            background: var(--t-hover-bg);
+            border: 1.5px solid var(--t-border);
+            color: var(--t-text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+
+        .tag-pill-btn:hover {
+            border-color: var(--t-accent);
+            color: var(--t-accent);
+            transform: translateY(-1.5px);
+        }
+
+        .tag-pill-btn.active {
+            background: var(--t-accent-gradient);
+            color: var(--t-text-on-accent, white);
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .tag-pill-count {
+            font-size: 0.72rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.08);
+            opacity: 0.85;
+        }
+
+        .tag-pill-btn.active .tag-pill-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+        }
+
+        /* ==========================================================================
+           RESPONSIVE ADAPTIVE LAYOUT (<= 900px)
+           ========================================================================== */
+        @media (max-width: 900px) {
+            .header {
+                position: sticky !important;
+                top: 0 !important;
+                padding: 10px 14px !important;
+                height: 56px !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+                box-sizing: border-box !important;
+                z-index: 10000 !important;
+            }
+
+            .header-logo {
+                flex: 1 1 auto !important;
+                min-width: 0 !important;
+                display: flex !important;
+                align-items: center !important;
+                gap: 10px !important;
+            }
+
+            .navbar-home-btn {
+                width: 36px !important;
+                height: 36px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 8px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .navbar-title {
+                font-size: clamp(0.92rem, 3.8vw, 1.15rem) !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                padding-left: 0 !important;
+                line-height: 1.2 !important;
+            }
+
+            .brand-sub {
+                font-size: clamp(0.6rem, 2.3vw, 0.7rem) !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .ocr-count-badge,
+            .desktop-nav {
+                display: none !important;
+            }
+
+            .header-actions {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .mobile-toggle {
+                display: flex !important;
+            }
+
+            .browse-container {
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 12px 14px !important;
+                gap: 18px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Main content (categories & books) first on mobile */
+            .main-content {
+                order: 1 !important;
+                width: 100% !important;
+                padding: 0 !important;
+            }
+
+            /* Category Chips Horizontal Swipe Strip */
+            .tax-hero-grid {
+                display: flex !important;
+                overflow-x: auto !important;
+                scroll-snap-type: x mandatory !important;
+                -webkit-overflow-scrolling: touch !important;
+                gap: 8px !important;
+                margin: 0 0 14px 0 !important;
+                padding: 2px 2px 8px 2px !important;
+                scrollbar-width: none !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .tax-hero-grid::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .tax-hero-card {
+                flex: 0 0 auto !important;
+                min-width: auto !important;
+                max-width: none !important;
+                scroll-snap-align: start !important;
+                padding: 8px 14px !important;
+                border-radius: 20px !important;
+                gap: 8px !important;
+                display: inline-flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                background: var(--t-bg-surface) !important;
+                border: 1.5px solid var(--t-border) !important;
+                color: var(--t-text-primary) !important;
+                text-decoration: none !important;
+                min-height: 40px !important;
+                touch-action: manipulation !important;
+                box-shadow: var(--t-shadow) !important;
+            }
+
+            .tax-hero-card.active {
+                background: var(--t-accent-gradient) !important;
+                border-color: transparent !important;
+            }
+
+            .tax-hero-card.active .tax-hero-count,
+            .tax-hero-card.active .tax-hero-title {
+                color: var(--t-text-on-accent, white) !important;
+            }
+
+            .tax-hero-icon {
+                font-size: 1.15rem !important;
+                width: auto !important;
+                height: auto !important;
+                background: none !important;
+            }
+
+            .tax-hero-title {
+                font-size: 0.85rem !important;
+                font-weight: 600 !important;
+                white-space: nowrap !important;
+            }
+
+            .tax-hero-count {
+                font-size: 0.72rem !important;
+                opacity: 0.85 !important;
+            }
+
+            /* Selected Category Inside Tags */
+            .inside-tags-container {
+                padding: 14px !important;
+                margin-bottom: 16px !important;
+                border-radius: 14px !important;
+            }
+
+            .inside-tags-pills-grid {
+                display: flex !important;
+                overflow-x: auto !important;
+                flex-wrap: nowrap !important;
+                gap: 8px !important;
+                padding-bottom: 6px !important;
+                scrollbar-width: none !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            .inside-tags-pills-grid::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .tag-pill-btn {
+                flex: 0 0 auto !important;
+                white-space: nowrap !important;
+                padding: 6px 12px !important;
+                font-size: 12.5px !important;
+                border-radius: 18px !important;
+                min-height: 36px !important;
+            }
+
+            /* Browse Header & Filter Bar */
+            .browse-header {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 16px !important;
+                gap: 12px !important;
+                margin-bottom: 18px !important;
+                border-radius: 14px !important;
+            }
+
+            .browse-header h1 {
+                font-size: 19px !important;
+                line-height: 1.25 !important;
+                margin: 0 !important;
+            }
+
+            .browse-header .filters {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 10px !important;
+                width: 100% !important;
+            }
+
+            .view-mode-toggle {
+                display: flex !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .view-mode-btn {
+                flex: 1 !important;
+                justify-content: center !important;
+                min-height: 38px !important;
+                font-size: 12.5px !important;
+                padding: 6px 8px !important;
+            }
+
+            .browse-header select {
+                width: 100% !important;
+                min-height: 42px !important;
+                padding: 8px 14px !important;
+                font-size: 13.5px !important;
+                border-radius: 10px !important;
+                box-sizing: border-box !important;
+            }
+
+            /* Book Cards Grid - 2 columns on tablets/larger mobile */
+            .items-grid {
+                display: grid !important;
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 16px !important;
+                width: 100% !important;
+            }
+
+            .item-card {
+                display: flex !important;
+                flex-direction: column !important;
+                background: var(--t-bg-surface) !important;
+                border-radius: 16px !important;
+                border: 1px solid var(--t-border) !important;
+                overflow: hidden !important;
+                box-shadow: var(--t-shadow) !important;
+                text-decoration: none !important;
+                color: inherit !important;
+                transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+
+            .item-card:active {
+                transform: scale(0.985) !important;
+            }
+
+            .item-thumbnail {
+                width: 100% !important;
+                height: 190px !important;
+                background: var(--t-accent-gradient) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 52px !important;
+                overflow: hidden !important;
+            }
+
+            .item-thumbnail img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important;
+            }
+
+            .item-content {
+                padding: 14px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+                flex: 1 1 auto !important;
+                box-sizing: border-box !important;
+            }
+
+            .item-title {
+                font-size: 14.5px !important;
+                font-weight: 700 !important;
+                color: var(--t-text-primary) !important;
+                line-height: 1.35 !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                overflow: hidden !important;
+                margin-bottom: 2px !important;
+            }
+
+            .item-meta {
+                font-size: 12px !important;
+                color: var(--t-text-secondary) !important;
+                margin-bottom: 2px !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .card-action-bar {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 6px !important;
+                margin: 6px 0 4px 0 !important;
+                width: 100% !important;
+            }
+
+            .proofread-badge {
+                font-size: 10.5px !important;
+                font-weight: 600 !important;
+                padding: 3px 8px !important;
+                border-radius: 7px !important;
+                width: fit-content !important;
+                white-space: nowrap !important;
+            }
+
+            .vector-download-btn {
+                width: 100% !important;
+                min-height: 38px !important;
+                padding: 6px 12px !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                border-radius: 8px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 6px !important;
+                cursor: pointer !important;
+                touch-action: manipulation !important;
+            }
+
+            .item-stats {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                font-size: 11.5px !important;
+                color: var(--t-text-muted) !important;
+                margin-top: 4px !important;
+                padding-top: 6px !important;
+                border-top: 1px solid var(--t-border-light) !important;
+            }
+
+            /* Pagination */
+            .pagination {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 8px !important;
+                margin-top: 24px !important;
+                padding: 12px 0 !important;
+                width: 100% !important;
+            }
+
+            .pagination a,
+            .pagination span {
+                padding: 8px 16px !important;
+                font-size: 13.5px !important;
+                border-radius: 10px !important;
+                min-height: 40px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            /* Taxonomy sidebar below books on mobile */
+            .sidebar {
+                order: 2 !important;
+                width: 100% !important;
+                margin-top: 16px !important;
+                padding: 0 !important;
+            }
+
+            .sidebar-section {
+                padding: 16px !important;
+                margin-bottom: 16px !important;
+                border-radius: 14px !important;
+            }
+
+            .collection-list {
+                display: flex !important;
+                overflow-x: auto !important;
+                gap: 8px !important;
+                padding-bottom: 6px !important;
+                scrollbar-width: none !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+
+            .collection-list::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .collection-list li {
+                margin-bottom: 0 !important;
+                flex-shrink: 0 !important;
+            }
+
+            .collection-list a {
+                white-space: nowrap !important;
+                padding: 7px 14px !important;
+                font-size: 13px !important;
+                border-radius: 20px !important;
+                min-height: 38px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                background: var(--t-hover-bg) !important;
+                border: 1px solid var(--t-border) !important;
+            }
+
+            .collection-list a.active {
+                background: var(--t-accent-gradient) !important;
+                color: var(--t-text-on-accent, white) !important;
+                border-color: transparent !important;
+            }
+        }
+
+        /* Phone Screen Specific (<= 560px) - 1 Column Book Grid */
+        @media (max-width: 560px) {
+            .items-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+
+            .item-thumbnail {
+                height: 200px !important;
+            }
+
+            .item-content {
+                padding: 16px !important;
+            }
+
+            .item-title {
+                font-size: 15.5px !important;
+            }
+
+            .vector-download-btn {
+                min-height: 42px !important;
+                font-size: 13.5px !important;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo header-brand">
+            <!-- Brand with Home link & official logo -->
+            <a href="/" class="brand-link" style="display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0;">
+                <img src="/static/logo.png" alt="Logo" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--t-border); flex-shrink: 0;">
+                <div class="brand-text" style="display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+                    <h1 class="navbar-title" style="margin: 0; line-height: 1.2; padding-left: 0;">Sanskrit Digital Library</h1>
+                    <span class="brand-sub" style="font-size: 0.65rem; color: var(--t-accent, #d4af37); font-weight: 600; letter-spacing: 0.3px;">Samshodhana Mandiram &bull; Gurukulam</span>
+                </div>
+            </a>
+
+            <div class="ocr-count-badge">
+                <span class="stat-number">{{ local_books_count }}</span>
+                <span>OCR'd Books</span>
+            </div>
+
+        </div>
+
+        <div class="header-actions">
+            <nav class="desktop-nav">
+                <a href="{{ url_for('search_page') }}">Search</a>
+                <a href="{{ url_for('browse') }}" class="active">Browse</a>
+                <a href="/upload-book">Upload Book</a>
+                {% if user_logged_in %}
+                <div>
+                    <a href="{% if session.get('logged_in') %}{{ url_for('admin_dashboard') }}{% else %}{{ url_for('user_sdl_profile') }}{% endif %}" class="user-avatar-nav-btn" style="{% if user_profile_pic_url %}background-image: url('{{ user_profile_pic_url }}') !important;{% else %}background: {{ user_avatar.gradient }} !important;{% endif %}" title="View Profile ({{ user_display_name }})">
+                        {% if not user_profile_pic_url %}
+                            {{ user_avatar.emoji }}
+                        {% endif %}
+                    </a>
+                </div>
+                {% elif not session.get('logged_in') %}
+                <a href="#" onclick="openLoginModal(event)">Login</a>
+                {% endif %}
+            </nav>
+
+            <!-- Mobile Hamburger Toggle -->
+            <button class="mobile-toggle" id="mobileNavToggle" onclick="toggleNav()" aria-label="Open Navigation Menu">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+    <!-- Unified Mobile Navigation Drawer & Backdrop -->
+    <div id="nav-backdrop" class="nav-backdrop" onclick="closeNav()"></div>
+    <nav id="mobile-nav-drawer" class="mobile-drawer" aria-label="Mobile Navigation">
+        <div class="drawer-header">
+            <div class="drawer-brand" style="display: flex; align-items: center; gap: 10px;">
+                <img src="/static/logo.png" alt="Logo" class="drawer-logo" style="width: 36px; height: 36px; border-radius: 8px; object-fit: cover;">
+                <div style="min-width: 0;">
+                    <div class="drawer-title" style="font-size: 14px; font-weight: 700; color: var(--t-text-primary);">Samshodhana Mandiram</div>
+                    <div class="drawer-sub" style="font-size: 10px; font-weight: 600; color: var(--t-accent);">Sri Trayee Vidya Gurukulam</div>
+                </div>
+            </div>
+            <button class="drawer-close-btn" onclick="closeNav()" aria-label="Close menu">✕</button>
+        </div>
+        <div class="drawer-content">
+            <div class="drawer-section-title">Library Navigation</div>
+            <a href="/" class="drawer-link"><span class="drawer-icon">🏠</span> Portal Home</a>
+            <a href="{{ url_for('search_page') }}" class="drawer-link"><span class="drawer-icon">🔍</span> Search OCR Texts</a>
+            <a href="{{ url_for('browse') }}" class="drawer-link active"><span class="drawer-icon">📚</span> Browse Library</a>
+            <a href="/upload-book" class="drawer-link"><span class="drawer-icon">📤</span> Upload Book</a>
+
+
+
+            <div class="drawer-section-title" style="margin-top: 14px;">Account</div>
+            {% if user_logged_in %}
+            <a href="{% if session.get('logged_in') %}{{ url_for('admin_dashboard') }}{% else %}{{ url_for('user_sdl_profile') }}{% endif %}" class="drawer-link">
+                <span class="drawer-icon">👤</span> My Profile ({{ user_display_name }})
+            </a>
+            {% if session.get('logged_in') %}
+            <a href="{{ url_for('admin_dashboard') }}" class="drawer-link"><span class="drawer-icon">⚙️</span> Admin Dashboard</a>
+            {% endif %}
+            {% else %}
+            <a href="#" onclick="closeNav(); openLoginModal(event); return false;" class="drawer-link drawer-auth-btn"><span class="drawer-icon">🔑</span> Login / Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="browse-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Taxonomy Category Tree -->
+            <div class="sidebar-section">
+                <h3><span class="emoji">🌿</span> Taxonomy Categories</h3>
+                <div id="sidebarTaxonomyTree" style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="font-size: 0.85rem; color: var(--t-text-muted);">Loading categories...</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3><span class="emoji">🏷️</span> All Tags</h3>
+                <ul class="collection-list">
+                    <li>
+                        <a href="{{ url_for('browse') }}?collection=community"
+                            class="{{ 'active' if current_collection == 'community' else '' }}">
+                            🤝 Community Uploads
+                        </a>
+                    </li>
+                    {% for col in collections %}
+                    <li>
+                        <a href="{{ url_for('browse') }}?collection={{ col.id }}"
+                            class="{{ 'active' if current_collection == col.id else '' }}">
+                            {{ col.icon }} {{ col.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Category Hero Chips -->
+            <div id="topCategoryHeroGrid" class="tax-hero-grid"></div>
+
+            <!-- Selected Category Inside Tags Container -->
+            <div id="categoryInsideTagsContainer" class="inside-tags-container" style="display: none;">
+                <div class="inside-tags-header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="selectedCategoryIcon" style="font-size: 1.3rem;">📜</span>
+                        <h3 id="selectedCategoryTitle" style="margin: 0; font-size: 1.05rem; font-family: 'Outfit', sans-serif; color: var(--t-text-primary);">
+                            Category Tags
+                        </h3>
+                    </div>
+                    <span id="selectedCategorySubtitle" style="font-size: 0.8rem; color: var(--t-text-muted);">
+                        Click a tag below to filter books
+                    </span>
+                </div>
+                <div id="insideTagsPillsGrid" class="inside-tags-pills-grid"></div>
+            </div>
+
+            <div class="browse-header">
+                <div>
+                    <h1 style="margin: 0;"><span class="emoji">📚</span> Browse Sanskrit Digital Library</h1>
+                    <div id="breadcrumbTrail" style="font-size: 0.85rem; color: var(--t-text-muted); margin-top: 4px;">Home</div>
+                </div>
+
+                <div class="filters">
+                    <!-- View Mode Toggle -->
+                    <div class="view-mode-toggle">
+                        <button type="button" class="view-mode-btn active" id="btnGridView" onclick="setBrowseViewMode('grid')">📱 Grid View</button>
+                        <button type="button" class="view-mode-btn" id="btnTreeView" onclick="setBrowseViewMode('tree')">🌿 Category Explorer View</button>
+                    </div>
+
+                    <select id="sortSelect" onchange="updateSort()">
+                        <option value="downloads desc" {{ 'selected' if sort=='downloads desc' else '' }}>Most Downloaded</option>
+                        <option value="week desc" {{ 'selected' if sort=='week desc' else '' }}>Star This Week</option>
+                        <option value="publicdate desc" {{ 'selected' if sort=='publicdate desc' else '' }}>Newest First</option>
+                        <option value="titleSorter asc" {{ 'selected' if sort=='titleSorter asc' else '' }}>Title A-Z</option>
+                    </select>
+                    <span style="color: var(--t-text-muted);">{{ total | default(0) }} items</span>
+                </div>
+            </div>
+
+            <!-- Tree Explorer View Container -->
+            <div id="treeExplorerView" class="tree-explorer-container">
+                <div style="text-align: center; padding: 30px; color: var(--t-text-muted);">Loading Category Tree Explorer...</div>
+            </div>
+
+
+            <div class="items-grid">
+                {% for item in items %}
+                <a href="/reader/{{ item.folder_name | default(item.identifier) }}/1" class="item-card">
+                    <div class="item-thumbnail">
+                        <img src="https://archive.org/services/img/{{ item.identifier }}" alt="{{ item.title }}"
+                            onerror="this.parentElement.innerHTML='📚'">
+                    </div>
+                    <div class="item-content">
+                        {% if item.is_community %}
+                        <div class="star-tag" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);" title="Community Contributed Book">🤝 Community</div>
+                        {% elif not item.has_archive_link %}
+                        <div class="star-tag">⭐</div>
+                        {% endif %}
+                        <div class="item-title">
+                            {{ item.title or item.identifier }}
+                            {% if item.is_community and item.verification != 'verified' %}
+                            <span style="font-size: 11px; font-weight: 600; color: #d97706; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 1px 5px; border-radius: 4px; display: inline-block; vertical-align: middle; margin-left: 4px;">Unverified</span>
+                            {% endif %}
+                        </div>
+                        <div class="item-meta" style="margin-bottom: auto;">
+                            {% if item.creator %}
+                            👤 {{ item.creator[0] if item.creator is iterable and item.creator is not string else
+                            item.creator }}
+                            {% elif item.contributor %}
+                            🤝 {{ item.contributor }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Badges & Action Buttons -->
+                        <div class="card-action-bar" style="display: flex; flex-direction: column; gap: 4px; margin: 8px 0 6px 0;">
+                            <!-- Proofread Status Badge -->
+                            {% if item.proofread_pct and item.proofread_pct > 0 %}
+                                {% if item.proofread_pct <= 50 %}
+                                    <div class="proofread-badge started">📝 Started ({{ item.proofread_pct }}%)</div>
+                                {% elif item.proofread_pct <= 90 %}
+                                    <div class="proofread-badge ongoing">⏳ Ongoing ({{ item.proofread_pct }}%)</div>
+                                {% elif item.proofread_pct < 100 %}
+                                    <div class="proofread-badge almost-done">🏁 Almost Done ({{ item.proofread_pct }}%)</div>
+                                {% elif item.proofread_pct == 100 %}
+                                    <div class="proofread-badge completed">✅ Proofread</div>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Download Action Button -->
+                            <button class="vector-download-btn {{ item.vector_status if item.has_vector else 'none' }}" 
+                                    onclick="handleDownloadClick(event, '{{ item.folder_name }}', {{ 'true' if item.has_vector else 'false' }}, '{{ item.vector_status }}', {{ 'true' if user_logged_in else 'false' }}, {{ 'true' if not item.archive_url else 'false' }})">
+                                {% if item.has_vector %}
+                                    {% if item.vector_status == 'none' %}
+                                        📥 Download
+                                    {% elif item.vector_status == 'pending' %}
+                                        ⏳ Key Pending
+                                    {% elif item.vector_status == 'approved' %}
+                                        ✅ Key Approved
+                                    {% elif item.vector_status == 'rejected' %}
+                                        📥 Re-request
+                                    {% endif %}
+                                {% else %}
+                                    📥 Download PDF
+                                {% endif %}
+                            </button>
+                        </div>
+
+                        <div class="item-stats">
+                            <span>📥 {{ item.downloads | default(0) }} downloads</span>
+                            {% if item.date %}
+                            <span>📅 {{ item.date }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% else %}
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--t-text-muted);">
+                    <p style="font-size: 48px; margin-bottom: 20px;">📭</p>
+                    <h3>No items found</h3>
+                    <p>Try a different tag or check back later</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                {% if page > 1 %}
+                <a href="{{ url_for('browse') }}?category={{ current_category }}&collection={{ current_collection }}&sort={{ sort }}&page={{ page - 1 }}">← Previous</a>
+                {% endif %}
+
+                <span class="active">Page {{ page }}</span>
+
+                {% if items | length >= 24 %}
+                <a href="{{ url_for('browse') }}?category={{ current_category }}&collection={{ current_collection }}&sort={{ sort }}&page={{ page + 1 }}">Next →</a>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Mobile Navigation Drawer handlers
+        function toggleNav() {
+            const drawer = document.getElementById('mobile-nav-drawer');
+            const backdrop = document.getElementById('nav-backdrop');
+            if (drawer && backdrop) {
+                const isOpen = drawer.classList.contains('open');
+                if (isOpen) {
+                    closeNav();
+                } else {
+                    drawer.classList.add('open');
+                    backdrop.classList.add('open');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+        }
+
+        function closeNav() {
+            const drawer = document.getElementById('mobile-nav-drawer');
+            const backdrop = document.getElementById('nav-backdrop');
+            if (drawer) drawer.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeNav();
+                closeDownloadModal();
+            }
+        });
+
+        function showToast(message, isError = false) {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'alert-toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerText = message;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        let pdfPollInterval = null;
+
+        function handleDownloadClick(event, bookName, hasVector, vectorStatus, loggedIn, isTextOnly) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            openDownloadModal(bookName, hasVector, vectorStatus, loggedIn, isTextOnly);
+        }
+
+        function openDownloadModal(bookName, hasVector, vectorStatus, loggedIn, isTextOnly) {
+            let modal = document.getElementById('downloadOptionsModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'downloadOptionsModal';
+                modal.className = 'overlay';
+                modal.style.cssText = "position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 1rem;";
+                modal.innerHTML = `
+                    <div class="download-modal-box" style="background: var(--t-bg-overlay, #1a1a2e); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 28px 24px; width: 100%; max-width: 440px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: var(--t-text-primary, #fff); text-align: left; position: relative; font-family: 'Inter', sans-serif;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h2 style="font-size: 1.3rem; font-weight: 700; color: #fff; margin: 0; font-family: inherit;">📥 Book Download</h2>
+                            <button onclick="closeDownloadModal()" style="width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; color: #94a3b8; cursor: pointer; font-size: 1rem; transition: all 0.2s;">✕</button>
+                        </div>
+                        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; font-family: inherit;">
+                            Book: <strong id="downloadModalBookName" style="color: #fff; word-break: break-all;"></strong>
+                        </p>
+                        
+                        <!-- Format Chooser Panel -->
+                        <div id="downloadModalOptionsPanel" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px;">
+                            <div style="text-align: left; background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                                <label for="downloadPdfAlignSelect" style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">
+                                    ↔️ Full Book PDF Text Alignment:
+                                </label>
+                                <select id="downloadPdfAlignSelect" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; background: rgba(15, 23, 42, 0.9); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; font-family: inherit; cursor: pointer;">
+                                    <option value="left" style="background: #1e293b; color: white;">⬅️ Left Aligned</option>
+                                    <option value="center" style="background: #1e293b; color: white;" selected>↔️ Middle / Center</option>
+                                    <option value="justify" style="background: #1e293b; color: white;">☰ Justified</option>
+                                </select>
+
+                                <label for="downloadPdfScriptSelect" style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-top: 10px; margin-bottom: 6px;">
+                                    🌐 PDF Script / Language:
+                                </label>
+                                <select id="downloadPdfScriptSelect" style="width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; background: rgba(15, 23, 42, 0.9); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none; font-family: inherit; cursor: pointer;">
+                                    <option value="sa" style="background: #1e293b; color: white;" selected>संस्कृतम् (Devanagari)</option>
+                                    <option value="ta" style="background: #1e293b; color: white;">தமிழ் (Tamil)</option>
+                                    <option value="ka" style="background: #1e293b; color: white;">ಕನ್ನಡ (Kannada)</option>
+                                    <option value="te" style="background: #1e293b; color: white;">తెలుగు (Telugu)</option>
+                                    <option value="en" style="background: #1e293b; color: white;">English (IAST)</option>
+                                </select>
+
+                                <button id="downloadModalPdfBtn" class="vector-download-btn none" style="width: 100%; height: 44px; margin-top: 12px; padding: 0 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 10px; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box;">
+                                    📄 Download Complete Book PDF
+                                </button>
+                            </div>
+                            <button id="downloadModalVectorBtn" class="vector-download-btn none" style="width: 100%; height: 44px; padding: 0 14px; background: linear-gradient(135deg, var(--t-accent, #6366f1) 0%, var(--t-accent-hover, #4f46e5) 100%); border: none; border-radius: 12px; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0; box-sizing: border-box;">
+                                🧠 AI Vector Database (ZIP)
+                            </button>
+                        </div>
+                        
+                        <!-- Progress Bar Panel -->
+                        <div id="downloadModalProgressPanel" style="display: none; margin-top: 15px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px;">
+                                <span id="downloadModalProgressStatus">Generating protected PDF...</span>
+                                <span id="downloadModalProgressPct">0%</span>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+                                <div id="downloadModalProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6); transition: width 0.3s ease;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <button onclick="closeDownloadModal()" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; font-family: inherit;">Cancel</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            
+            document.getElementById('downloadModalBookName').innerText = bookName;
+            
+            const savedScript = (function() {
+                try { return localStorage.getItem('smsdl_book_reader_script'); } catch(e) { return null; }
+            })() || 'sa';
+            const scriptSelect = document.getElementById('downloadPdfScriptSelect');
+            if (scriptSelect) scriptSelect.value = savedScript;
+            
+            const optionsPanel = document.getElementById('downloadModalOptionsPanel');
+            const progressPanel = document.getElementById('downloadModalProgressPanel');
+            
+            // Reset panels
+            optionsPanel.style.display = 'flex';
+            progressPanel.style.display = 'none';
+            document.getElementById('downloadModalProgressBar').style.width = '0%';
+            document.getElementById('downloadModalProgressPct').innerText = '0%';
+            
+            const vecBtn = document.getElementById('downloadModalVectorBtn');
+            if (hasVector) {
+                vecBtn.style.display = 'flex';
+                let statusText = '🧠 Request AI Vector Key';
+                if (vectorStatus === 'pending') {
+                    statusText = '⏳ Key Pending (Re-download ZIP)';
+                } else if (vectorStatus === 'approved') {
+                    statusText = '📥 Download Vector ZIP';
+                } else if (vectorStatus === 'rejected') {
+                    statusText = '🔄 Re-request Key & Download';
+                }
+                vecBtn.innerText = statusText;
+                vecBtn.className = 'vector-download-btn ' + vectorStatus;
+                vecBtn.onclick = function(e) {
+                    closeDownloadModal();
+                    handleVectorDownload(e, bookName, vectorStatus, loggedIn);
+                };
+            } else {
+                vecBtn.style.display = 'none';
+            }
+
+            const pdfBtn = document.getElementById('downloadModalPdfBtn');
+            pdfBtn.onclick = function(e) {
+                optionsPanel.style.display = 'none';
+                progressPanel.style.display = 'block';
+                startPdfGenerationFlow(bookName);
+            };
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeDownloadModal() {
+            const modal = document.getElementById('downloadOptionsModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            if (pdfPollInterval) {
+                clearInterval(pdfPollInterval);
+                pdfPollInterval = null;
+            }
+        }
+
+        function startPdfGenerationFlow(bookName) {
+            const statusText = document.getElementById('downloadModalProgressStatus');
+            const progressPct = document.getElementById('downloadModalProgressPct');
+            const progressBar = document.getElementById('downloadModalProgressBar');
+            const alignSelect = document.getElementById('downloadPdfAlignSelect');
+            const alignChoice = alignSelect ? alignSelect.value : 'center';
+            const scriptSelect = document.getElementById('downloadPdfScriptSelect');
+            const scriptChoice = scriptSelect ? scriptSelect.value : 'sa';
+            if (statusText) statusText.innerText = "Initializing generation...";
+            if (progressPct) progressPct.innerText = "0%";
+            if (progressBar) progressBar.style.width = "0%";
+            
+            fetch('/api/user/download-pdf/start/' + encodeURIComponent(bookName), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ font_choice: 'sanskrit_text', align_choice: alignChoice, script_choice: scriptChoice })
+            })
+            .then(res => {
+                if (res.status === 401) {
+                    return res.json().then(data => {
+                        throw { isAuth: true, message: data.error || "Please login to download PDFs." };
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success && data.task_id) {
+                    pollPdfStatus(data.task_id);
+                } else {
+                    if (statusText) statusText.innerText = data.error || "Failed to start generation";
+                    showToast(data.error || "Failed to start PDF generation", true);
+                    if (data.login_required && typeof openLoginModal === 'function') {
+                        closeDownloadModal();
+                        openLoginModal();
+                    }
+                }
+            })
+            .catch(err => {
+                if (err && err.isAuth) {
+                    if (statusText) statusText.innerText = "Login required";
+                    showToast(err.message, true);
+                    closeDownloadModal();
+                    if (typeof openLoginModal === 'function') openLoginModal();
+                } else {
+                    if (statusText) statusText.innerText = "Connection error";
+                    showToast("Error while starting PDF generation", true);
+                }
+            });
+        }
+
+        function pollPdfStatus(taskId) {
+            if (pdfPollInterval) clearInterval(pdfPollInterval);
+            
+            const statusText = document.getElementById('downloadModalProgressStatus');
+            const progressPct = document.getElementById('downloadModalProgressPct');
+            const progressBar = document.getElementById('downloadModalProgressBar');
+            
+            pdfPollInterval = setInterval(() => {
+                fetch('/api/user/download-pdf/status/' + taskId)
+                .then(res => {
+                    if (res.status === 404) {
+                        clearInterval(pdfPollInterval);
+                        if (statusText) statusText.innerText = "Task not found";
+                        return null;
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data) return;
+                    
+                    if (data.status === 'completed') {
+                        clearInterval(pdfPollInterval);
+                        if (statusText) statusText.innerText = "Download ready!";
+                        if (progressPct) progressPct.innerText = "100%";
+                        if (progressBar) progressBar.style.width = "100%";
+                        showToast("PDF generation complete! Downloading...");
+                        setTimeout(() => {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = '/api/user/download-pdf/file/' + taskId;
+                            downloadLink.download = '';
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            downloadLink.remove();
+                            setTimeout(closeDownloadModal, 1000);
+                        }, 500);
+                    } else if (data.status === 'error') {
+                        clearInterval(pdfPollInterval);
+                        if (statusText) statusText.innerText = "Generation failed";
+                        showToast(data.error || "Generation error", true);
+                    } else if (data.status === 'processing') {
+                        const total = data.total_pages || 1;
+                        const current = data.current_page || 0;
+                        const pct = Math.min(99, Math.max(1, Math.round((current / total) * 100)));
+                        if (statusText) statusText.innerText = `Formatting pages... ${pct}%`;
+                        if (progressPct) progressPct.innerText = `${pct}%`;
+                        if (progressBar) progressBar.style.width = `${pct}%`;
+                    }
+
+                })
+                .catch(err => {
+                });
+            }, 1000);
+        }
+
+        function handleVectorDownload(event, bookName, status, loggedIn) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            
+            if (!loggedIn) {
+                showToast("Please login to request and download AI vector databases.", true);
+                if (typeof openLoginModal === 'function') {
+                    openLoginModal(event);
+                }
+                return;
+            }
+            
+            if (status === 'none' || status === 'rejected') {
+                const confirmMsg = "This AI vector database file is encrypted. Accessing it requires an approval key sent via email.\n\nDownloading this file will automatically submit an approval request to the Super Admin.\n\nDo you want to proceed and download the file now?";
+                if (confirm(confirmMsg)) {
+                    fetch('/api/user/request-vector-download', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ book_name: bookName })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast("Key request submitted! Initiating download...");
+                            window.location.href = '/api/user/download-vector-db/' + encodeURIComponent(bookName);
+                            setTimeout(() => { window.location.reload(); }, 1500);
+                        } else {
+                            showToast(data.error || "Failed to submit key request", true);
+                        }
+                    })
+                    .catch(() => {
+                        showToast("Failed to submit request", true);
+                    });
+                }
+            } else {
+                window.location.href = '/api/user/download-vector-db/' + encodeURIComponent(bookName);
+                if (status === 'approved') {
+                    showToast("Downloading encrypted vector database...");
+                } else if (status === 'pending') {
+                    showToast("Initiating ZIP download (Key still pending approval)...");
+                }
+            }
+        }
+
+        function updateSort() {
+            const sort = document.getElementById('sortSelect').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sort);
+            window.location.href = url.toString();
+        }
+
+        // Taxonomy Integration on Browse Page
+        let browseTaxonomy = null;
+        let currentViewMode = localStorage.getItem('sdl_browse_view_mode') || 'grid';
+
+        function setBrowseViewMode(mode) {
+            if (!mode) mode = 'grid';
+            localStorage.setItem('sdl_browse_view_mode', mode);
+
+            const btnGrid = document.getElementById('btnGridView');
+            const btnTree = document.getElementById('btnTreeView');
+            const itemsGrid = document.querySelector('.items-grid');
+            const treeView = document.getElementById('treeExplorerView');
+
+            if (btnGrid) btnGrid.classList.toggle('active', mode === 'grid');
+            if (btnTree) btnTree.classList.toggle('active', mode === 'tree');
+
+            if (mode === 'tree') {
+                if (itemsGrid) itemsGrid.style.display = 'none';
+                if (treeView) treeView.style.display = 'block';
+            } else {
+                if (itemsGrid) itemsGrid.style.display = 'grid';
+                if (treeView) treeView.style.display = 'none';
+            }
+        }
+
+        function applyViewMode(mode) {
+            setBrowseViewMode(mode);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchBrowseTaxonomy();
+            applyViewMode(currentViewMode);
+        });
+
+        async function fetchBrowseTaxonomy() {
+            try {
+                const res = await fetch('/api/v1/taxonomy');
+                browseTaxonomy = await res.json();
+                renderTopHeroCards();
+                renderInsideTagsPanel();
+                renderSidebarTaxonomyTree();
+                renderCategoryTreeExplorer();
+                updateBreadcrumbs();
+            } catch (err) {
+                console.error('Failed to load browse taxonomy:', err);
+            }
+        }
+
+        function getActiveTaxonomyState() {
+            const urlParams = new URLSearchParams(window.location.search);
+            let selectedCatId = urlParams.get('category') || '';
+            let selectedTag = urlParams.get('collection') || urlParams.get('tag') || '';
+
+            if (selectedTag === 'all') selectedTag = '';
+            if (selectedCatId === 'all') selectedCatId = '';
+
+            if (!browseTaxonomy || !browseTaxonomy.nodes) {
+                return { categoryId: selectedCatId, tag: selectedTag, activeNode: null };
+            }
+
+            const nodes = browseTaxonomy.nodes;
+            let activeNode = null;
+
+            if (selectedCatId) {
+                activeNode = nodes.find(n => n.id === selectedCatId);
+            }
+
+            if (!activeNode && selectedTag) {
+                const matchedCat = nodes.find(n => n.id === selectedTag);
+                if (matchedCat) {
+                    activeNode = matchedCat;
+                    selectedCatId = matchedCat.id;
+                    selectedTag = '';
+                } else {
+                    activeNode = nodes.find(n => (n.tags || []).includes(selectedTag));
+                    if (activeNode) {
+                        selectedCatId = activeNode.id;
+                    }
+                }
+            }
+
+            return { categoryId: selectedCatId, tag: selectedTag, activeNode: activeNode };
+        }
+
+        function renderTopHeroCards() {
+            const container = document.getElementById('topCategoryHeroGrid');
+            if (!container || !browseTaxonomy || !browseTaxonomy.nodes) return;
+
+            const state = getActiveTaxonomyState();
+            const nodes = browseTaxonomy.nodes;
+
+            const isAllActive = !state.categoryId;
+
+            let html = `
+                <a href="/browse?category=all&collection=all" class="tax-hero-card ${isAllActive ? 'active' : ''}">
+                    <div class="tax-hero-icon" style="color: #6366f1">📚</div>
+                    <div>
+                        <div class="tax-hero-title">सर्वाः श्रेणीः</div>
+                        <div class="tax-hero-count">All Categories</div>
+                    </div>
+                </a>
+            `;
+
+            html += nodes.map(node => {
+                const isActive = (state.categoryId === node.id);
+                return `
+                    <a href="/browse?category=${encodeURIComponent(node.id)}&collection=all" class="tax-hero-card ${isActive ? 'active' : ''}">
+                        <div class="tax-hero-icon" style="color: ${node.color || 'var(--t-accent)'}">${node.icon || '📜'}</div>
+                        <div>
+                            <div class="tax-hero-title">${node.name_sa}</div>
+                            <div class="tax-hero-count">${node.book_count || 0} books</div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function renderInsideTagsPanel() {
+            const container = document.getElementById('categoryInsideTagsContainer');
+            const titleEl = document.getElementById('selectedCategoryTitle');
+            const iconEl = document.getElementById('selectedCategoryIcon');
+            const subtitleEl = document.getElementById('selectedCategorySubtitle');
+            const pillsGrid = document.getElementById('insideTagsPillsGrid');
+
+            if (!container || !pillsGrid) return;
+
+            const state = getActiveTaxonomyState();
+
+            if (!state.activeNode) {
+                container.style.display = 'none';
+                return;
+            }
+
+            const node = state.activeNode;
+            container.style.display = 'block';
+            iconEl.innerText = node.icon || '🏷️';
+            titleEl.innerText = node.name_sa + (node.name_en ? ` (${node.name_en})` : '');
+            subtitleEl.innerText = `${(node.tags || []).length} tags in this category`;
+
+            const tagCountMap = {};
+            (node.tag_details || []).forEach(td => {
+                tagCountMap[td.name] = td.count;
+            });
+
+            const isAllCategoryTagActive = !state.tag;
+            const saShortName = node.name_sa.split('/')[0].trim();
+
+            let pillsHtml = `
+                <a href="/browse?category=${encodeURIComponent(node.id)}&collection=all" 
+                   class="tag-pill-btn ${isAllCategoryTagActive ? 'active' : ''}">
+                    <span>✨ All ${saShortName}</span>
+                    <span class="tag-pill-count">${node.book_count || 0}</span>
+                </a>
+            `;
+
+            (node.tags || []).forEach(t => {
+                const isTagActive = (state.tag === t);
+                const count = tagCountMap[t] !== undefined ? tagCountMap[t] : '';
+                pillsHtml += `
+                    <a href="/browse?category=${encodeURIComponent(node.id)}&collection=${encodeURIComponent(t)}" 
+                       class="tag-pill-btn ${isTagActive ? 'active' : ''}">
+                        <span>🏷️ ${t}</span>
+                        ${count !== '' ? `<span class="tag-pill-count">${count}</span>` : ''}
+                    </a>
+                `;
+            });
+
+            pillsGrid.innerHTML = pillsHtml;
+        }
+
+        function renderSidebarTaxonomyTree() {
+            const container = document.getElementById('sidebarTaxonomyTree');
+            if (!container || !browseTaxonomy || !browseTaxonomy.nodes) return;
+
+            const nodes = browseTaxonomy.nodes;
+            const state = getActiveTaxonomyState();
+
+            container.innerHTML = nodes.map(node => {
+                const isNodeActive = (state.categoryId === node.id);
+                const tagsList = (node.tags || []).map(t => {
+                    const isSel = (t === state.tag && isNodeActive);
+                    return `
+                        <a href="/browse?category=${encodeURIComponent(node.id)}&collection=${encodeURIComponent(t)}" style="padding: 4px 8px; font-size: 0.82rem; border-radius: 6px; text-decoration: none; color: ${isSel ? 'var(--t-accent)' : 'var(--t-text-muted)'}; background: ${isSel ? 'var(--t-accent-alpha-15)' : 'transparent'}; font-weight: ${isSel ? '700' : '400'}; display: flex; justify-content: space-between; align-items: center;">
+                            <span>🏷️ ${t}</span>
+                        </a>
+                    `;
+                }).join('');
+
+                return `
+                    <details style="margin-bottom: 4px;" ${isNodeActive ? 'open' : ''}>
+                        <summary style="font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: ${isNodeActive ? '700' : '600'}; cursor: pointer; padding: 6px 4px; color: ${isNodeActive ? 'var(--t-accent)' : (node.color || 'inherit')}; display: flex; justify-content: space-between; align-items: center;">
+                            <a href="/browse?category=${encodeURIComponent(node.id)}&collection=all" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px;">
+                                <span>${node.icon || '📜'} ${node.name_sa}</span>
+                            </a>
+                            <span style="font-size: 0.75rem; font-weight: 600; opacity: 0.7;">(${node.book_count})</span>
+                        </summary>
+                        <div style="margin-left: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
+                            ${tagsList}
+                        </div>
+                    </details>
+                `;
+            }).join('');
+
+            const mobileContainer = document.getElementById('mobileSheetTaxonomyTree');
+            if (mobileContainer) {
+                mobileContainer.innerHTML = container.innerHTML;
+            }
+        }
+
+        function renderCategoryTreeExplorer() {
+            const container = document.getElementById('treeExplorerView');
+            if (!container || !browseTaxonomy || !browseTaxonomy.nodes) return;
+
+            const nodes = browseTaxonomy.nodes;
+
+            container.innerHTML = nodes.map(node => `
+                <div class="tree-branch-group">
+                    <div class="tree-branch-header">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.4rem;">${node.icon || '📜'}</span>
+                            <span>${node.name_sa} ${node.name_en ? `<span style="font-weight: 400; font-size: 0.85rem; color: var(--t-text-muted);">(${node.name_en})</span>` : ''}</span>
+                        </div>
+                        <a href="/browse?category=${encodeURIComponent(node.id)}&collection=all" class="star-tag" style="text-decoration: none;">${node.book_count || 0} books</a>
+                    </div>
+                    <div class="tree-branch-content">
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            ${(node.tags || []).map(t => `
+                                <a href="/browse?category=${encodeURIComponent(node.id)}&collection=${encodeURIComponent(t)}" style="padding: 6px 14px; border-radius: 16px; background: var(--t-hover-bg); border: 1px solid var(--t-border); font-size: 0.85rem; text-decoration: none; color: var(--t-text-primary); font-weight: 600;">
+                                    🏷️ ${t}
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateBreadcrumbs() {
+            const trail = document.getElementById('breadcrumbTrail');
+            if (!trail) return;
+
+            const state = getActiveTaxonomyState();
+            let html = '<a href="/" style="color: inherit; text-decoration: none;">Home</a> &gt; <a href="/browse?category=all&collection=all" style="color: inherit; text-decoration: none;">Browse</a>';
+
+            if (state.activeNode) {
+                html += ` &gt; <a href="/browse?category=${encodeURIComponent(state.activeNode.id)}&collection=all" style="color: var(--t-accent); font-weight: 600; text-decoration: none;">${state.activeNode.name_sa}</a>`;
+                if (state.tag) {
+                    html += ` &gt; <span style="color: var(--t-accent); font-weight: 700;">🏷️ ${state.tag}</span>`;
+                }
+            } else if (state.tag) {
+                html += ` &gt; <span style="color: var(--t-accent); font-weight: 700;">🏷️ ${state.tag}</span>`;
+            } else {
+                html += ' &gt; <span>All Categories</span>';
+            }
+
+            trail.innerHTML = html;
+        }
+
+        // Connectivity checking for OCR dropdown link
+
+        (function() {
+            function updateOcrDropdownStatus() {
+                const isOnline = navigator.onLine;
+                const ocrLinks = document.querySelectorAll('.ocr-tool-link');
+                ocrLinks.forEach(link => {
+                    if (!isOnline) {
+                        link.classList.add('disabled');
+                        link.setAttribute('aria-disabled', 'true');
+                        link.title = 'OCR Tool is unavailable offline';
+                    } else {
+                        link.classList.remove('disabled');
+                        link.removeAttribute('aria-disabled');
+                        link.removeAttribute('title');
+                    }
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                updateOcrDropdownStatus();
+                const ocrLinks = document.querySelectorAll('.ocr-tool-link');
+                ocrLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        if (!navigator.onLine) {
+                            e.preventDefault();
+                        }
+                    });
+                });
+            });
+
+            window.addEventListener('online', updateOcrDropdownStatus);
+            window.addEventListener('offline', updateOcrDropdownStatus);
+        })();
+    </script>
+    {% include 'public/login_modal.html' %}
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+
+</html>

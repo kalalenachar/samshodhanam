@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function () {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vyākaraṇa Studio — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-link {
+            background: none;
+            border: none;
+            color: var(--t-text-muted);
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            border-radius: 8px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tab-link:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+        }
+
+        .tab-link.active {
+            color: var(--t-accent);
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .panel-container {
+            display: none;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .panel-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex-grow: 1;
+            min-width: 250px;
+        }
+
+        .table-card {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--t-shadow-sm);
+            margin-bottom: 20px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        table.admin-table th, table.admin-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--t-border-light);
+            font-size: 0.9rem;
+            color: var(--t-text-secondary);
+        }
+
+        table.admin-table th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            border-bottom: 2px solid var(--t-border);
+        }
+
+        table.admin-table tr:hover td {
+            background: rgba(255, 255, 255, 0.015);
+            color: var(--t-text-primary);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        .pagination-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            color: var(--t-text-muted);
+            font-size: 0.88rem;
+        }
+
+        .pagination-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Modal Overlay & Container */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-box {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 950px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--t-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            color: var(--t-text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--t-text-muted);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--t-text-primary);
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .modal-footer {
+            padding: 15px 25px;
+            border-top: 1px solid var(--t-border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--t-text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--t-border);
+            background: var(--t-hover-bg);
+            color: var(--t-text-primary);
+            font-size: 0.92rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--t-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Commentaries Accordion style */
+        .comm-section {
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 25px;
+        }
+
+        .comm-header {
+            background: var(--t-hover-bg);
+            padding: 14px 20px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            color: var(--t-text-primary);
+            border-bottom: 1px solid var(--t-border);
+        }
+
+        .comm-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--t-border);
+            background: rgba(0, 0, 0, 0.05);
+            overflow-x: auto;
+        }
+
+        .comm-tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--t-text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .comm-tab-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+        }
+
+        .comm-tab-btn.active {
+            color: var(--t-accent);
+            border-bottom-color: var(--t-accent);
+            background: var(--t-bg-surface);
+        }
+
+        .comm-pane {
+            display: none;
+            padding: 20px;
+        }
+
+        .comm-pane.active {
+            display: block;
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 2000;
+        }
+
+        .toast-msg {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-left: 4px solid var(--t-accent);
+            border-radius: 10px;
+            padding: 15px 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--t-text-primary);
+            font-weight: 500;
+            font-size: 0.92rem;
+            animation: slideIn 0.3s ease, fadeOut 0.5s ease 3.5s forwards;
+            margin-bottom: 10px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header admin-header">
+        <h1><span class="emoji">🕉️</span> <span>Vyākaraṇa</span> Studio</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub">Hub</a>
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_USERS' in session.get('admin_permissions', []) %}
+            <a href="/admin/users">Users</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/manage-admins">Admins</a>
+            {% endif %}
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container" style="max-width: 1200px; padding-bottom: 80px;">
+        <h1 class="page-title">व्याकरण-मन्दिरम् Vyakarana Database Studio</h1>
+        <div class="page-subtitle">Add/edit sutras, commentaries (Vyakhya), vartikas, gana list, and classical grammar texts.</div>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-bar">
+            <button class="tab-link active" onclick="switchTab('sutras', this)">📖 Sutras (Ashtadhyayi)</button>
+            <button class="tab-link" onclick="switchTab('shivasutras', this)">⚡ Shiva Sutras</button>
+            <button class="tab-link" onclick="switchTab('vartikas', this)">📝 Vartikas</button>
+            <button class="tab-link" onclick="switchTab('ganapatha', this)">🌿 Ganapatha</button>
+            <button class="tab-link" onclick="switchTab('texts', this)">📚 Classical Texts</button>
+            <button class="tab-link" onclick="switchTab('extra', this)">⚙️ Extra Tables</button>
+        </div>
+
+        <!-- ================= PANEL: SUTRAS ================= -->
+        <div id="panel-sutras" class="panel-container active">
+            <div class="search-row">
+                <div class="search-box">
+                    <input type="text" id="sutra-search" placeholder="Search by sutra, SLP1, padachheda, translation or 1.1.1..." class="form-control" onkeyup="if(event.key === 'Enter') loadSutras(1)">
+                </div>
+                <button class="btn btn-primary" onclick="loadSutras(1)">🔍 Search</button>
+                <button class="btn btn-secondary" onclick="openSutraModal(0)">➕ Add Sutra</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 100px;">Reference</th>
+                                <th style="width: 250px;">Sutra (Devanagari)</th>
+                                <th>SLP1</th>
+                                <th>Type</th>
+                                <th>Padachheda</th>
+                                <th style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sutras-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination-row">
+                <span id="sutras-pagination-info">Showing page 1 of ...</span>
+                <div class="pagination-btns">
+                    <button class="btn btn-secondary btn-sm" id="sutras-btn-prev" onclick="prevSutrasPage()">Previous</button>
+                    <button class="btn btn-secondary btn-sm" id="sutras-btn-next" onclick="nextSutrasPage()">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANEL: SHIVA SUTRAS ================= -->
+        <div id="panel-shivasutras" class="panel-container">
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 200px;">Shiva Sutra</th>
+                                <th>Kashika Detail</th>
+                                <th>Custom Vyakhya</th>
+                                <th style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shivasutras-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANEL: VARTIKAS ================= -->
+        <div id="panel-vartikas" class="panel-container">
+            <div class="search-row">
+                <div class="search-box">
+                    <input type="text" id="vartika-search" placeholder="Search by vartika text or sutra ref (e.g. 1.1.1)..." class="form-control" onkeyup="if(event.key==='Enter') loadVartikas(1)">
+                </div>
+                <button class="btn btn-primary" onclick="loadVartikas(1)">🔍 Search</button>
+                <button class="btn btn-secondary" onclick="openGenericModal('vartikas', 0)">➕ Add Vartika</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 120px;">Sutra Ref</th>
+                                <th>Vartika Text</th>
+                                <th style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vartikas-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination-row">
+                <span id="vartikas-pagination-info">Showing page 1 of ...</span>
+                <div class="pagination-btns">
+                    <button class="btn btn-secondary btn-sm" id="vartikas-btn-prev" onclick="prevVartikasPage()">Previous</button>
+                    <button class="btn btn-secondary btn-sm" id="vartikas-btn-next" onclick="nextVartikasPage()">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANEL: GANAPATHA ================= -->
+        <div id="panel-ganapatha" class="panel-container">
+            <div class="search-row">
+                <div class="search-box">
+                    <input type="text" id="ganapatha-search" placeholder="Search by Gana name, sutra reference, or word list..." class="form-control" onkeyup="if(event.key==='Enter') loadGanapatha(1)">
+                </div>
+                <button class="btn btn-primary" onclick="loadGanapatha(1)">🔍 Search</button>
+                <button class="btn btn-secondary" onclick="openGenericModal('ganapatha', 0)">➕ Add Gana</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">ID</th>
+                                <th style="width: 180px;">Gana Name</th>
+                                <th style="width: 120px;">Sutra</th>
+                                <th>Words</th>
+                                <th style="width: 120px;">Type</th>
+                                <th style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ganapatha-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination-row">
+                <span id="ganapatha-pagination-info">Showing page 1 of ...</span>
+                <div class="pagination-btns">
+                    <button class="btn btn-secondary btn-sm" id="ganapatha-btn-prev" onclick="prevGanapathaPage()">Previous</button>
+                    <button class="btn btn-secondary btn-sm" id="ganapatha-btn-next" onclick="nextGanapathaPage()">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANEL: CLASSICAL TEXTS ================= -->
+        <div id="panel-texts" class="panel-container">
+            <div class="search-row">
+                <div style="width: 250px;">
+                    <select id="text-select" class="form-control" onchange="switchText(this.value)">
+                        <option value="mahabhashyam">Mahābhāṣyam</option>
+                        <option value="vakyapadeeyam">Vākyapadīyam</option>
+                        <option value="paribhashendushekhar">Paribhāṣenduśekhara</option>
+                        <option value="bhushanasara">Vaiyākaraṇabhūṣaṇasāra</option>
+                        <option value="paramalaghumanjoosha">Paramalaghumañjūṣā</option>
+                        <option value="tarkasangraha">Tarkasaṅgraha</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="text-search" placeholder="Search entries in selected text..." class="form-control" onkeyup="if(event.key==='Enter') loadTextEntries(1)">
+                </div>
+                <button class="btn btn-primary" onclick="loadTextEntries(1)">🔍 Search</button>
+                <button class="btn btn-secondary" onclick="openGenericModal(currentSelectedText, 0)">➕ Add Entry</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead id="text-table-head">
+                            <!-- Populated dynamically based on schema -->
+                        </thead>
+                        <tbody id="text-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination-row">
+                <span id="text-pagination-info">Showing page 1 of ...</span>
+                <div class="pagination-btns">
+                    <button class="btn btn-secondary btn-sm" id="text-btn-prev" onclick="prevTextPage()">Previous</button>
+                    <button class="btn btn-secondary btn-sm" id="text-btn-next" onclick="nextTextPage()">Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANEL: EXTRA TABLES ================= -->
+        <div id="panel-extra" class="panel-container">
+            <div class="search-row">
+                <div style="width: 250px;">
+                    <select id="extra-table-select" class="form-control" onchange="switchExtraTable(this.value)">
+                        <option value="">-- Select Extra Table --</option>
+                        <option value="unadipatha">Uṇādipāṭha</option>
+                        <option value="linganushasanam">Liṅgānuśāsanam</option>
+                        <option value="shiksha">Pāṇinīya-Śikṣā</option>
+                        <option value="phitsutrani">Phiṭsūtrāṇi</option>
+                        <option value="sutra_prayogas">Sutra Prayogas (Literary Usages)</option>
+                        <option value="kosha_words">Kosha Words</option>
+                        <option value="kosha_entries">Kosha Definitions</option>
+                    </select>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="extra-search" placeholder="Search entries in selected table..." class="form-control" onkeyup="if(event.key==='Enter') loadExtraEntries(1)" disabled>
+                </div>
+                <button class="btn btn-primary" id="extra-search-btn" onclick="loadExtraEntries(1)" disabled>🔍 Search</button>
+                <button class="btn btn-secondary" id="extra-add-btn" onclick="openGenericModal(currentSelectedExtraTable, 0)" disabled>➕ Add Row</button>
+            </div>
+
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead id="extra-table-head">
+                            <tr>
+                                <th>Select a table above to list records</th>
+                            </tr>
+                        </thead>
+                        <tbody id="extra-table-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination-row">
+                <span id="extra-pagination-info">Showing page 1 of ...</span>
+                <div class="pagination-btns">
+                    <button class="btn btn-secondary btn-sm" id="extra-btn-prev" onclick="prevExtraPage()" disabled>Previous</button>
+                    <button class="btn btn-secondary btn-sm" id="extra-btn-next" onclick="nextExtraPage()" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= SUTRA MODAL ================= -->
+    <div class="modal-overlay" id="sutra-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="sutra-modal-title">Edit Sutra</h3>
+                <button class="modal-close" onclick="closeSutraModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-sutra-idx">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="edit-sutra-adhyaya">Adhyaya (1-8)</label>
+                        <input type="number" id="edit-sutra-adhyaya" min="1" max="8" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-pada">Pada (1-4)</label>
+                        <input type="number" id="edit-sutra-pada" min="1" max="4" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-number">Number</label>
+                        <input type="number" id="edit-sutra-number" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-type">Sutra Type (e.g. संज्ञा, विधि, परिभाषा, अधिकार)</label>
+                        <input type="text" id="edit-sutra-type" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="edit-sutra-text">Sutra Text (Devanagari)</label>
+                        <input type="text" id="edit-sutra-text" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-slp1">Sutra Text (SLP1)</label>
+                        <input type="text" id="edit-sutra-slp1" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-sk">Siddhanta Kaumudi Number (optional)</label>
+                        <input type="number" id="edit-sutra-sk" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sutra-lsk">Laghu Kaumudi Number (optional)</label>
+                        <input type="number" id="edit-sutra-lsk" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-sutra-padachheda">Padachheda</label>
+                    <input type="text" id="edit-sutra-padachheda" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-sutra-translation">English Translation / Artha</label>
+                    <textarea id="edit-sutra-translation" rows="3" class="form-control"></textarea>
+                </div>
+
+                <!-- Accordion/Tabs for Vyakhya (Commentaries) -->
+                <div class="comm-section">
+                    <div class="comm-header">📖 Commentary & Vyakhya Annotations</div>
+                    <div class="comm-tabs" id="vyakhya-tabs">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="vyakhya-panes">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSutraModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveSutra()">💾 Save Sutra</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= GENERIC/DYNAMIC CRUD MODAL ================= -->
+    <div class="modal-overlay" id="generic-modal">
+        <div class="modal-box" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 id="generic-modal-title">Edit Entry</h3>
+                <button class="modal-close" onclick="closeGenericModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="generic-modal-body">
+                <!-- Dynamically populated inputs based on table columns -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeGenericModal()">Cancel</button>
+                <button class="btn btn-primary" id="generic-save-btn" onclick="saveGenericRow()">💾 Save Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // State variables
+        let currentSutrasPage = 1;
+        let currentVartikasPage = 1;
+        let currentGanapathaPage = 1;
+        let currentTextPage = 1;
+        let currentExtraPage = 1;
+        
+        let currentSelectedText = 'mahabhashyam';
+        let currentSelectedExtraTable = '';
+        
+        let activeGenericTable = '';
+        let activeGenericColumns = [];
+        let activeGenericPk = 'id';
+
+        // Commentaries configuration
+        const commentaries = [
+            { id: 'kashika', label: 'Kāśikā' },
+            { id: 'kaumudi', label: 'Siddhānta Kaumudī' },
+            { id: 'laghukaumudi', label: 'Laghu Kaumudī' },
+            { id: 'bhashya', label: 'Mahābhāṣya' },
+            { id: 'nyaas', label: 'Nyāsa' },
+            { id: 'padamanjari', label: 'Padamañjarī' },
+            { id: 'tattvabodhini', label: 'Tattvabodhinī' },
+            { id: 'balamanorama', label: 'Bālamanoramā' },
+            { id: 'praudhamanorama', label: 'Prauḍhamanoramā' },
+            { id: 'laghushabdendushekhar', label: 'Laghu Śabdendu Śekhara' },
+            { id: 'sutrartha_sa', label: 'Sūtrārtha (Sanskrit A)' },
+            { id: 'sutrartha_sd', label: 'Sūtrārtha (Sanskrit D)' },
+            { id: 'vasu_english', label: 'Vasu English' },
+            { id: 'vasu_english_summary', label: 'Vasu Summary' },
+            { id: 'sarala', label: 'Saralā' },
+            { id: 'sudha', label: 'Sudhā' },
+            { id: 'prakriyasarvasvam', label: 'Prakriyāsarvasvam' }
+        ];
+
+        // Long text column keys that should be hidden from summary tables
+        const longTextCols = [
+            'bhashya', 'pradeep', 'uddyot', 'vyakhya', 'vyakhyaa', 'definition', 
+            'teeka', 'sutrartha_english', 'kashika', 'kaumudi', 'laghukaumudi', 
+            'nyaas', 'padamanjari', 'tattvabodhini', 'balamanorama', 'praudhamanorama', 
+            'vasu_english', 'vasu_english_summary', 'sarala', 'sudha', 
+            'prakriyasarvasvam', 'laghushabdendushekhar', 'commentary', 'words', 
+            'artha', 'tatparya', 'svopajna', 'ambakartri'
+        ];
+
+        // On document load
+        document.addEventListener('DOMContentLoaded', () => {
+            initVyakhyaTabs();
+            loadSutras(1);
+        });
+
+        // Show toast msg helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            el.className = 'toast-msg';
+            if (type === 'error') el.style.borderLeftColor = '#ef4444';
+            el.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        // Tab switcher
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-link').forEach(link => link.classList.remove('active'));
+            document.querySelectorAll('.panel-container').forEach(panel => panel.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+
+            // Load data when tab opens
+            if (tabId === 'sutras') loadSutras(1);
+            else if (tabId === 'shivasutras') loadShivaSutras();
+            else if (tabId === 'vartikas') loadVartikas(1);
+            else if (tabId === 'ganapatha') loadGanapatha(1);
+            else if (tabId === 'texts') loadTextEntries(1);
+            else if (tabId === 'extra' && currentSelectedExtraTable) loadExtraEntries(1);
+        }
+
+        // Initialize Sutra Vyakhya tabs
+        function initVyakhyaTabs() {
+            const tabsContainer = document.getElementById('vyakhya-tabs');
+            const panesContainer = document.getElementById('vyakhya-panes');
+            tabsContainer.innerHTML = '';
+            panesContainer.innerHTML = '';
+
+            commentaries.forEach((c, idx) => {
+                const tab = document.createElement('button');
+                tab.className = `comm-tab-btn ${idx === 0 ? 'active' : ''}`;
+                tab.innerText = c.label;
+                tab.type = 'button';
+                tab.onclick = () => selectVyakhyaTab(c.id, tab);
+                tabsContainer.appendChild(tab);
+
+                const pane = document.createElement('div');
+                pane.id = `pane-${c.id}`;
+                pane.className = `comm-pane ${idx === 0 ? 'active' : ''}`;
+                pane.innerHTML = `
+                    <label for="edit-sutra-vyakhya-${c.id}" style="display:none;">${c.label}</label>
+                    <textarea id="edit-sutra-vyakhya-${c.id}" rows="8" class="form-control" placeholder="Enter ${c.label} commentary..."></textarea>
+                `;
+                panesContainer.appendChild(pane);
+            });
+        }
+
+        function selectVyakhyaTab(commId, btn) {
+            document.querySelectorAll('.comm-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.comm-pane').forEach(p => p.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(`pane-${commId}`).classList.add('active');
+        }
+
+        // ================= SUTRAS ACTIONS =================
+        async function loadSutras(page) {
+            currentSutrasPage = page;
+            const query = document.getElementById('sutra-search').value;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/sutras?query=${encodeURIComponent(query)}&page=${page}&limit=50`);
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('sutras-table-body');
+                    tbody.innerHTML = '';
+                    
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${row.adhyaya}.${row.pada}.${row.number}</strong></td>
+                            <td style="font-size:1.1rem; font-weight:600;">${row.sutra || ''}</td>
+                            <td><code>${row.sutra_slp1 || ''}</code></td>
+                            <td><span class="badge">${row.type || ''}</span></td>
+                            <td style="font-size:0.85rem;">${row.padachheda || ''}</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-secondary btn-sm" onclick="openSutraModal(${row.idx})">✏️ Edit</button>
+                                <button class="btn btn-sm" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25);" onclick="deleteSutra(${row.idx})">🗑️</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    // Pagination
+                    document.getElementById('sutras-pagination-info').innerText = `Page ${data.pagination.page} of ${data.pagination.total_pages} (${data.pagination.total_records} records)`;
+                    document.getElementById('sutras-btn-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('sutras-btn-next').disabled = data.pagination.page >= data.pagination.total_pages;
+                } else {
+                    showToast(data.message || 'Error loading sutras', 'error');
+                }
+            } catch (e) {
+                showToast(e.message || 'Network error loading sutras', 'error');
+            }
+        }
+
+        function prevSutrasPage() { if (currentSutrasPage > 1) loadSutras(currentSutrasPage - 1); }
+        function nextSutrasPage() { loadSutras(currentSutrasPage + 1); }
+
+        async function openSutraModal(idx) {
+            document.getElementById('sutra-modal-title').innerText = idx === 0 ? 'Create New Sutra' : 'Edit Sutra Details';
+            document.getElementById('edit-sutra-idx').value = idx;
+
+            // Reset fields
+            document.getElementById('edit-sutra-adhyaya').value = '';
+            document.getElementById('edit-sutra-pada').value = '';
+            document.getElementById('edit-sutra-number').value = '';
+            document.getElementById('edit-sutra-type').value = '';
+            document.getElementById('edit-sutra-text').value = '';
+            document.getElementById('edit-sutra-slp1').value = '';
+            document.getElementById('edit-sutra-sk').value = '';
+            document.getElementById('edit-sutra-lsk').value = '';
+            document.getElementById('edit-sutra-padachheda').value = '';
+            document.getElementById('edit-sutra-translation').value = '';
+            commentaries.forEach(c => {
+                document.getElementById(`edit-sutra-vyakhya-${c.id}`).value = '';
+            });
+
+            if (idx > 0) {
+                try {
+                    const res = await fetch(`/admin/vyakarana/api/sutra/${idx}`);
+                    const data = await res.json();
+                    if (data.success) {
+                        const s = data.sutra;
+                        document.getElementById('edit-sutra-adhyaya').value = s.adhyaya || '';
+                        document.getElementById('edit-sutra-pada').value = s.pada || '';
+                        document.getElementById('edit-sutra-number').value = s.number || '';
+                        document.getElementById('edit-sutra-type').value = s.type || '';
+                        document.getElementById('edit-sutra-text').value = s.sutra || '';
+                        document.getElementById('edit-sutra-slp1').value = s.sutra_slp1 || '';
+                        document.getElementById('edit-sutra-sk').value = s.sk_number || '';
+                        document.getElementById('edit-sutra-lsk').value = s.lsk_number || '';
+                        document.getElementById('edit-sutra-padachheda').value = s.padachheda || '';
+                        document.getElementById('edit-sutra-translation').value = s.sutrartha_english || '';
+                        
+                        commentaries.forEach(c => {
+                            document.getElementById(`edit-sutra-vyakhya-${c.id}`).value = s[c.id] || '';
+                        });
+                    }
+                } catch (e) {
+                    showToast('Failed to fetch sutra details: ' + e.message, 'error');
+                }
+            }
+            
+            document.getElementById('sutra-modal').classList.add('active');
+        }
+
+        function closeSutraModal() {
+            document.getElementById('sutra-modal').classList.remove('active');
+        }
+
+        async function saveSutra() {
+            const idx = document.getElementById('edit-sutra-idx').value;
+            const payload = {
+                idx: idx ? parseInt(idx) : 0,
+                adhyaya: parseInt(document.getElementById('edit-sutra-adhyaya').value) || 0,
+                pada: parseInt(document.getElementById('edit-sutra-pada').value) || 0,
+                number: parseInt(document.getElementById('edit-sutra-number').value) || 0,
+                type: document.getElementById('edit-sutra-type').value,
+                sutra: document.getElementById('edit-sutra-text').value,
+                sutra_slp1: document.getElementById('edit-sutra-slp1').value,
+                sk_number: parseInt(document.getElementById('edit-sutra-sk').value) || null,
+                lsk_number: parseInt(document.getElementById('edit-sutra-lsk').value) || null,
+                padachheda: document.getElementById('edit-sutra-padachheda').value,
+                sutrartha_english: document.getElementById('edit-sutra-translation').value
+            };
+
+            commentaries.forEach(c => {
+                payload[c.id] = document.getElementById(`edit-sutra-vyakhya-${c.id}`).value;
+            });
+
+            try {
+                const res = await fetch('/admin/vyakarana/api/sutra/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Sutra saved successfully!');
+                    closeSutraModal();
+                    loadSutras(currentSutrasPage);
+                } else {
+                    showToast(data.message || 'Failed to save sutra', 'error');
+                }
+            } catch(e) {
+                showToast('Network error saving sutra', 'error');
+            }
+        }
+
+        async function deleteSutra(idx) {
+            if (!confirm('Are you absolutely sure you want to delete this sutra? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/sutra/delete/${idx}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Sutra deleted.');
+                    loadSutras(currentSutrasPage);
+                } else {
+                    showToast(data.message || 'Failed to delete', 'error');
+                }
+            } catch(e) {
+                showToast('Network error deleting sutra', 'error');
+            }
+        }
+
+        // ================= SHIVA SUTRAS ACTIONS =================
+        async function loadShivaSutras() {
+            try {
+                const res = await fetch('/admin/vyakarana/api/table/shivasutras?limit=50');
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('shivasutras-table-body');
+                    tbody.innerHTML = '';
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${row.id}</strong></td>
+                            <td style="font-size:1.15rem; font-weight:700; letter-spacing:1px;">${row.sutra || ''}</td>
+                            <td>${row.kashika || ''}</td>
+                            <td>${row.vyakhya || ''}</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-secondary btn-sm" onclick="openGenericModal('shivasutras', ${row.id})">✏️ Edit</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch(e) {
+                showToast('Failed to load Shiva sutras: ' + e.message, 'error');
+            }
+        }
+
+        // ================= VARTIKAS ACTIONS =================
+        async function loadVartikas(page) {
+            currentVartikasPage = page;
+            const query = document.getElementById('vartika-search').value;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/vartikas?query=${encodeURIComponent(query)}&page=${page}&limit=50`);
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('vartikas-table-body');
+                    tbody.innerHTML = '';
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td><strong>${row.sutra_ref || ''}</strong></td>
+                            <td>${row.vartika || ''}</td>
+                            <td class="actions-cell">
+                                <button class="btn btn-secondary btn-sm" onclick="openGenericModal('vartikas', ${row.id})">✏️ Edit</button>
+                                <button class="btn btn-sm" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25);" onclick="deleteGenericRow('vartikas', ${row.id}, () => loadVartikas(currentVartikasPage))">🗑️</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('vartikas-pagination-info').innerText = `Page ${data.pagination.page} of ${data.pagination.total_pages} (${data.pagination.total_records} records)`;
+                    document.getElementById('vartikas-btn-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('vartikas-btn-next').disabled = data.pagination.page >= data.pagination.total_pages;
+                }
+            } catch(e) {
+                showToast('Failed to load Vartikas', 'error');
+            }
+        }
+
+        function prevVartikasPage() { if (currentVartikasPage > 1) loadVartikas(currentVartikasPage - 1); }
+        function nextVartikasPage() { loadVartikas(currentVartikasPage + 1); }
+
+        // ================= GANAPATHA ACTIONS =================
+        async function loadGanapatha(page) {
+            currentGanapathaPage = page;
+            const query = document.getElementById('ganapatha-search').value;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/ganapatha?query=${encodeURIComponent(query)}&page=${page}&limit=50`);
+                const data = await res.json();
+                if (data.success) {
+                    const tbody = document.getElementById('ganapatha-table-body');
+                    tbody.innerHTML = '';
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td><strong>${row.name || ''}</strong></td>
+                            <td>${row.sutra || ''}</td>
+                            <td style="font-size:0.85rem; max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${row.words || ''}</td>
+                            <td><span class="badge">${row.type || ''}</span></td>
+                            <td class="actions-cell">
+                                <button class="btn btn-secondary btn-sm" onclick="openGenericModal('ganapatha', ${row.id})">✏️ Edit</button>
+                                <button class="btn btn-sm" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25);" onclick="deleteGenericRow('ganapatha', ${row.id}, () => loadGanapatha(currentGanapathaPage))">🗑️</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('ganapatha-pagination-info').innerText = `Page ${data.pagination.page} of ${data.pagination.total_pages} (${data.pagination.total_records} records)`;
+                    document.getElementById('ganapatha-btn-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('ganapatha-btn-next').disabled = data.pagination.page >= data.pagination.total_pages;
+                }
+            } catch(e) {
+                showToast('Failed to load Ganapatha', 'error');
+            }
+        }
+
+        function prevGanapathaPage() { if (currentGanapathaPage > 1) loadGanapatha(currentGanapathaPage - 1); }
+        function nextGanapathaPage() { loadGanapatha(currentGanapathaPage + 1); }
+
+        // ================= CLASSICAL TEXTS ACTIONS =================
+        function switchText(textName) {
+            currentSelectedText = textName;
+            loadTextEntries(1);
+        }
+
+        async function loadTextEntries(page) {
+            currentTextPage = page;
+            const query = document.getElementById('text-search').value;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/${currentSelectedText}?query=${encodeURIComponent(query)}&page=${page}&limit=50`);
+                const data = await res.json();
+                if (data.success) {
+                    // Draw table headers dynamically
+                    const thead = document.getElementById('text-table-head');
+                    thead.innerHTML = '';
+                    const trHead = document.createElement('tr');
+                    
+                    // Display key fields first, filtering out long text / commentary columns
+                    const displayCols = data.columns.filter(c => !longTextCols.includes(c));
+                    displayCols.forEach(col => {
+                        const th = document.createElement('th');
+                        th.innerText = col.toUpperCase();
+                        trHead.appendChild(th);
+                    });
+                    
+                    const thActions = document.createElement('th');
+                    thActions.innerText = 'ACTIONS';
+                    thActions.style.width = '140px';
+                    trHead.appendChild(thActions);
+                    thead.appendChild(trHead);
+
+                    // Draw body
+                    const tbody = document.getElementById('text-table-body');
+                    tbody.innerHTML = '';
+                    
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        displayCols.forEach(col => {
+                            const td = document.createElement('td');
+                            let val = row[col] || '';
+                            if (val.length > 80) val = val.substring(0, 80) + '...';
+                            td.innerText = val;
+                            tr.appendChild(td);
+                        });
+
+                        const tdActions = document.createElement('td');
+                        tdActions.className = 'actions-cell';
+                        tdActions.innerHTML = `
+                            <button class="btn btn-secondary btn-sm" onclick="openGenericModal('${currentSelectedText}', '${row[data.primary_key]}')">✏️ Edit</button>
+                            <button class="btn btn-sm" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25);" onclick="deleteGenericRow('${currentSelectedText}', '${row[data.primary_key]}', () => loadTextEntries(currentTextPage))">🗑️</button>
+                        `;
+                        tr.appendChild(tdActions);
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('text-pagination-info').innerText = `Page ${data.pagination.page} of ${data.pagination.total_pages} (${data.pagination.total_records} records)`;
+                    document.getElementById('text-btn-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('text-btn-next').disabled = data.pagination.page >= data.pagination.total_pages;
+                }
+            } catch(e) {
+                showToast('Failed to load text entries: ' + e.message, 'error');
+            }
+        }
+
+        function prevTextPage() { if (currentTextPage > 1) loadTextEntries(currentTextPage - 1); }
+        function nextTextPage() { loadTextEntries(currentTextPage + 1); }
+
+        // ================= EXTRA TABLES ACTIONS =================
+        function switchExtraTable(table) {
+            currentSelectedExtraTable = table;
+            
+            const disabled = !table;
+            document.getElementById('extra-search').disabled = disabled;
+            document.getElementById('extra-search-btn').disabled = disabled;
+            document.getElementById('extra-add-btn').disabled = disabled;
+            document.getElementById('extra-btn-prev').disabled = disabled;
+            document.getElementById('extra-btn-next').disabled = disabled;
+
+            if (table) {
+                loadExtraEntries(1);
+            } else {
+                document.getElementById('extra-table-head').innerHTML = '<tr><th>Select a table above to list records</th></tr>';
+                document.getElementById('extra-table-body').innerHTML = '';
+                document.getElementById('extra-pagination-info').innerText = 'Showing page 1 of ...';
+            }
+        }
+
+        async function loadExtraEntries(page) {
+            if (!currentSelectedExtraTable) return;
+            currentExtraPage = page;
+            const query = document.getElementById('extra-search').value;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/${currentSelectedExtraTable}?query=${encodeURIComponent(query)}&page=${page}&limit=50`);
+                const data = await res.json();
+                if (data.success) {
+                    // Headers
+                    const thead = document.getElementById('extra-table-head');
+                    thead.innerHTML = '';
+                    const trHead = document.createElement('tr');
+                    
+                    // Display key fields first, filtering out long text / commentary columns and limiting to first 5
+                    const displayCols = data.columns.filter(c => !longTextCols.includes(c)).slice(0, 5);
+                    displayCols.forEach(col => {
+                        const th = document.createElement('th');
+                        th.innerText = col.toUpperCase();
+                        trHead.appendChild(th);
+                    });
+                    
+                    const thActions = document.createElement('th');
+                    thActions.innerText = 'ACTIONS';
+                    thActions.style.width = '140px';
+                    trHead.appendChild(thActions);
+                    thead.appendChild(trHead);
+
+                    // Body
+                    const tbody = document.getElementById('extra-table-body');
+                    tbody.innerHTML = '';
+                    
+                    data.results.forEach(row => {
+                        const tr = document.createElement('tr');
+                        displayCols.forEach(col => {
+                            const td = document.createElement('td');
+                            let val = row[col] !== null ? String(row[col]) : '';
+                            if (val.length > 80) val = val.substring(0, 80) + '...';
+                            td.innerText = val;
+                            tr.appendChild(td);
+                        });
+
+                        const tdActions = document.createElement('td');
+                        tdActions.className = 'actions-cell';
+                        tdActions.innerHTML = `
+                            <button class="btn btn-secondary btn-sm" onclick="openGenericModal('${currentSelectedExtraTable}', '${row[data.primary_key]}')">✏️ Edit</button>
+                            <button class="btn btn-sm" style="background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.25);" onclick="deleteGenericRow('${currentSelectedExtraTable}', '${row[data.primary_key]}', () => loadExtraEntries(currentExtraPage))">🗑️</button>
+                        `;
+                        tr.appendChild(tdActions);
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('extra-pagination-info').innerText = `Page ${data.pagination.page} of ${data.pagination.total_pages} (${data.pagination.total_records} records)`;
+                    document.getElementById('extra-btn-prev').disabled = data.pagination.page <= 1;
+                    document.getElementById('extra-btn-next').disabled = data.pagination.page >= data.pagination.total_pages;
+                }
+            } catch(e) {
+                showToast('Failed to load extra table entries', 'error');
+            }
+        }
+
+        function prevExtraPage() { if (currentExtraPage > 1) loadExtraEntries(currentExtraPage - 1); }
+        function nextExtraPage() { loadExtraEntries(currentExtraPage + 1); }
+
+        // ================= DYNAMIC/GENERIC MODAL CRUD =================
+        async function openGenericModal(tableName, rowId) {
+            activeGenericTable = tableName;
+            
+            const modalTitle = document.getElementById('generic-modal-title');
+            const modalBody = document.getElementById('generic-modal-body');
+            
+            modalTitle.innerText = rowId === 0 ? `Add Entry into ${tableName.toUpperCase()}` : `Edit Entry in ${tableName.toUpperCase()}`;
+            modalBody.innerHTML = '<p>Loading schema...</p>';
+            
+            try {
+                // Fetch schema info by getting first page
+                const resSchema = await fetch(`/admin/vyakarana/api/table/${tableName}?limit=1`);
+                const dataSchema = await resSchema.json();
+                if (!dataSchema.success) {
+                    showToast('Failed to load schema', 'error');
+                    return;
+                }
+                
+                activeGenericColumns = dataSchema.columns;
+                activeGenericPk = dataSchema.primary_key;
+                
+                let rowData = {};
+                if (rowId !== 0) {
+                    const resRow = await fetch(`/admin/vyakarana/api/table/${tableName}/${rowId}`);
+                    const dataRow = await resRow.json();
+                    if (dataRow.success) {
+                        rowData = dataRow.data;
+                    }
+                }
+
+                // Render dynamic form
+                modalBody.innerHTML = '';
+                activeGenericColumns.forEach(col => {
+                    const group = document.createElement('div');
+                    group.className = 'form-group';
+                    
+                    const label = document.createElement('label');
+                    label.innerText = col.toUpperCase();
+                    group.appendChild(label);
+                    
+                    // Determine if it should be text area or input
+                    const val = rowData[col] !== undefined && rowData[col] !== null ? rowData[col] : '';
+                    const isLongText = ['bhashya', 'pradeep', 'uddyot', 'vyakhya', 'vyakhyaa', 'definition', 'words', 'artha', 'tatparya', 'text', 'sutra_slp1', 'sutra'].includes(col);
+                    
+                    if (isLongText) {
+                        const textarea = document.createElement('textarea');
+                        textarea.id = `dyn-input-${col}`;
+                        textarea.className = 'form-control';
+                        textarea.rows = 4;
+                        textarea.value = val;
+                        if (col === activeGenericPk && rowId !== 0) textarea.disabled = true;
+                        group.appendChild(textarea);
+                    } else {
+                        const input = document.createElement('input');
+                        input.id = `dyn-input-${col}`;
+                        input.className = 'form-control';
+                        input.type = 'text';
+                        input.value = val;
+                        if (col === activeGenericPk && rowId !== 0) input.disabled = true;
+                        group.appendChild(input);
+                    }
+                    
+                    modalBody.appendChild(group);
+                });
+                
+                document.getElementById('generic-modal').classList.add('active');
+            } catch(e) {
+                showToast('Failed to prepare form: ' + e.message, 'error');
+            }
+        }
+
+        function closeGenericModal() {
+            document.getElementById('generic-modal').classList.remove('active');
+        }
+
+        async function saveGenericRow() {
+            const payload = {};
+            activeGenericColumns.forEach(col => {
+                const el = document.getElementById(`dyn-input-${col}`);
+                if (el) {
+                    payload[col] = el.value;
+                }
+            });
+
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/${activeGenericTable}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Entry saved successfully!');
+                    closeGenericModal();
+                    
+                    // Refresh active view
+                    if (activeGenericTable === 'shivasutras') loadShivaSutras();
+                    else if (activeGenericTable === 'vartikas') loadVartikas(currentVartikasPage);
+                    else if (activeGenericTable === 'ganapatha') loadGanapatha(currentGanapathaPage);
+                    else if (activeGenericTable === currentSelectedText) loadTextEntries(currentTextPage);
+                    else if (activeGenericTable === currentSelectedExtraTable) loadExtraEntries(currentExtraPage);
+                } else {
+                    showToast(data.message || 'Failed to save', 'error');
+                }
+            } catch(e) {
+                showToast('Network error saving entry', 'error');
+            }
+        }
+
+        async function deleteGenericRow(tableName, rowId, callback) {
+            if (!confirm(`Are you sure you want to delete this row (${rowId}) from ${tableName}?`)) return;
+            try {
+                const res = await fetch(`/admin/vyakarana/api/table/${tableName}/delete/${rowId}`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Entry deleted successfully.');
+                    if (callback) callback();
+                } else {
+                    showToast(data.message || 'Failed to delete', 'error');
+                }
+            } catch(e) {
+                showToast('Network error deleting entry', 'error');
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=35"></script>
+</body>
+</html>

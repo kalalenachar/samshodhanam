@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram OCR Bot Admin — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function () {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        .admin-ocr-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 80px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.6));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .metric-icon {
+            font-size: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(99, 102, 241, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--t-text-primary);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--t-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.6));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--t-text-primary);
+        }
+
+        .btn-action {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #ffffff;
+        }
+
+        .btn-restart {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: #ffffff;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #ffffff;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--t-bg-input, rgba(15, 23, 42, 0.6));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 10px;
+            color: var(--t-text-primary);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: #6366f1;
+        }
+
+        .tokens-list {
+            list-style: none;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .token-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: var(--t-bg-input, rgba(15, 23, 42, 0.4));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.05));
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .upload-dropzone {
+            border: 2px dashed var(--t-border, rgba(255, 255, 255, 0.15));
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-dropzone:hover {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .log-box {
+            background: #020617;
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 14px;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.825rem;
+            color: #38bdf8;
+            height: 320px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pill.running {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-pill.stopped {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="/admin/hub" class="brand">
+            <span style="font-size: 1.5rem;">🤖</span>
+            <span>Samshodhana <span class="highlight">OCR Bot</span></span>
+        </a>
+        <nav class="nav-links">
+            <a href="/admin/hub">🏠 Admin Hub</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="admin-ocr-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+                <h1 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; font-weight: 800;">Telegram OCR Bot Control Center</h1>
+                <p style="color: var(--t-text-secondary); font-size: 0.9rem;">High-Accuracy OCR, PDF Extraction, and Script Transliteration</p>
+            </div>
+            <div id="statusPill" class="status-pill stopped">
+                <span id="statusDot">●</span>
+                <span id="statusLabel">Checking status...</span>
+            </div>
+        </div>
+
+        <!-- Metrics Overview -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">☁️</div>
+                <div>
+                    <div class="metric-val" id="metricTokens">Connected</div>
+                    <div class="metric-label">Cloud OCR API</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🤖</div>
+                <div>
+                    <div class="metric-val" id="metricBotToken">Not Set</div>
+                    <div class="metric-label">Telegram Bot Token</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🛡️</div>
+                <div>
+                    <div class="metric-val" style="font-size: 1.1rem; color: #10b981;">Protected</div>
+                    <div class="metric-label">Zero Email Forwarding</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">⚙️</div>
+                <div>
+                    <div class="metric-val" id="metricPid">--</div>
+                    <div class="metric-label">Process PID</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Control -->
+        <div class="panel-card">
+            <div class="panel-title">⚡ Process Controls</div>
+            <p style="color: var(--t-text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
+                Manage real-time execution of Python bot process <code>apps/ocr_bot/run_bot.py</code>.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn-action btn-start" onclick="triggerAction('start')">▶️ Start Bot</button>
+                <button class="btn-action btn-restart" onclick="triggerAction('restart')">🔄 Restart Bot</button>
+                <button class="btn-action btn-stop" onclick="triggerAction('stop')">⏹️ Stop Bot</button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px;">
+            <!-- Configuration -->
+            <div class="panel-card">
+                <div class="panel-title">🔑 Bot Token & Credentials</div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 0.85rem; color: var(--t-text-secondary); display: block; margin-bottom: 6px;">Telegram OCR Bot Token</label>
+                    <input type="text" id="inputBotToken" class="form-control" placeholder="e.g. 1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ">
+                </div>
+                <button class="btn-action btn-restart" onclick="saveConfig()">💾 Save Token</button>
+            </div>
+
+            <!-- OAuth Credentials Upload -->
+            <div class="panel-card">
+            <!-- OCR API Configuration -->
+            <div class="panel-card">
+                <div class="panel-title">☁️ Samshodhanam OCR API</div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--t-text-secondary); display: block; margin-bottom: 4px;">OCR API Endpoint</label>
+                    <input type="text" id="inputOcrApiUrl" class="input-field" placeholder="http://localhost:5001/api/v1/ocr" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <label style="font-size: 0.8rem; font-weight: 600; color: var(--t-text-secondary); display: block; margin-bottom: 4px;">API Key (Optional)</label>
+                    <input type="password" id="inputOcrApiKey" class="input-field" placeholder="Bearer Token / API Key" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <button class="btn-action btn-start" style="width: 100%; font-size: 0.85rem; padding: 10px;" onclick="saveOcrApiConfig()">💾 Save API Configuration</button>
+            </div>
+        </div>
+
+        <!-- Logs Console -->
+        <div class="panel-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div class="panel-title" style="margin-bottom: 0;">🖥️ Console Logs Output (telegram_ocr_bot.log)</div>
+                <button class="btn-action btn-restart" style="font-size: 0.75rem; padding: 6px 12px;" onclick="fetchLogs()">🔄 Refresh Logs</button>
+            </div>
+            <div class="log-box" id="logConsole">Loading logs...</div>
+        </div>
+    </div>
+
+    <script>
+        async function apiFetch(endpoint, options = {}) {
+            let res = await fetch('/apps/api/ocr_bot/' + endpoint, options);
+            if (!res.ok && res.status === 404) {
+                res = await fetch('/api/ocr_bot/' + endpoint, options);
+            }
+            return res;
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await apiFetch('status');
+                const data = await res.json();
+                if (data.success && data.data) {
+                    const s = data.data;
+                    const pill = document.getElementById('statusPill');
+                    const label = document.getElementById('statusLabel');
+                    const pidEl = document.getElementById('metricPid');
+                    const tokensEl = document.getElementById('metricTokens');
+                    const botTokenEl = document.getElementById('metricBotToken');
+                    const tokensList = document.getElementById('tokensList');
+                    const inputToken = document.getElementById('inputBotToken');
+
+                    if (s.is_running) {
+                        pill.className = 'status-pill running';
+                        label.textContent = `Running (PID: ${s.pid})`;
+                        pidEl.textContent = s.pid;
+                    } else {
+                        pill.className = 'status-pill stopped';
+                        label.textContent = 'Stopped 🔴';
+                        pidEl.textContent = 'Offline';
+                    }
+
+                    tokensEl.textContent = s.has_ocr_api ? 'Connected' : 'Offline';
+                    botTokenEl.textContent = s.masked_token || 'Not Set';
+
+                    if (!inputToken.value && s.masked_token) {
+                        inputToken.placeholder = s.masked_token;
+                    }
+
+                    const inputApiUrl = document.getElementById('inputOcrApiUrl');
+                    if (inputApiUrl && !inputApiUrl.value && s.ocr_api_url) {
+                        inputApiUrl.value = s.ocr_api_url;
+                    }
+                }
+            } catch (e) {
+                console.error('Fetch status error:', e);
+            }
+        }
+
+        async function triggerAction(action) {
+            try {
+                const res = await apiFetch('action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: action })
+                });
+                const data = await res.json();
+                alert(data.message || 'Action executed.');
+                fetchStatus();
+                fetchLogs();
+            } catch (e) {
+                alert('Action failed: ' + e);
+            }
+        }
+
+        async function saveConfig() {
+            const token = document.getElementById('inputBotToken').value.trim();
+            if (!token) {
+                alert('Please enter a Telegram Bot Token.');
+                return;
+            }
+            try {
+                const res = await apiFetch('config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+                const data = await res.json();
+                alert(data.message || 'Token saved successfully.');
+                fetchStatus();
+            } catch (e) {
+                alert('Save config failed: ' + e);
+            }
+        }
+
+        async function saveOcrApiConfig() {
+            const apiUrl = (document.getElementById('inputOcrApiUrl').value || '').trim();
+            const apiKey = (document.getElementById('inputOcrApiKey').value || '').trim();
+
+            try {
+                const res = await apiFetch('set_api_config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ api_url: apiUrl, api_key: apiKey })
+                });
+                const data = await res.json();
+                alert(data.message || 'API configuration saved.');
+                fetchStatus();
+            } catch (e) {
+                alert('Save failed: ' + e);
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await apiFetch('logs?lines=60');
+                const data = await res.json();
+                if (data.success && data.logs) {
+                    const consoleEl = document.getElementById('logConsole');
+                    consoleEl.textContent = data.logs;
+                    consoleEl.scrollTop = consoleEl.scrollHeight;
+                }
+            } catch (e) {
+                console.error('Fetch logs error:', e);
+            }
+        }
+
+        fetchStatus();
+        fetchLogs();
+        setInterval(fetchStatus, 5000);
+        setInterval(fetchLogs, 5000);
+    </script>
+</body>
+</html>

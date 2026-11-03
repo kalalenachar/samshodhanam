@@ -1,0 +1,15 @@
+[Unit]
+Description=Samshodhana Telegram OCR Bot Service
+After=network.target
+
+[Service]
+Type=simple
+User={{USER_NAME}}
+WorkingDirectory={{APP_DIR}}/apps/ocr_bot
+ExecStart={{VENV_DIR}}/bin/python run_bot.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

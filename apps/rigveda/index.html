@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rigveda Samhita — Samshodhana Mandiram</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="/favicon.ico">
+    
+    <!-- Samshodhana Mandiram Global Theme System -->
+    <link rel="stylesheet" href="/static/css/theme.css?v=37">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Serif+Devanagari:wght@400;500;600;700;800&family=Noto+Serif+Telugu:wght@400;600;700&family=Noto+Serif+Kannada:wght@400;600;700&family=Noto+Serif+Tamil:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Multi-Script Transliterator -->
+    <script src="/static/js/script-transliterate.js?v=6"></script>
+
+    <!-- Global Theme Initialization -->
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        :root {
+            --sanskrit-font-size: 1.55rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            padding: 24px 16px 48px;
+        }
+
+        /* Perfectly Fitted Container matching Chandas & Samasa */
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Standard App Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            border-color: var(--t-border-hover);
+            transform: translateX(-3px);
+        }
+
+        .app-title-block {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .app-title-block h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.1rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24, #d97706);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2px;
+            letter-spacing: -0.5px;
+        }
+
+        .app-title-block p {
+            color: var(--t-text-secondary);
+            font-size: 13.5px;
+            font-weight: 500;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--t-text-secondary);
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 13px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-header:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            border-color: var(--t-border-hover);
+        }
+
+        /* ── Master Unified Glass Panel ── */
+        .glass-panel {
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 22px;
+            padding: 24px 28px;
+            box-shadow: var(--t-shadow);
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 14px 10px 30px; }
+            .glass-panel { padding: 16px 14px; border-radius: 16px; }
+            .app-title-block h1 { font-size: 1.6rem; }
+        }
+
+        /* ── Unified Top Control Deck ── */
+        .control-deck {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--t-border-light);
+            margin-bottom: 14px;
+        }
+
+        .deck-coords-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .select-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 5px 10px;
+            border-radius: 10px;
+        }
+
+        .select-chip label {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--t-text-secondary);
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .select-chip select {
+            background: transparent;
+            border: none;
+            color: var(--t-text-primary);
+            font-weight: 700;
+            font-size: 13.5px;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            cursor: pointer;
+            outline: none;
+            max-width: 170px;
+        }
+
+        .select-chip select option {
+            background: var(--t-select-option-bg, #0b0f19);
+            color: var(--t-text-primary);
+        }
+
+        .quick-jump-wrap {
+            display: flex;
+            align-items: center;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .quick-jump-wrap input {
+            background: transparent;
+            border: none;
+            padding: 5px 8px;
+            color: var(--t-text-primary);
+            font-size: 12.5px;
+            font-weight: 600;
+            width: 70px;
+            outline: none;
+            text-align: center;
+        }
+
+        .quick-jump-wrap button {
+            background: transparent;
+            border: none;
+            padding: 5px 8px;
+            color: #f59e0b;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* ── Classification Scheme Segmented Toggle ── */
+        .scheme-segmented-control {
+            display: inline-flex;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 3px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+
+        .scheme-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            background: transparent;
+            color: var(--t-text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            padding: 5px 12px;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .scheme-pill:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+        }
+
+        .scheme-pill.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.25));
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+        }
+
+        .deck-tools-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Layer Checklist / Toggle Pills ── */
+        .layer-checklist-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-deck-pill,
+        .layer-chk-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            padding: 5px 11px 5px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            outline: none;
+            line-height: 1.2;
+        }
+
+        .btn-deck-pill:hover,
+        .layer-chk-pill:hover {
+            color: var(--t-text-primary);
+            border-color: var(--t-border-hover);
+            background: var(--t-bg-surface-hover, rgba(255, 255, 255, 0.05));
+        }
+
+        .btn-deck-pill:active,
+        .layer-chk-pill:active {
+            transform: scale(0.97);
+        }
+
+        .btn-deck-pill:focus-visible,
+        .layer-chk-pill:focus-visible {
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4);
+        }
+
+        .layer-chk-box {
+            width: 15px;
+            height: 15px;
+            border-radius: 4px;
+            border: 1.5px solid var(--t-border-hover, rgba(255, 255, 255, 0.25));
+            background: rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .layer-chk-box i {
+            font-size: 9px;
+            opacity: 0;
+            transform: scale(0.2) rotate(-20deg);
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-deck-pill.active,
+        .layer-chk-pill.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.08));
+            border-color: #f59e0b;
+            color: #f59e0b;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+        }
+
+        .btn-deck-pill.active:hover,
+        .layer-chk-pill.active:hover {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.14));
+            border-color: #fbbf24;
+            box-shadow: 0 3px 12px rgba(245, 158, 11, 0.22);
+        }
+
+        .btn-deck-pill.active .layer-chk-box,
+        .layer-chk-pill.active .layer-chk-box {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.45);
+        }
+
+        .btn-deck-pill.active .layer-chk-box i,
+        .layer-chk-pill.active .layer-chk-box i {
+            color: #0f172a;
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+        }
+
+        .btn-font-step {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            padding: 5px 9px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .btn-font-step:hover {
+            color: var(--t-text-primary);
+            border-color: var(--t-border-hover);
+        }
+
+        /* ── Integrated Audio & Auto-Progress Bar ── */
+        .audio-subdeck {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 14px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+        }
+
+        .audio-left-side {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-play-trigger {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: white;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(245, 158, 11, 0.35);
+            transition: transform 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-play-trigger:hover {
+            transform: scale(1.08);
+        }
+
+        .audio-status-info b {
+            font-size: 14px;
+            color: var(--t-text-primary);
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            display: block;
+            line-height: 1.2;
+        }
+
+        .audio-status-info span {
+            font-size: 11.5px;
+            color: var(--t-text-secondary);
+        }
+
+        .audio-right-side {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-auto-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--t-bg-overlay);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .btn-auto-toggle:hover {
+            border-color: #f59e0b;
+            color: var(--t-text-primary);
+        }
+
+        .btn-auto-toggle.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
+            border-color: #f59e0b;
+            color: #f59e0b;
+            font-weight: 700;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+        }
+
+        /* ── Compact Ṛk Carousel Strip ── */
+        .rik-carousel-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 6px 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn-sukta-nav {
+            background: transparent;
+            border: none;
+            color: var(--t-text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-sukta-nav:hover {
+            color: #f59e0b;
+            background: var(--t-hover-bg);
+        }
+
+        .rik-scroll-view {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow-x: auto;
+            padding: 2px 2px;
+            flex-grow: 1;
+            scrollbar-width: thin;
+        }
+
+        .rik-scroll-view::-webkit-scrollbar {
+            height: 4px;
+        }
+        .rik-scroll-view::-webkit-scrollbar-thumb {
+            background: var(--t-border);
+            border-radius: 4px;
+        }
+
+        .rik-pill {
+            background: transparent;
+            border: 1px solid var(--t-border-light);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-family: 'Noto Serif Devanagari', serif;
+            font-size: 13.5px;
+            color: var(--t-text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .rik-pill:hover {
+            border-color: #f59e0b;
+            color: var(--t-text-primary);
+        }
+
+        .rik-pill.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: transparent;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+        }
+
+        /* ── The Mantra Reading Section ── */
+        .mantra-display-zone {
+            position: relative;
+            font-family: 'Sanskrit Text', 'Noto Serif Devanagari', serif;
+        }
+
+        .mantra-headline-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--t-border-light);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .mantra-badge {
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            padding: 4px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mantra-actions-cluster {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-action-mini {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            padding: 5px 11px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action-mini:hover {
+            color: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        /* Samhitā */
+        .section-label {
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #f59e0b;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .samhita-container {
+            margin-bottom: 20px;
+        }
+
+        .samhita-content {
+            font-family: inherit;
+            font-size: var(--sanskrit-font-size);
+            color: var(--t-text-primary);
+            line-height: 2.15;
+            letter-spacing: 0.3px;
+        }
+
+        /* Padapāṭha */
+        .padapatha-container {
+            background: var(--t-bg-surface);
+            border-left: 3px solid #38bdf8;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+        }
+
+        .padapatha-content {
+            font-family: inherit;
+            font-size: calc(var(--sanskrit-font-size) * 0.94);
+            color: var(--t-text-primary);
+            line-height: 2.0;
+        }
+
+        /* Sāyaṇa Bhāṣya */
+        .bhashya-container {
+            background: var(--t-bg-surface);
+            border-left: 3px solid #f59e0b;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 18px;
+        }
+
+        .bhashya-content {
+            font-family: inherit;
+            font-size: calc(var(--sanskrit-font-size) * 0.88);
+            color: var(--t-text-secondary);
+            line-height: 1.95;
+            text-align: justify;
+        }
+
+        /* Explicit Script-Specific Font Overrides for Mantra & Commentary */
+        [data-script-font="telugu"] .samhita-content,
+        [data-script-font="telugu"] .padapatha-content,
+        [data-script-font="telugu"] .bhashya-content,
+        [data-script-font="telugu"] .mantra-badge {
+            font-family: 'Noto Serif Telugu', 'Noto Sans Telugu', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+        }
+
+        [data-script-font="kannada"] .samhita-content,
+        [data-script-font="kannada"] .padapatha-content,
+        [data-script-font="kannada"] .bhashya-content,
+        [data-script-font="kannada"] .mantra-badge {
+            font-family: 'Noto Serif Kannada', 'Noto Sans Kannada', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+        }
+
+        [data-script-font="tamil"] .samhita-content,
+        [data-script-font="tamil"] .padapatha-content,
+        [data-script-font="tamil"] .bhashya-content,
+        [data-script-font="tamil"] .mantra-badge {
+            font-family: 'Noto Serif Tamil', 'Noto Sans Tamil', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+        }
+
+        [data-script-font="devanagari"] .samhita-content,
+        [data-script-font="devanagari"] .padapatha-content,
+        [data-script-font="devanagari"] .bhashya-content,
+        [data-script-font="devanagari"] .mantra-badge,
+        [data-script-font="sa"] .samhita-content,
+        [data-script-font="sa"] .padapatha-content,
+        [data-script-font="sa"] .bhashya-content,
+        [data-script-font="sa"] .mantra-badge {
+            font-family: 'Sanskrit Text', 'Noto Serif Devanagari', 'Noto Sans Devanagari', serif !important;
+        }
+
+        [data-script-font="en"] .samhita-content,
+        [data-script-font="en"] .padapatha-content,
+        [data-script-font="en"] .bhashya-content,
+        [data-script-font="en"] .mantra-badge {
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        /* Metadata (Rishi, Devata, Chandas) - Top Layer */
+        .meta-strip {
+            display: flex;
+            gap: 14px 26px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 22px;
+            padding: 14px 20px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-left: 3px solid #f59e0b;
+            border-radius: 14px;
+            font-size: calc(var(--sanskrit-font-size) * 0.78);
+            line-height: 1.6;
+            color: var(--t-text-secondary);
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            box-shadow: var(--t-shadow, 0 2px 8px rgba(0, 0, 0, 0.04));
+        }
+
+        .meta-strip-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .meta-strip-item.highlight-attr {
+            font-size: 1.08em;
+        }
+
+        .meta-strip-item b {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .meta-strip-item span {
+            color: var(--t-text-primary);
+            font-weight: 600;
+        }
+
+        .meta-strip-divider {
+            width: 1px;
+            height: 22px;
+            background: var(--t-border-light, rgba(255, 255, 255, 0.15));
+            margin: 0 4px;
+        }
+
+        .meta-strip-sub {
+            font-size: 0.88em;
+            color: var(--t-text-muted);
+        }
+
+        .meta-strip-sub b {
+            color: var(--t-text-secondary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .meta-strip {
+                padding: 10px 14px;
+                gap: 8px 16px;
+                font-size: calc(var(--sanskrit-font-size) * 0.72);
+            }
+            .meta-strip-divider {
+                display: none;
+            }
+        }
+
+        /* ── Bottom Stepper Bar ── */
+        .bottom-stepper-deck {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 22px;
+            padding-top: 16px;
+            border-top: 1px solid var(--t-border-light);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-stepper {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 12px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-primary);
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-stepper:hover {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+        }
+
+        .stepper-label-counter {
+            font-size: 13.5px;
+            color: var(--t-text-secondary);
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            font-weight: 600;
+        }
+
+        .kbd-hint {
+            font-size: 11px;
+            color: var(--t-text-muted);
+            margin-left: 6px;
+            background: var(--t-bg-overlay);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--t-border-light);
+        }
+
+        /* ── Modals ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--t-bg-overlay);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 680px;
+            height: min(85vh, 760px);
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .modal-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--t-border);
+            flex-shrink: 0;
+        }
+
+        .modal-top h3 {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+        }
+
+        .modal-search-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--t-bg-surface);
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            margin: 14px 20px 8px;
+            flex-shrink: 0;
+        }
+
+        .modal-search-field input {
+            background: transparent;
+            border: none;
+            color: var(--t-text-primary);
+            font-size: 1.05rem;
+            font-family: 'Noto Sans Devanagari', sans-serif;
+            width: 100%;
+            outline: none;
+        }
+
+        .modal-results-scroll {
+            padding: 10px 20px 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .clickable-attr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: underline;
+            text-decoration-color: rgba(245, 158, 11, 0.4);
+            text-underline-offset: 4px;
+        }
+
+        .clickable-attr:hover {
+            color: #f59e0b !important;
+            text-decoration-color: #f59e0b;
+        }
+
+        .attr-pill-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+            gap: 8px;
+            padding: 8px 2px;
+        }
+
+        .attr-rik-pill {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 10px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Noto Serif Devanagari', serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            user-select: none;
+        }
+
+        .attr-rik-pill:hover {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        }
+
+        /* ── Akshara Bar for Mantra Pratika Index ── */
+        .akshara-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--t-bg-surface);
+            border-bottom: 1px solid var(--t-border-light);
+            max-height: 145px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .akshara-btn {
+            min-width: 34px;
+            height: 32px;
+            padding: 0 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Serif Devanagari', serif;
+            font-size: 14px;
+            font-weight: 700;
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            background: var(--t-bg-overlay);
+            color: var(--t-text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .akshara-btn:hover {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            transform: translateY(-1px);
+        }
+
+        .akshara-btn.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            border-color: #f59e0b;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        /* ── Pratika Card Entries ── */
+        .pratika-card {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pratika-card:hover {
+            border-color: rgba(245, 158, 11, 0.5);
+            background: var(--t-hover-bg);
+            transform: translateX(4px);
+        }
+
+        .pratika-text {
+            font-family: 'Noto Serif Devanagari', serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--t-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .pratika-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-size: 11.5px;
+        }
+
+        .pratika-coord-badge {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            color: #f59e0b;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pratika-tag {
+            background: var(--t-bg-overlay);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            padding: 2px 7px;
+            border-radius: 6px;
+        }
+
+        .result-entry {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .result-entry:hover {
+            border-color: #f59e0b;
+            transform: translateX(4px);
+        }
+
+        .result-entry mark {
+            background: rgba(245, 158, 11, 0.35);
+            color: var(--t-text-primary);
+            padding: 0 3px;
+            border-radius: 3px;
+        }
+
+        /* Toast */
+        .toast-msg {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--t-bg-overlay);
+            color: var(--t-text-primary);
+            border: 1px solid #f59e0b;
+            padding: 10px 18px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 20000;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        /* Layer Visibility Toggles */
+        .hide-pada .padapatha-container { display: none !important; }
+        .hide-sayana .bhashya-container { display: none !important; }
+        .hide-meta .meta-strip { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- App Header (Matching Samsho Chandas & Samasa) -->
+        <header class="header">
+            <a href="/" class="back-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Back to Portal
+            </a>
+
+            <div class="app-title-block">
+                <h1>Rigveda Samhita</h1>
+                <p>ऋग्वेद-संहिता • पदपाठ • सायणभाष्य • सस्वर-पारायण</p>
+            </div>
+
+            <div class="header-actions">
+                <button class="btn-header" id="btn-search-open" title="Full-Text Search across all 10,552 Mantras">
+                    <i class="fa fa-search" style="color: #f59e0b;"></i>
+                    <span>Search</span>
+                </button>
+                <button class="btn-header" id="btn-indices-open" title="Concordances (Rishi, Devata, Chandas)">
+                    <i class="fa fa-list-ol" style="color: #f59e0b;"></i>
+                    <span>अनुक्रमणिका</span>
+                </button>
+                <button class="btn-header" id="btn-theme-cycle" title="Switch Theme">
+                    <i class="fa fa-palette"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Master Unified Glass Panel (All controls, audio, and active Mantra in ONE cohesive frame) -->
+        <main class="glass-panel">
+            
+            <!-- 1. Top Control Deck: Classification Switcher, Dropdowns, Jump, Layer Switches -->
+            <section class="control-deck">
+                <!-- Classification Scheme Segmented Toggle -->
+                <div class="scheme-toggle-group">
+                    <div class="scheme-segmented-control" role="tablist" aria-label="वर्गीकरण-पद्धतिः">
+                        <button type="button" class="scheme-pill active" id="scheme-btn-mandala" onclick="switchClassificationScheme('mandala')">
+                            <i class="fa fa-book-open"></i> <span>मण्डलवर्गीकरणम्</span>
+                        </button>
+                        <button type="button" class="scheme-pill" id="scheme-btn-ashtaka" onclick="switchClassificationScheme('ashtaka')">
+                            <i class="fa fa-layer-group"></i> <span>अष्टकवर्गीकरणम्</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1a. Mandala Scheme Coords -->
+                <div class="deck-coords-group" id="coords-mandala-group">
+                    <div class="select-chip">
+                        <label>मण्डल:</label>
+                        <select id="select-mandala"></select>
+                    </div>
+                    <div class="select-chip">
+                        <label>सूक्त:</label>
+                        <select id="select-sukta"></select>
+                    </div>
+                    <div class="select-chip">
+                        <label>ऋक्:</label>
+                        <select id="select-rik"></select>
+                    </div>
+                    <div class="quick-jump-wrap" title="Direct coordinate jump (e.g. 1.1.1, A1.1.1, or Pratika)">
+                        <input type="text" id="quick-jump-input" placeholder="1.1.1 / A1.1.1">
+                        <button id="btn-quick-jump"><i class="fa fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- 1b. Ashtaka Scheme Coords (dynamically toggled) -->
+                <div class="deck-coords-group" id="coords-ashtaka-group" style="display: none;">
+                    <div class="select-chip">
+                        <label>अष्टक:</label>
+                        <select id="select-ashtaka"></select>
+                    </div>
+                    <div class="select-chip">
+                        <label>अध्याय:</label>
+                        <select id="select-adhyaya"></select>
+                    </div>
+                    <div class="select-chip">
+                        <label>वर्ग:</label>
+                        <select id="select-varga"></select>
+                    </div>
+                    <div class="select-chip">
+                        <label>ऋक्:</label>
+                        <select id="select-varga-rik"></select>
+                    </div>
+                    <div class="quick-jump-wrap" title="Direct coordinate jump (e.g. A1.1.1 or 1.1.1)">
+                        <input type="text" id="quick-jump-input-ashtaka" placeholder="A1.1.1.1">
+                        <button id="btn-quick-jump-ashtaka"><i class="fa fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="deck-tools-group">
+                    <!-- Interactive Script Changer Component -->
+                    <div class="script-picker-wrapper" style="position: relative; display: inline-block;">
+                        <button onclick="toggleRigvedaScriptPicker(event)" class="script-picker-btn" id="rigvedaScriptPickerBtn" title="Change Script (Devanagari, Kannada, Telugu, Tamil, IAST)" style="height: 32px; border-radius: 20px; font-size: 12px; background: rgba(245, 158, 11, 0.15) !important; border-color: rgba(245, 158, 11, 0.4) !important; color: #f59e0b !important;">
+                            <span style="font-size: 13px;">🌐</span>
+                            <span id="rigvedaScriptPickerActiveLabel" style="font-size: 12px; font-weight: 700;">संस्कृतम्</span>
+                            <span style="font-size: 9px; opacity: 0.8; margin-left: 2px;">▼</span>
+                        </button>
+
+                        <div id="rigvedaScriptPickerPopover" class="script-picker-popover" style="left: 0; top: calc(100% + 6px);">
+                            <div style="font-size: 11px; font-weight: 700; color: #f59e0b; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 10px 4px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px;">Reading Script</div>
+                            <div class="script-option-item active" data-script="sa" onclick="changeRigvedaScript('sa')">
+                                <div class="script-info"><div class="script-name">संस्कृतम् (Devanagari)</div><div class="script-desc">Original Vedic</div></div>
+                                <span class="script-check">✓</span>
+                            </div>
+                            <div class="script-option-item" data-script="ka" onclick="changeRigvedaScript('ka')">
+                                <div class="script-info"><div class="script-name">ಕನ್ನಡ (Kannada)</div><div class="script-desc">Vedic accents + bindu (ಂ)</div></div>
+                                <span class="script-check">✓</span>
+                            </div>
+                            <div class="script-option-item" data-script="te" onclick="changeRigvedaScript('te')">
+                                <div class="script-info"><div class="script-name">తెలుగు (Telugu)</div><div class="script-desc">Vedic accents + sunna (ం)</div></div>
+                                <span class="script-check">✓</span>
+                            </div>
+                            <div class="script-option-item" data-script="ta" onclick="changeRigvedaScript('ta')">
+                                <div class="script-info"><div class="script-name">தமிழ் (Tamil)</div><div class="script-desc">Traditional class nasals</div></div>
+                                <span class="script-check">✓</span>
+                            </div>
+                            <div class="script-option-item" data-script="en" onclick="changeRigvedaScript('en')">
+                                <div class="script-info"><div class="script-name">English (IAST)</div><div class="script-desc">Roman with Vedic marks</div></div>
+                                <span class="script-check">✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layer Visibility Checklist -->
+                    <div class="layer-checklist-bar" role="group" aria-label="Commentary and Text Layers">
+                        <button type="button" role="checkbox" aria-checked="true" class="btn-deck-pill layer-chk-pill active" data-layer="meta" id="btn-toggle-meta" title="Toggle Rishi / Devata strip">
+                            <span class="layer-chk-box"><i class="fa fa-check"></i></span>
+                            <span class="layer-chk-text">ऋषि/देवता</span>
+                        </button>
+                        <button type="button" role="checkbox" aria-checked="true" class="btn-deck-pill layer-chk-pill active" data-layer="pada" id="btn-toggle-pada" title="Toggle Padapatha section">
+                            <span class="layer-chk-box"><i class="fa fa-check"></i></span>
+                            <span class="layer-chk-text">पदपाठ</span>
+                        </button>
+                        <button type="button" role="checkbox" aria-checked="true" class="btn-deck-pill layer-chk-pill active" data-layer="sayana" id="btn-toggle-sayana" title="Toggle Sayana Bhashya commentary">
+                            <span class="layer-chk-box"><i class="fa fa-check"></i></span>
+                            <span class="layer-chk-text">सायणभाष्य</span>
+                        </button>
+                    </div>
+                    <button class="btn-font-step" id="btn-font-dec" title="Decrease Sanskrit Font Size"><i class="fa fa-minus"></i></button>
+                    <button class="btn-font-step" id="btn-font-inc" title="Increase Sanskrit Font Size"><i class="fa fa-plus"></i></button>
+                </div>
+            </section>
+
+            <!-- 2. Integrated Audio Chanting & Auto-Progress Bar -->
+            <section class="audio-subdeck">
+                <div class="audio-left-side">
+                    <button class="btn-play-trigger" id="btn-play-active" title="Play Chanting Audio (Spacebar)">
+                        <i class="fa fa-play" id="icon-play-active"></i>
+                    </button>
+                    <div class="audio-status-info">
+                        <b id="active-track-title">ऋग्वेदः १.१.१</b>
+                        <span id="active-track-status">Ready to chant</span>
+                    </div>
+                </div>
+
+                <div class="audio-right-side">
+                    <button class="btn-auto-toggle" id="btn-toggle-auto-progress" title="When enabled, automatically advances to chant the next Mantra">
+                        <i class="fa fa-forward"></i>
+                        <span id="auto-progress-label">Auto Progress: OFF</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 3. Integrated Ṛk Carousel Pill Strip -->
+            <section class="rik-carousel-bar">
+                <button class="btn-sukta-nav" id="strip-prev-sukta" title="Previous Sūkta">
+                    <i class="fa fa-chevron-left"></i> <span>सूक्तम्</span>
+                </button>
+                <div class="rik-scroll-view" id="rik-pill-strip">
+                    <!-- Ṛk pills inserted dynamically -->
+                </div>
+                <button class="btn-sukta-nav" id="strip-next-sukta" title="Next Sūkta">
+                    <span>सूक्तम्</span> <i class="fa fa-chevron-right"></i>
+                </button>
+            </section>
+
+            <!-- 4. Active Single-Mantra Viewport -->
+            <section id="mantra-viewport" class="mantra-display-zone">
+                <div style="text-align: center; padding: 50px 20px; color: var(--t-text-muted);">
+                    <i class="fa fa-spinner fa-spin fa-2x" style="color: #f59e0b; margin-bottom: 12px;"></i>
+                    <p>Loading Mantra...</p>
+                </div>
+            </section>
+
+            <!-- 5. Bottom Stepper Deck (Seamless Next / Previous navigation) -->
+            <footer class="bottom-stepper-deck">
+                <button class="btn-stepper" id="btn-step-prev" onclick="stepRik(-1)">
+                    <i class="fa fa-arrow-left"></i> पूर्व ऋक् <span class="kbd-hint">←</span>
+                </button>
+                <span class="stepper-label-counter" id="stepper-counter-label">ऋक् १ / ९</span>
+                <button class="btn-stepper" id="btn-step-next" onclick="stepRik(1)">
+                    अग्रिम ऋक् <span class="kbd-hint">→</span> <i class="fa fa-arrow-right"></i>
+                </button>
+            </footer>
+
+        </main>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="modal-overlay" id="search-modal-overlay">
+        <div class="modal-box">
+            <div class="modal-top">
+                <h3><i class="fa fa-search" style="color: #f59e0b; margin-right: 8px;"></i> मन्त्र / भाष्य शोध (Search Archive)</h3>
+                <button class="btn-header" id="btn-close-search"><i class="fa fa-times"></i></button>
+            </div>
+            <div class="modal-search-field">
+                <i class="fa fa-search" style="color: var(--t-text-muted);"></i>
+                <input type="text" id="input-modal-query" placeholder="Type Sanskrit word e.g. अग्नि, इन्द्र, वरुण, गायत्री...">
+                <button class="btn-header" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:white; border:none;" id="btn-submit-search">Search</button>
+            </div>
+            <div class="modal-results-scroll" id="search-results-box">
+                <p style="text-align: center; color: var(--t-text-muted); padding: 30px;">
+                    Search across all 10,552 verses, Padapāṭha, and Sāyaṇācārya's commentary.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Concordance Indices Modal -->
+    <div class="modal-overlay" id="indices-modal-overlay">
+        <div class="modal-box" style="max-width: 720px; width: 95%;">
+            <div class="modal-top">
+                <h3 id="indices-modal-title"><i class="fa fa-list-ol" style="color: #f59e0b; margin-right: 8px;"></i> अनुक्रमणिका (Concordance Indices)</h3>
+                <button class="btn-header" id="btn-close-indices"><i class="fa fa-times"></i></button>
+            </div>
+            
+            <!-- Index Category Tabs -->
+            <div id="indices-tabs-row" style="padding: 14px 20px 6px; display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0;">
+                <button class="btn-header active" id="idx-tab-pratika" onclick="openIndexTab('pratika')"><i class="fa fa-align-left" style="color: #f59e0b; margin-right: 4px;"></i> मन्त्राः (मन्त्रानुक्रमणिका)</button>
+                <button class="btn-header" id="idx-tab-rishi" onclick="openIndexTab('rishi')">ऋषिः (Seers - 427)</button>
+                <button class="btn-header" id="idx-tab-devata" onclick="openIndexTab('devata')">देवता (Deities - 356)</button>
+                <button class="btn-header" id="idx-tab-chandas" onclick="openIndexTab('chandas')">छन्दः (Meters - 82)</button>
+            </div>
+
+            <!-- Akshara Strip for Mantra Pratika Concordance -->
+            <div id="indices-akshara-bar" class="akshara-bar" style="display:none;"></div>
+
+            <!-- Live Filter Box -->
+            <div id="indices-filter-wrap" class="modal-search-field" style="margin: 8px 20px 10px;">
+                <i class="fa fa-filter" style="color: var(--t-text-muted);"></i>
+                <input type="text" id="input-indices-filter" placeholder="Filter by name (e.g. विश्वामित्र, गायत्री, अग्नि)...">
+                <button class="btn-action-mini" id="btn-clear-indices-filter" style="display:none;" onclick="clearIndicesFilter()">Clear</button>
+            </div>
+
+            <!-- Sub-Header for Verses drill-down -->
+            <div id="indices-drilldown-header" style="display:none; padding: 12px 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--t-border-light); background: rgba(245, 158, 11, 0.06); flex-shrink: 0;">
+                <button class="btn-header" id="btn-indices-back" onclick="backToIndicesList()">
+                    <i class="fa fa-arrow-left"></i> <span>Back to List</span>
+                </button>
+                <span id="indices-drilldown-title" style="font-family:'Noto Serif Devanagari', serif; font-size:16px; font-weight:700; color:#f59e0b;"></span>
+                <span id="indices-drilldown-count" style="font-size:13px; color:var(--t-text-secondary); font-weight:600;"></span>
+            </div>
+
+            <!-- Results Scroll Box -->
+            <div class="modal-results-scroll" id="indices-results-box">
+                <p style="text-align: center; padding: 30px; color: var(--t-text-muted);">Loading index data...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Audio element for non-blocking preloading & playing -->
+    <audio id="core-audio-player" preload="auto"></audio>
+
+    <!-- Floating Toast Notification -->
+    <div class="toast-msg" id="toast-message"></div>
+
+    <script>
+        // State
+        let activeMandala = 1;
+        let activeSukta = 1;
+        let activeRikIndex = 0; // 0-based index in current sukta
+        let loadedRiks = [];
+        let isAutoProgress = false;
+        let baseFontSizeRem = 1.55;
+
+        const coreAudio = document.getElementById('core-audio-player');
+        const playBtn = document.getElementById('btn-play-active');
+        const playIcon = document.getElementById('icon-play-active');
+        const trackTitle = document.getElementById('active-track-title');
+        const trackStatus = document.getElementById('active-track-status');
+        const autoProgressBtn = document.getElementById('btn-toggle-auto-progress');
+        const autoProgressLabel = document.getElementById('auto-progress-label');
+        const stepperCounter = document.getElementById('stepper-counter-label');
+
+        // Devanagari numerals
+        const devaMap = {'0':'०', '1':'१', '2':'२', '3':'३', '4':'४', '5':'५', '6':'६', '7':'७', '8':'८', '9':'९'};
+        function toDeva(num) {
+            return String(num).split('').map(d => devaMap[d] || d).join('');
+        }
+
+        function triggerToast(text) {
+            const t = document.getElementById('toast-message');
+            t.textContent = text;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2400);
+        }
+
+        // Available Themes in theme.css
+        const SAMSHO_THEMES = ['light', 'dark', 'sunset', 'nature', 'sepia', 'ocean', 'synthwave'];
+
+        function initThemeSystem() {
+            const cycleBtn = document.getElementById('btn-theme-cycle');
+            cycleBtn.addEventListener('click', () => {
+                const cur = document.documentElement.getAttribute('data-theme') || 'light';
+                let nextIdx = (SAMSHO_THEMES.indexOf(cur) + 1) % SAMSHO_THEMES.length;
+                const nextTheme = SAMSHO_THEMES[nextIdx];
+                document.documentElement.setAttribute('data-theme', nextTheme);
+                localStorage.setItem('smsdl-theme', nextTheme);
+                triggerToast(`Theme: ${nextTheme.charAt(0).toUpperCase() + nextTheme.slice(1)}`);
+            });
+        }
+
+        function initLayerToggles() {
+            ['pada', 'sayana', 'meta'].forEach(layer => {
+                const btn = document.getElementById(`btn-toggle-${layer}`);
+                if (!btn) return;
+                const isOff = localStorage.getItem(`rigveda-hide-${layer}`) === 'true';
+                if (isOff) {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-checked', 'false');
+                    document.body.classList.add(`hide-${layer}`);
+                } else {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-checked', 'true');
+                    document.body.classList.remove(`hide-${layer}`);
+                }
+                btn.addEventListener('click', () => {
+                    const willHide = btn.classList.contains('active');
+                    const nextActive = !willHide;
+                    btn.classList.toggle('active', nextActive);
+                    btn.setAttribute('aria-checked', nextActive ? 'true' : 'false');
+                    document.body.classList.toggle(`hide-${layer}`, willHide);
+                    localStorage.setItem(`rigveda-hide-${layer}`, willHide);
+                });
+            });
+
+            // Font resize
+            document.getElementById('btn-font-inc').addEventListener('click', () => {
+                if (baseFontSizeRem < 2.3) {
+                    baseFontSizeRem += 0.1;
+                    document.documentElement.style.setProperty('--sanskrit-font-size', `${baseFontSizeRem}rem`);
+                }
+            });
+            document.getElementById('btn-font-dec').addEventListener('click', () => {
+                if (baseFontSizeRem > 1.1) {
+                    baseFontSizeRem -= 0.1;
+                    document.documentElement.style.setProperty('--sanskrit-font-size', `${baseFontSizeRem}rem`);
+                }
+            });
+
+            // Auto Progress Toggle
+            isAutoProgress = localStorage.getItem('rigveda-auto-progress') === 'true';
+            updateAutoProgressUI();
+
+            autoProgressBtn.addEventListener('click', () => {
+                isAutoProgress = !isAutoProgress;
+                localStorage.setItem('rigveda-auto-progress', isAutoProgress);
+                updateAutoProgressUI();
+                triggerToast(isAutoProgress ? "Auto Progress Enabled: Chants next Ṛk automatically." : "Auto Progress Disabled: Manual progression.");
+            });
+        }
+
+        function updateAutoProgressUI() {
+            autoProgressBtn.classList.toggle('active', isAutoProgress);
+            autoProgressLabel.textContent = isAutoProgress ? "Auto Progress: ON" : "Auto Progress: OFF";
+        }
+
+        // Initialize App
+        async function startApp() {
+            initThemeSystem();
+            initLayerToggles();
+            initRigvedaScriptChanger();
+            setupEventListeners();
+            setupKeyboardShortcuts();
+            await populateMandalaOptions();
+            await populateAshtakaOptions();
+            loadSukta(1, 1, 0);
+        }
+
+        async function populateMandalaOptions() {
+            const selMandala = document.getElementById('select-mandala');
+            selMandala.innerHTML = '';
+
+            for (let m = 1; m <= 10; m++) {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = `मण्डल ${toDeva(m)}`;
+                selMandala.appendChild(opt);
+            }
+
+            selMandala.addEventListener('change', (e) => {
+                const m = parseInt(e.target.value);
+                activeMandala = m;
+                loadSuktaOptions(m).then(() => loadSukta(m, 1, 0));
+            });
+
+            await loadSuktaOptions(1);
+        }
+
+        async function loadSuktaOptions(m) {
+            const selSukta = document.getElementById('select-sukta');
+            selSukta.innerHTML = '';
+
+            try {
+                const res = await fetch('/apps/api/rigveda/tree');
+                const data = await res.json();
+                const suktas = (data.tree && data.tree[String(m)]) || [];
+
+                suktas.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.sukta;
+                    opt.textContent = `सूक्त ${toDeva(s.sukta)} (${toDeva(s.total_riks)} ऋक्)`;
+                    selSukta.appendChild(opt);
+                });
+
+                selSukta.value = activeSukta;
+            } catch (e) {
+                console.error("Error loading suktas tree:", e);
+            }
+        }
+
+        // LOAD SŪKTA & RENDER SELECTED MANTRA
+        async function loadSukta(mandala, sukta, targetRikIdx = 0) {
+            activeMandala = mandala;
+            activeSukta = sukta;
+            pauseAudio();
+
+            document.getElementById('select-mandala').value = mandala;
+            document.getElementById('select-sukta').value = sukta;
+
+            const viewport = document.getElementById('mantra-viewport');
+            viewport.innerHTML = `
+                <div style="text-align: center; padding: 50px 20px; color: var(--t-text-muted);">
+                    <i class="fa fa-spinner fa-spin fa-2x" style="color: #f59e0b; margin-bottom: 12px;"></i>
+                    <p>Loading Mantra...</p>
+                </div>
+            `;
+
+            try {
+                const startTime = performance.now();
+                const res = await fetch(`/apps/api/rigveda/sukta/${mandala}/${sukta}`);
+                const data = await res.json();
+                const latency = Math.round(performance.now() - startTime);
+
+                if (!data.success || !data.riks || data.riks.length === 0) {
+                    viewport.innerHTML = `
+                        <div style="text-align:center; padding: 40px; color:var(--t-text-secondary);">
+                            No verses recorded for Mandala ${mandala}, Sukta ${sukta}.
+                        </div>
+                    `;
+                    return;
+                }
+
+                loadedRiks = data.riks;
+
+                // Populate Ṛk pills strip and drop-down
+                renderRikPills(loadedRiks);
+
+                // Display target Ṛk (default 0)
+                const validIdx = Math.min(Math.max(0, targetRikIdx), loadedRiks.length - 1);
+                displayMantra(validIdx, false);
+
+                console.log(`⚡ Loaded Sukta ${mandala}.${sukta} in ${latency}ms.`);
+            } catch (e) {
+                viewport.innerHTML = `<div style="color:#ef4444; padding:20px;">Error: ${e.message}</div>`;
+            }
+        }
+
+        // Populate Ṛk Pills Strip and Select Dropdown
+        function renderRikPills(riks) {
+            const strip = document.getElementById('rik-pill-strip');
+            const selRik = document.getElementById('select-rik');
+            strip.innerHTML = '';
+            selRik.innerHTML = '';
+
+            riks.forEach((r, idx) => {
+                // Pill button
+                const pill = document.createElement('button');
+                pill.className = `rik-pill ${idx === activeRikIndex ? 'active' : ''}`;
+                pill.id = `pill-rik-${idx}`;
+                pill.textContent = toDeva(r.rik);
+                pill.title = `ऋक् ${toDeva(r.rik)}`;
+                pill.addEventListener('click', () => displayMantra(idx, true));
+                strip.appendChild(pill);
+
+                // Dropdown Option
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `ऋक् ${toDeva(r.rik)}`;
+                selRik.appendChild(opt);
+            });
+
+            selRik.onchange = (e) => displayMantra(parseInt(e.target.value), true);
+        }
+
+        // DISPLAY SINGLE MANTRA (Clean, Focused, Perfectly Fitted)
+        function displayMantra(idx, autoPlayIfRequested = false) {
+            if (!loadedRiks || loadedRiks.length === 0) return;
+            if (idx < 0 || idx >= loadedRiks.length) return;
+
+            activeRikIndex = idx;
+            const r = loadedRiks[idx];
+
+            // Update Pill and Dropdown selection
+            document.querySelectorAll('.rik-pill').forEach((p, i) => {
+                p.classList.toggle('active', i === idx);
+                if (i === idx) p.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            });
+            document.getElementById('select-rik').value = idx;
+
+            // Update Audio Bar
+            trackTitle.textContent = `ऋग्वेदः ${toDeva(r.mandala)}.${toDeva(r.sukta)}.${toDeva(r.rik)}`;
+            trackStatus.textContent = `Ṛk ${toDeva(r.rik)} of ${toDeva(loadedRiks.length)} (मण्डलम् ${toDeva(r.mandala)}, सूक्तम् ${toDeva(r.sukta)})`;
+            coreAudio.src = r.audio_url;
+
+            // Update Stepper counter
+            stepperCounter.textContent = `ऋक् ${toDeva(idx + 1)} / ${toDeva(loadedRiks.length)}`;
+
+            // Render Focused Single-Mantra Card
+            const viewport = document.getElementById('mantra-viewport');
+            viewport.innerHTML = `
+                <div class="mantra-headline-bar">
+                    <div class="mantra-badge" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+                        <span style="display:inline-flex; align-items:center; gap:6px;">
+                            <i class="fa fa-om" style="color:#f59e0b;"></i>
+                            <b>मण्डल ${toDeva(r.mandala)} • सूक्त ${toDeva(r.sukta)} • ऋक् ${toDeva(r.rik)}</b>
+                        </span>
+                        ${r.ashtaka ? `
+                        <span style="opacity:0.6;">|</span>
+                        <span style="color:#38bdf8; font-weight:600;">
+                            <i class="fa fa-layer-group" style="font-size:11px; margin-right:3px;"></i>
+                            अष्टक ${toDeva(r.ashtaka)} • अध्याय ${toDeva(r.adhyaya)} • वर्ग ${toDeva(r.varga)}
+                        </span>` : ''}
+                    </div>
+                    <div class="mantra-actions-cluster">
+                        <button class="btn-action-mini" onclick="copyMantraText('${r.id}')" title="Copy Mantra Sanskrit text">
+                            <i class="fa fa-copy"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 1. Rishi, Devata & Chandas Metadata Layer (First on Top - Clickable Concordance Links) -->
+                <div class="meta-strip">
+                    <div class="meta-strip-item highlight-attr" onclick="browseByAttribute('rishi', '${(r.rishi || '').replace(/'/g, "\\'")}')" title="Browse all Ṛks by this Rishi" style="cursor:pointer;">
+                        <b>ऋषिः:</b> <span class="clickable-attr">${r.rishi || '-'} <i class="fa fa-arrow-up-right-from-square" style="font-size:10.5px; opacity:0.65; margin-left:3px;"></i></span>
+                    </div>
+                    <div class="meta-strip-item highlight-attr" onclick="browseByAttribute('devata', '${(r.devata || '').replace(/'/g, "\\'")}')" title="Browse all Ṛks for this Devata" style="cursor:pointer;">
+                        <b>देवता:</b> <span class="clickable-attr">${r.devata || '-'} <i class="fa fa-arrow-up-right-from-square" style="font-size:10.5px; opacity:0.65; margin-left:3px;"></i></span>
+                    </div>
+                    <div class="meta-strip-item highlight-attr" onclick="browseByAttribute('chandas', '${(r.chandas || '').replace(/'/g, "\\'")}')" title="Browse all Ṛks in this Chandas" style="cursor:pointer;">
+                        <b>छन्दः:</b> <span class="clickable-attr">${r.chandas || '-'} <i class="fa fa-arrow-up-right-from-square" style="font-size:10.5px; opacity:0.65; margin-left:3px;"></i></span>
+                    </div>
+                    ${(r.ashtaka || r.adhyaya || r.varga) ? `<div class="meta-strip-divider"></div>` : ''}
+                    ${r.ashtaka ? `<div class="meta-strip-item meta-strip-sub"><b>अष्टक:</b> <span>${toDeva(r.ashtaka)}</span></div>` : ''}
+                    ${r.adhyaya ? `<div class="meta-strip-item meta-strip-sub"><b>अध्याय:</b> <span>${toDeva(r.adhyaya)}</span></div>` : ''}
+                    ${r.varga ? `<div class="meta-strip-item meta-strip-sub"><b>वर्गः:</b> <span>${toDeva(r.varga)}</span></div>` : ''}
+                </div>
+
+                <!-- 2. Samhita Layer -->
+                <div class="samhita-container">
+                    <div class="section-label"><i class="fa fa-feather-alt"></i> संहिता</div>
+                    <p class="samhita-content" id="samhita-txt-${r.id}">${r.samhita}</p>
+                </div>
+
+                <!-- Padapatha Layer -->
+                <div class="padapatha-container">
+                    <div class="section-label" style="color: #38bdf8;"><i class="fa fa-code-branch"></i> पदपाठः</div>
+                    <p class="padapatha-content">${r.padapatha || 'उपलब्धो नास्ति'}</p>
+                </div>
+
+                <!-- 3. Sayana Bhashya Layer -->
+                <div class="bhashya-container">
+                    <div class="section-label" style="color: #f59e0b;"><i class="fa fa-book-open"></i> सायणभाष्यम्</div>
+                    <p class="bhashya-content">${r.sayana_bhashya || 'सायणभाष्यं न लब्धम्'}</p>
+                </div>
+            `;
+
+            applyActiveScriptToRigveda();
+
+            // Synchronize Ashtaka Navigation Dropdowns
+            if (r.ashtaka && r.adhyaya && r.varga) {
+                syncAshtakaDropdowns(r.ashtaka, r.adhyaya, r.varga, r.rik);
+            }
+
+            playIcon.className = 'fa fa-play';
+
+            if (autoPlayIfRequested) {
+                coreAudio.play().then(() => {
+                    playIcon.className = 'fa fa-pause';
+                    trackStatus.textContent = 'Chanting...';
+                }).catch(e => {
+                    console.warn(e);
+                    playIcon.className = 'fa fa-play';
+                });
+            } else {
+                // Background non-blocking pre-fetch
+                const prefetch = document.createElement('link');
+                prefetch.rel = 'prefetch';
+                prefetch.as = 'audio';
+                prefetch.href = r.audio_url;
+                document.head.appendChild(prefetch);
+            }
+        }
+
+        // Step Ṛk forward or backward
+        function stepRik(direction) {
+            const nextIdx = activeRikIndex + direction;
+            if (nextIdx >= 0 && nextIdx < loadedRiks.length) {
+                displayMantra(nextIdx, false);
+            } else if (nextIdx >= loadedRiks.length) {
+                triggerToast("Reached end of Sūkta. Loading next Sūkta...");
+                loadSukta(activeMandala, activeSukta + 1, 0);
+            } else if (nextIdx < 0 && activeSukta > 1) {
+                loadSukta(activeMandala, activeSukta - 1, 0);
+            }
+        }
+
+        // Keyboard Shortcuts (Arrow keys to navigate, Spacebar to play/pause)
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                // Don't intercept if user is typing in an input
+                if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                    return;
+                }
+                if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    stepRik(1);
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    stepRik(-1);
+                } else if (e.key === ' ') {
+                    e.preventDefault();
+                    togglePlayChanting();
+                }
+            });
+        }
+
+        function togglePlayChanting() {
+            if (!coreAudio.src) return;
+
+            if (coreAudio.paused) {
+                coreAudio.play().then(() => {
+                    playIcon.className = 'fa fa-pause';
+                    trackStatus.textContent = 'Chanting...';
+                }).catch(e => {
+                    console.warn(e);
+                    triggerToast("Click play again to start audio.");
+                });
+            } else {
+                coreAudio.pause();
+                playIcon.className = 'fa fa-play';
+                trackStatus.textContent = 'Paused';
+            }
+        }
+
+        // Audio Play / Pause
+        playBtn.addEventListener('click', togglePlayChanting);
+
+        // Audio Finished -> Auto Progress check!
+        coreAudio.addEventListener('ended', () => {
+            playIcon.className = 'fa fa-play';
+            trackStatus.textContent = 'Completed';
+
+            if (isAutoProgress) {
+                if (activeRikIndex + 1 < loadedRiks.length) {
+                    trackStatus.textContent = 'Advancing to next Ṛk...';
+                    setTimeout(() => {
+                        displayMantra(activeRikIndex + 1, true);
+                    }, 500);
+                } else {
+                    triggerToast("सूक्त सम्पूर्णम् (Sukta chanting complete).");
+                }
+            }
+        });
+
+        function pauseAudio() {
+            coreAudio.pause();
+            playIcon.className = 'fa fa-play';
+        }
+
+        function copyMantraText(id) {
+            const el = document.getElementById(`samhita-txt-${id}`);
+            if (el) {
+                navigator.clipboard.writeText(el.textContent.trim());
+                triggerToast("Mantra copied to clipboard!");
+            }
+        }
+
+        // Setup UI Event Listeners
+        function setupEventListeners() {
+            document.getElementById('select-sukta').addEventListener('change', (e) => {
+                loadSukta(activeMandala, parseInt(e.target.value), 0);
+            });
+
+            document.getElementById('strip-prev-sukta').addEventListener('click', () => {
+                if (activeSukta > 1) loadSukta(activeMandala, activeSukta - 1, 0);
+            });
+
+            document.getElementById('strip-next-sukta').addEventListener('click', () => {
+                loadSukta(activeMandala, activeSukta + 1, 0);
+            });
+
+            // Universal Enhanced Quick Jump (Mandala, Ashtaka, Pratika, and Devanagari numerals)
+            const executeQuickJump = (explicitVal) => {
+                const raw = (explicitVal || document.getElementById('quick-jump-input').value || (document.getElementById('quick-jump-input-ashtaka') ? document.getElementById('quick-jump-input-ashtaka').value : '')).trim();
+                if (!raw) return;
+
+                // 1. Convert Devanagari numerals to ASCII digits
+                let input = raw.replace(/[०-९]/g, d => '०१२३४५६७८९'.indexOf(d));
+
+                // 2. Check for Ashtaka prefix (e.g. A1.2.3, a1.1.1.1, अ1.1.1) or 4 coordinates
+                const isAshtakaPrefix = /^[aAअ]/.test(input);
+                const cleaned = input.replace(/^[aAअ\s]+/, '');
+                const parts = cleaned.split(/[\.\,\s\-]+/);
+
+                if (isAshtakaPrefix || parts.length === 4) {
+                    const ash = parseInt(parts[0]);
+                    const adh = parseInt(parts[1]);
+                    const var_ = parseInt(parts[2]);
+                    const v_rik = parts.length >= 4 ? parseInt(parts[3]) : 1;
+                    if (ash >= 1 && ash <= 8 && adh >= 1 && adh <= 8 && var_ >= 1) {
+                        jumpViaAshtaka(ash, adh, var_, v_rik);
+                        return;
+                    }
+                }
+
+                // 3. Check for Mandala notation (e.g. 1.1.1 or 1.1)
+                if (parts.length >= 2 && !isNaN(parseInt(parts[0])) && !isNaN(parseInt(parts[1]))) {
+                    const m = parseInt(parts[0]);
+                    const s = parseInt(parts[1]);
+                    const r = parts.length >= 3 ? parseInt(parts[2]) : 1;
+                    if (m >= 1 && m <= 10 && s >= 1) {
+                        activeMandala = m;
+                        document.getElementById('select-mandala').value = m;
+                        loadSuktaOptions(m).then(() => {
+                            loadSukta(m, s, Math.max(0, r - 1));
+                        });
+                        triggerToast(`जम्प: मण्डल ${toDeva(m)} • सूक्त ${toDeva(s)} • ऋक् ${toDeva(r)}`);
+                        return;
+                    }
+                }
+
+                // 4. Check for Mantra Pratika text lookup
+                fetch(`/apps/api/rigveda/pratika?q=${encodeURIComponent(raw)}&limit=5`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.items && data.items.length > 0) {
+                            const first = data.items[0];
+                            jumpToMantraFromIndex(first.mandala, first.sukta, first.rik);
+                            triggerToast(`प्रतीकः ${first.pratika.slice(0, 30)}... (${toDeva(first.mandala)}.${toDeva(first.sukta)}.${toDeva(first.rik)})`);
+                        } else {
+                            triggerToast(`Mantra not found for "${raw}". Enter format 1.1.1 or A1.1.1`);
+                        }
+                    })
+                    .catch(() => {
+                        triggerToast("Enter format: Mandala.Sukta.Rik (1.1.1) or A.Ad.V.R (A1.1.1.1)");
+                    });
+            };
+
+            document.getElementById('btn-quick-jump').addEventListener('click', () => executeQuickJump());
+            document.getElementById('quick-jump-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') executeQuickJump();
+            });
+            const btnJumpAsh = document.getElementById('btn-quick-jump-ashtaka');
+            if (btnJumpAsh) {
+                btnJumpAsh.addEventListener('click', () => executeQuickJump(document.getElementById('quick-jump-input-ashtaka').value));
+            }
+            const inputJumpAsh = document.getElementById('quick-jump-input-ashtaka');
+            if (inputJumpAsh) {
+                inputJumpAsh.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') executeQuickJump(inputJumpAsh.value);
+                });
+            }
+
+            // Search Modal
+            const searchModal = document.getElementById('search-modal-overlay');
+            document.getElementById('btn-search-open').addEventListener('click', () => {
+                searchModal.classList.add('active');
+                document.getElementById('input-modal-query').focus();
+            });
+            document.getElementById('btn-close-search').addEventListener('click', () => {
+                searchModal.classList.remove('active');
+            });
+            document.getElementById('btn-submit-search').addEventListener('click', performFullTextSearch);
+            document.getElementById('input-modal-query').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performFullTextSearch();
+            });
+
+            // Indices Modal
+            const idxModal = document.getElementById('indices-modal-overlay');
+            document.getElementById('btn-indices-open').addEventListener('click', () => {
+                idxModal.classList.add('active');
+                openIndexTab(activeIndexAttr || 'pratika');
+            });
+            document.getElementById('btn-close-indices').addEventListener('click', () => {
+                idxModal.classList.remove('active');
+            });
+            document.getElementById('input-indices-filter').addEventListener('input', filterIndicesList);
+        }
+
+        // ── Classification Scheme State & Handlers ──
+        let activeClassificationScheme = 'mandala';
+        let ashtakaTreeData = null;
+        let isSyncingAshtaka = false;
+        let currentVargaRiks = [];
+
+        function switchClassificationScheme(scheme) {
+            activeClassificationScheme = scheme;
+            const btnMandala = document.getElementById('scheme-btn-mandala');
+            const btnAshtaka = document.getElementById('scheme-btn-ashtaka');
+            const coordsMandala = document.getElementById('coords-mandala-group');
+            const coordsAshtaka = document.getElementById('coords-ashtaka-group');
+
+            if (scheme === 'mandala') {
+                btnMandala.classList.add('active');
+                btnAshtaka.classList.remove('active');
+                coordsMandala.style.display = 'flex';
+                coordsAshtaka.style.display = 'none';
+            } else {
+                btnMandala.classList.remove('active');
+                btnAshtaka.classList.add('active');
+                coordsMandala.style.display = 'none';
+                coordsAshtaka.style.display = 'flex';
+
+                if (loadedRiks && loadedRiks[activeRikIndex]) {
+                    const cur = loadedRiks[activeRikIndex];
+                    syncAshtakaDropdowns(cur.ashtaka, cur.adhyaya, cur.varga, cur.rik);
+                }
+            }
+        }
+
+        async function populateAshtakaOptions() {
+            try {
+                const res = await fetch('/apps/api/rigveda/ashtaka_tree');
+                const data = await res.json();
+                if (!data.success || !data.ashtakas) return;
+                ashtakaTreeData = data.ashtakas;
+
+                const selAsh = document.getElementById('select-ashtaka');
+                selAsh.innerHTML = '';
+                ashtakaTreeData.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.ashtaka;
+                    opt.textContent = `अष्टक ${toDeva(a.ashtaka)}`;
+                    selAsh.appendChild(opt);
+                });
+
+                selAsh.addEventListener('change', onAshtakaChange);
+                document.getElementById('select-adhyaya').addEventListener('change', onAdhyayaChange);
+                document.getElementById('select-varga').addEventListener('change', onVargaChange);
+                document.getElementById('select-varga-rik').addEventListener('change', onVargaRikChange);
+
+                await updateAdhyayaOptions(1, 1);
+            } catch (e) {
+                console.error("Error loading Ashtaka tree:", e);
+            }
+        }
+
+        async function updateAdhyayaOptions(ashNum, targetAdh = 1) {
+            const selAdh = document.getElementById('select-adhyaya');
+            selAdh.innerHTML = '';
+            const ashObj = (ashtakaTreeData || []).find(a => a.ashtaka === ashNum);
+            if (!ashObj) return;
+
+            ashObj.adhyayas.forEach(ad => {
+                const opt = document.createElement('option');
+                opt.value = ad.adhyaya;
+                opt.textContent = `अध्याय ${toDeva(ad.adhyaya)}`;
+                selAdh.appendChild(opt);
+            });
+
+            selAdh.value = targetAdh;
+            await updateVargaOptions(ashNum, targetAdh, 1);
+        }
+
+        async function updateVargaOptions(ashNum, adhNum, targetVarga = 1) {
+            const selVarga = document.getElementById('select-varga');
+            selVarga.innerHTML = '';
+            const ashObj = (ashtakaTreeData || []).find(a => a.ashtaka === ashNum);
+            const adhObj = ashObj ? ashObj.adhyayas.find(d => d.adhyaya === adhNum) : null;
+            const totalVargas = adhObj ? adhObj.total_vargas : 35;
+
+            for (let v = 1; v <= totalVargas; v++) {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = `वर्ग ${toDeva(v)}`;
+                selVarga.appendChild(opt);
+            }
+
+            selVarga.value = Math.min(targetVarga, totalVargas);
+            await loadVargaRikOptions(ashNum, adhNum, selVarga.value);
+        }
+
+        async function loadVargaRikOptions(ashNum, adhNum, vargaNum, targetRikNum = null) {
+            const selRik = document.getElementById('select-varga-rik');
+            selRik.innerHTML = '';
+
+            try {
+                const res = await fetch(`/apps/api/rigveda/varga/${ashNum}/${adhNum}/${vargaNum}`);
+                if (!res.ok) {
+                    console.warn(`Failed to load varga riks (HTTP ${res.status})`);
+                    return;
+                }
+                const data = await res.json();
+                if (!data.success || !data.riks) return;
+                currentVargaRiks = data.riks;
+
+                data.riks.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r.varga_rik;
+                    opt.textContent = `ऋक् ${toDeva(r.varga_rik)} (${toDeva(r.mandala)}.${toDeva(r.sukta)}.${toDeva(r.rik)})`;
+                    selRik.appendChild(opt);
+                });
+
+                if (targetRikNum) {
+                    const match = data.riks.find(r => r.rik === targetRikNum);
+                    if (match) selRik.value = match.varga_rik;
+                }
+            } catch (e) {
+                console.error("Error loading varga riks:", e);
+            }
+        }
+
+        function onAshtakaChange(e) {
+            if (isSyncingAshtaka) return;
+            const ash = parseInt(e.target.value);
+            updateAdhyayaOptions(ash, 1).then(() => {
+                triggerAshtakaJump();
+            });
+        }
+
+        function onAdhyayaChange(e) {
+            if (isSyncingAshtaka) return;
+            const ash = parseInt(document.getElementById('select-ashtaka').value);
+            const adh = parseInt(e.target.value);
+            updateVargaOptions(ash, adh, 1).then(() => {
+                triggerAshtakaJump();
+            });
+        }
+
+        function onVargaChange(e) {
+            if (isSyncingAshtaka) return;
+            const ash = parseInt(document.getElementById('select-ashtaka').value);
+            const adh = parseInt(document.getElementById('select-adhyaya').value);
+            const var_ = parseInt(e.target.value);
+            loadVargaRikOptions(ash, adh, var_).then(() => {
+                triggerAshtakaJump();
+            });
+        }
+
+        function onVargaRikChange(e) {
+            if (isSyncingAshtaka) return;
+            triggerAshtakaJump();
+        }
+
+        async function triggerAshtakaJump() {
+            const ash = parseInt(document.getElementById('select-ashtaka').value);
+            const adh = parseInt(document.getElementById('select-adhyaya').value);
+            const var_ = parseInt(document.getElementById('select-varga').value);
+            const vRik = parseInt(document.getElementById('select-varga-rik').value || 1);
+            await jumpViaAshtaka(ash, adh, var_, vRik);
+        }
+
+        async function jumpViaAshtaka(ashtaka, adhyaya, varga, rik = 1) {
+            try {
+                const res = await fetch(`/apps/api/rigveda/ashtaka_to_mandala?ashtaka=${ashtaka}&adhyaya=${adhyaya}&varga=${varga}&rik=${rik}`);
+                const data = await res.json();
+                if (data.success) {
+                    activeMandala = data.mandala;
+                    document.getElementById('select-mandala').value = data.mandala;
+                    await loadSuktaOptions(data.mandala);
+                    await loadSukta(data.mandala, data.sukta, Math.max(0, data.rik - 1));
+                    triggerToast(`जम्प: अष्टक ${toDeva(ashtaka)}.${toDeva(adhyaya)}.${toDeva(varga)}.${toDeva(data.varga_rik)} (मण्डल ${toDeva(data.mandala)}.${toDeva(data.sukta)}.${toDeva(data.rik)})`);
+                } else {
+                    triggerToast(`Varga not found: Ashtaka ${ashtaka}, Adhyaya ${adhyaya}, Varga ${varga}`);
+                }
+            } catch (e) {
+                console.error(e);
+                triggerToast("Error jumping to Ashtaka coordinate");
+            }
+        }
+
+        async function syncAshtakaDropdowns(ash, adh, var_, rik) {
+            if (!ashtakaTreeData || isSyncingAshtaka) return;
+            isSyncingAshtaka = true;
+            try {
+                const selAsh = document.getElementById('select-ashtaka');
+                const selAdh = document.getElementById('select-adhyaya');
+                const selVar = document.getElementById('select-varga');
+
+                if (selAsh && selAsh.value != ash) selAsh.value = ash;
+                await updateAdhyayaOptions(ash, adh);
+                if (selAdh && selAdh.value != adh) selAdh.value = adh;
+                await updateVargaOptions(ash, adh, var_);
+                if (selVar && selVar.value != var_) selVar.value = var_;
+                await loadVargaRikOptions(ash, adh, var_, rik);
+            } catch (e) {
+                console.error("Error syncing Ashtaka dropdowns:", e);
+            } finally {
+                isSyncingAshtaka = false;
+            }
+        }
+
+        // ── Mantra Pratīka (मन्त्रानुक्रमणिका) Concordance ──
+        let pratikaLetters = null;
+        let activePratikaLetter = 'अ';
+        let currentPratikaMantras = [];
+        let pratikaSearchTimer = null;
+
+        async function loadPratikaTab() {
+            document.getElementById('indices-akshara-bar').style.display = 'flex';
+            const filterInput = document.getElementById('input-indices-filter');
+            filterInput.placeholder = 'Search mantra text (e.g. अग्निमीळे, नासदासीत्, सङ्गच्छध्वं)...';
+
+            if (!pratikaLetters) {
+                try {
+                    const res = await fetch('/apps/api/rigveda/pratika_letters');
+                    if (!res.ok) {
+                        console.warn(`Failed to load pratika letters (HTTP ${res.status})`);
+                        return;
+                    }
+                    const data = await res.json();
+                    if (data.success) {
+                        pratikaLetters = data.letters;
+                        renderAksharaBar(pratikaLetters);
+                    }
+                } catch (e) {
+                    console.error("Error loading pratika letters:", e);
+                }
+            } else {
+                renderAksharaBar(pratikaLetters);
+            }
+
+            await selectPratikaLetter(activePratikaLetter);
+        }
+
+        function renderAksharaBar(letters) {
+            const bar = document.getElementById('indices-akshara-bar');
+            bar.innerHTML = '';
+            letters.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `akshara-btn ${item.letter === activePratikaLetter ? 'active' : ''}`;
+                btn.id = `akshara-btn-${item.letter}`;
+                btn.innerHTML = `${item.letter} <span style="font-size:10px; opacity:0.75; font-weight:500; margin-left:3px;">${toDeva(item.count)}</span>`;
+                btn.title = `अक्षरम् '${item.letter}' (${item.count} मन्त्राः)`;
+                btn.onclick = () => selectPratikaLetter(item.letter);
+                bar.appendChild(btn);
+            });
+        }
+
+        async function selectPratikaLetter(letter) {
+            activePratikaLetter = letter;
+            document.querySelectorAll('.akshara-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `akshara-btn-${letter}`);
+            });
+
+            const box = document.getElementById('indices-results-box');
+            box.innerHTML = `<p style="text-align:center; padding:30px;"><i class="fa fa-spinner fa-spin" style="color:#f59e0b;"></i> Loading mantras for '${letter}'...</p>`;
+
+            try {
+                const res = await fetch(`/apps/api/rigveda/pratika?letter=${encodeURIComponent(letter)}`);
+                if (!res.ok) {
+                    box.innerHTML = `<p style="color:#ef4444; padding:20px; text-align:center;">Failed to load mantras (HTTP ${res.status}).</p>`;
+                    return;
+                }
+                const data = await res.json();
+                if (data.success && data.items) {
+                    currentPratikaMantras = data.items;
+                    renderPratikaList(data.items);
+                } else {
+                    box.innerHTML = '<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No mantras found for this letter.</p>';
+                }
+            } catch (e) {
+                box.innerHTML = `<p style="color:#ef4444; padding:20px;">Error: ${e.message}</p>`;
+            }
+        }
+
+        function renderPratikaList(items) {
+            const box = document.getElementById('indices-results-box');
+            if (!items || items.length === 0) {
+                box.innerHTML = '<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No matching mantras found.</p>';
+                return;
+            }
+
+            box.innerHTML = `
+                <div style="font-size:12.5px; color:var(--t-text-secondary); margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>Found <b>${toDeva(items.length)}</b> mantras:</span>
+                    <span style="font-size:11px; opacity:0.8;">Click any mantra to jump directly</span>
+                </div>
+            `;
+
+            items.forEach(it => {
+                const card = document.createElement('div');
+                card.className = 'pratika-card';
+                card.innerHTML = `
+                    <div class="pratika-text">${it.pratika_svara || it.pratika}</div>
+                    <div class="pratika-meta-row">
+                        <span class="pratika-coord-badge"><i class="fa fa-om"></i> मण्डल ${toDeva(it.mandala)}.${toDeva(it.sukta)}.${toDeva(it.rik)}</span>
+                        ${it.ashtaka ? `<span class="pratika-coord-badge" style="background:rgba(56,189,248,0.15); border-color:rgba(56,189,248,0.35); color:#38bdf8;"><i class="fa fa-layer-group"></i> अष्टक ${toDeva(it.ashtaka)}.${toDeva(it.adhyaya)}.${toDeva(it.varga)}</span>` : ''}
+                        <span class="pratika-tag"><b>ऋषिः:</b> ${it.rishi || '-'}</span>
+                        <span class="pratika-tag"><b>देवता:</b> ${it.devata || '-'}</span>
+                        <span class="pratika-tag"><b>छन्दः:</b> ${it.chandas || '-'}</span>
+                    </div>
+                `;
+                card.onclick = () => jumpToMantraFromIndex(it.mandala, it.sukta, it.rik);
+                box.appendChild(card);
+            });
+        }
+
+        function jumpToMantraFromIndex(mandala, sukta, rik) {
+            document.getElementById('indices-modal-overlay').classList.remove('active');
+            activeMandala = mandala;
+            document.getElementById('select-mandala').value = mandala;
+            loadSuktaOptions(mandala).then(() => {
+                loadSukta(mandala, sukta, Math.max(0, rik - 1));
+            });
+            triggerToast(`जम्प: ऋग्वेदः ${toDeva(mandala)}.${toDeva(sukta)}.${toDeva(rik)}`);
+        }
+
+        // Full-Text Search
+        async function performFullTextSearch() {
+            const query = document.getElementById('input-modal-query').value.trim();
+            if (!query) return;
+
+            const resBox = document.getElementById('search-results-box');
+            resBox.innerHTML = '<p style="text-align:center; padding:30px;"><i class="fa fa-spinner fa-spin" style="color:#f59e0b;"></i> Searching...</p>';
+
+            try {
+                const res = await fetch(`/apps/api/rigveda/search?q=${encodeURIComponent(query)}`);
+                const data = await res.json();
+                if (!data.success || data.results.length === 0) {
+                    resBox.innerHTML = `<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No matching verses found for "${query}".</p>`;
+                    return;
+                }
+
+                resBox.innerHTML = '';
+                data.results.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'result-entry';
+                    item.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; font-size:13px; color:#f59e0b; font-weight:700; margin-bottom:6px;">
+                            <span>ऋग्वेदः ${toDeva(r.mandala)}.${toDeva(r.sukta)}.${toDeva(r.rik)}</span>
+                            <span>${r.rishi || ''} | ${r.devata || ''}</span>
+                        </div>
+                        <p style="font-family:'Noto Serif Devanagari', serif; font-size:16px; line-height:1.8; margin-bottom:6px;">
+                            ${r.samhita_hl}
+                        </p>
+                        ${r.bhashya_snip ? `<p style="font-size:13px; color:var(--t-text-muted); font-family:'Noto Sans Devanagari', sans-serif;">भाष्य: ${r.bhashya_snip}</p>` : ''}
+                    `;
+                    item.addEventListener('click', () => {
+                        document.getElementById('search-modal-overlay').classList.remove('active');
+                        activeMandala = r.mandala;
+                        document.getElementById('select-mandala').value = r.mandala;
+                        loadSuktaOptions(r.mandala).then(() => {
+                            loadSukta(r.mandala, r.sukta, Math.max(0, r.rik - 1));
+                        });
+                    });
+                    resBox.appendChild(item);
+                });
+            } catch (e) {
+                resBox.innerHTML = `<p style="color:#ef4444; padding:20px;">Error: ${e.message}</p>`;
+            }
+        }
+
+        // Concordance Indices State & Controller
+        let currentIndicesData = { attr: 'pratika', items: [] };
+        let activeIndexAttr = 'pratika';
+
+        // Open Concordance Indices Tab (Pratika, Rishi, Devata, Chandas)
+        async function openIndexTab(attr) {
+            activeIndexAttr = attr;
+            document.getElementById('indices-tabs-row').style.display = 'flex';
+            document.getElementById('indices-filter-wrap').style.display = 'flex';
+            document.getElementById('indices-drilldown-header').style.display = 'none';
+            document.getElementById('input-indices-filter').value = '';
+            document.getElementById('btn-clear-indices-filter').style.display = 'none';
+
+            ['pratika', 'rishi', 'devata', 'chandas'].forEach(a => {
+                const tab = document.getElementById(`idx-tab-${a}`);
+                if (tab) tab.classList.toggle('active', a === attr);
+            });
+
+            if (attr === 'pratika') {
+                await loadPratikaTab();
+                return;
+            }
+
+            // Rishi / Devata / Chandas tab
+            document.getElementById('indices-akshara-bar').style.display = 'none';
+            document.getElementById('input-indices-filter').placeholder = `Filter ${attr} by name...`;
+            const box = document.getElementById('indices-results-box');
+            box.innerHTML = '<p style="text-align:center; padding:30px;"><i class="fa fa-spinner fa-spin" style="color:#f59e0b;"></i> Loading...</p>';
+
+            try {
+                const res = await fetch(`/apps/api/rigveda/indices/${attr}`);
+                const data = await res.json();
+                if (!data.success || data.items.length === 0) {
+                    box.innerHTML = '<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No entries found.</p>';
+                    return;
+                }
+
+                currentIndicesData = { attr, items: data.items };
+                renderIndicesList(data.items);
+            } catch (e) {
+                box.innerHTML = `<p style="color:#ef4444; padding:20px;">Error: ${e.message}</p>`;
+            }
+        }
+
+        // Render filtered or full list of Seers/Deities/Meters
+        function renderIndicesList(items) {
+            const box = document.getElementById('indices-results-box');
+            if (items.length === 0) {
+                box.innerHTML = '<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No matching entries found.</p>';
+                return;
+            }
+
+            box.innerHTML = '';
+            items.forEach(it => {
+                const row = document.createElement('div');
+                row.className = 'result-entry';
+                row.style.display = 'flex';
+                row.style.alignItems = 'center';
+                row.style.justifyContent = 'space-between';
+                row.style.cursor = 'pointer';
+                row.innerHTML = `
+                    <span style="font-family:'Noto Serif Devanagari', serif; font-size:15px; font-weight:600;">${it.name}</span>
+                    <span style="font-size:12px; background:var(--t-bg-overlay); border:1px solid var(--t-border); padding:4px 12px; border-radius:20px;"><b style="color:#f59e0b;">${toDeva(it.count)}</b> ऋक्</span>
+                `;
+                row.addEventListener('click', () => {
+                    browseByAttribute(currentIndicesData.attr, it.name);
+                });
+                box.appendChild(row);
+            });
+        }
+
+        // Live Filter as user types
+        function filterIndicesList() {
+            const q = document.getElementById('input-indices-filter').value.trim();
+            const clearBtn = document.getElementById('btn-clear-indices-filter');
+            if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
+
+            if (activeIndexAttr === 'pratika') {
+                clearTimeout(pratikaSearchTimer);
+                if (!q) {
+                    renderPratikaList(currentPratikaMantras);
+                    return;
+                }
+                pratikaSearchTimer = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/apps/api/rigveda/pratika?q=${encodeURIComponent(q)}&limit=100`);
+                        const data = await res.json();
+                        if (data.success) {
+                            renderPratikaList(data.items);
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }, 200);
+                return;
+            }
+
+            if (!q) {
+                renderIndicesList(currentIndicesData.items);
+                return;
+            }
+            const filtered = currentIndicesData.items.filter(it => it.name.toLowerCase().includes(q.toLowerCase()));
+            renderIndicesList(filtered);
+        }
+
+        function clearIndicesFilter() {
+            document.getElementById('input-indices-filter').value = '';
+            document.getElementById('btn-clear-indices-filter').style.display = 'none';
+            if (activeIndexAttr === 'pratika') {
+                renderPratikaList(currentPratikaMantras);
+            } else {
+                renderIndicesList(currentIndicesData.items);
+            }
+        }
+
+        // Browse all Ṛks by a specific Rishi, Devata, or Chandas (Just like Sanatana Website)
+        async function browseByAttribute(attr, val) {
+            if (!val || val === '-') return;
+
+            const modal = document.getElementById('indices-modal-overlay');
+            modal.classList.add('active');
+
+            // Switch to drill-down view
+            document.getElementById('indices-tabs-row').style.display = 'none';
+            document.getElementById('indices-akshara-bar').style.display = 'none';
+            document.getElementById('indices-filter-wrap').style.display = 'none';
+            const drillHeader = document.getElementById('indices-drilldown-header');
+            drillHeader.style.display = 'flex';
+
+            const attrLabels = { 'rishi': 'ऋषिः', 'devata': 'देवता', 'chandas': 'छन्दः' };
+            document.getElementById('indices-drilldown-title').textContent = `${attrLabels[attr] || attr}: ${val}`;
+            const countSpan = document.getElementById('indices-drilldown-count');
+            countSpan.textContent = 'Loading verses...';
+
+            const box = document.getElementById('indices-results-box');
+            box.innerHTML = '<p style="text-align:center; padding:30px;"><i class="fa fa-spinner fa-spin" style="color:#f59e0b;"></i> Loading verses...</p>';
+
+            try {
+                const res = await fetch(`/apps/api/rigveda/by_attr/${attr}?val=${encodeURIComponent(val)}`);
+                const data = await res.json();
+                if (!data.success || !data.verses || data.verses.length === 0) {
+                    box.innerHTML = '<p style="text-align:center; padding:30px; color:var(--t-text-muted);">No verses found.</p>';
+                    countSpan.textContent = '0 ऋक्';
+                    return;
+                }
+
+                countSpan.textContent = `${toDeva(data.total)} ऋक्`;
+
+                box.innerHTML = `
+                    <div style="margin-bottom: 10px; font-size:13px; color:var(--t-text-secondary); font-weight:600;">
+                        Click any Ṛk coordinate to jump directly to it:
+                    </div>
+                    <div class="attr-pill-grid" id="attr-verses-grid"></div>
+                `;
+
+                const grid = document.getElementById('attr-verses-grid');
+                data.verses.forEach(v => {
+                    const pill = document.createElement('div');
+                    pill.className = 'attr-rik-pill';
+                    pill.innerHTML = `
+                        <span>${toDeva(v.mandala)}.${toDeva(v.sukta)}.${toDeva(v.rik)}</span>
+                        <span style="font-size:10px; opacity:0.75; font-family:'Inter', sans-serif;">(${v.id})</span>
+                    `;
+                    pill.title = v.samhita_snip || `Ṛk ${v.id}`;
+                    pill.addEventListener('click', () => {
+                        modal.classList.remove('active');
+                        activeMandala = v.mandala;
+                        document.getElementById('select-mandala').value = v.mandala;
+                        loadSuktaOptions(v.mandala).then(() => {
+                            loadSukta(v.mandala, v.sukta, Math.max(0, v.rik - 1));
+                        });
+                    });
+                    grid.appendChild(pill);
+                });
+            } catch (e) {
+                box.innerHTML = `<p style="color:#ef4444; padding:20px;">Error: ${e.message}</p>`;
+            }
+        }
+
+        // Return from Verse Grid back to the Category Index list
+        function backToIndicesList() {
+            document.getElementById('indices-tabs-row').style.display = 'flex';
+            document.getElementById('indices-filter-wrap').style.display = 'flex';
+            document.getElementById('indices-drilldown-header').style.display = 'none';
+            renderIndicesList(currentIndicesData.items);
+        }
+
+        // ── Rigveda Multi-Script Transliterator Integration ──
+        let currentRigvedaScript = 'sa';
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const scriptParam = urlParams.get('script');
+            if (scriptParam && ['sa', 'ka', 'te', 'ta', 'en'].includes(scriptParam)) {
+                currentRigvedaScript = scriptParam;
+            } else {
+                currentRigvedaScript = localStorage.getItem('smsdl_rigveda_reader_script') || 'sa';
+            }
+        } catch(e) {}
+
+        const rigvedaScriptLabelMap = {
+            sa: 'संस्कृतम्',
+            ka: 'ಕನ್ನಡ',
+            te: 'తెలుగు',
+            ta: 'தமிழ்',
+            en: 'IAST'
+        };
+
+        function toggleRigvedaScriptPicker(event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            const popover = document.getElementById('rigvedaScriptPickerPopover');
+            if (!popover) return;
+            popover.style.display = (popover.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function closeRigvedaScriptPicker() {
+            const popover = document.getElementById('rigvedaScriptPickerPopover');
+            if (popover) popover.style.display = 'none';
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = document.getElementById('rigvedaScriptPickerBtn');
+            const popover = document.getElementById('rigvedaScriptPickerPopover');
+            if (popover && popover.style.display === 'block') {
+                if ((!btn || !btn.contains(e.target)) && !popover.contains(e.target)) {
+                    popover.style.display = 'none';
+                }
+            }
+        });
+
+        function changeRigvedaScript(scriptCode, save = true) {
+            if (!scriptCode) scriptCode = 'sa';
+            currentRigvedaScript = scriptCode;
+            if (save) {
+                try { localStorage.setItem('smsdl_rigveda_reader_script', scriptCode); } catch(e) {}
+            }
+
+            const labelEl = document.getElementById('rigvedaScriptPickerActiveLabel');
+            if (labelEl) labelEl.textContent = rigvedaScriptLabelMap[scriptCode] || 'संस्कृतम्';
+
+            document.querySelectorAll('#rigvedaScriptPickerPopover .script-option-item').forEach(item => {
+                const isMatch = item.getAttribute('data-script') === scriptCode;
+                item.classList.toggle('active', isMatch);
+                const chk = item.querySelector('.script-check');
+                if (chk) chk.style.display = isMatch ? 'inline' : 'none';
+            });
+
+            closeRigvedaScriptPicker();
+            applyActiveScriptToRigveda();
+        }
+
+        function applyActiveScriptToRigveda() {
+            if (!window.SamshoTranslit) return;
+            const viewport = document.getElementById('mantra-viewport');
+            if (viewport) {
+                window.SamshoTranslit.transliterateElement(viewport, currentRigvedaScript);
+            }
+        }
+
+        function initRigvedaScriptChanger() {
+            changeRigvedaScript(currentRigvedaScript, false);
+        }
+
+        window.addEventListener('DOMContentLoaded', startApp);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play / क्रीडा — Admin Dashboard</title>
+  <link rel="stylesheet" href="/quiz/style.css?v=100">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    /* Tabs Layout */
+    .admin-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.25rem;
+      overflow-x: auto;
+    }
+    .admin-tab {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      padding: 0.75rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .admin-tab:hover {
+      background: var(--t-border-light);
+      color: #fff;
+    }
+    .admin-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 -2px 10px rgba(129, 140, 248, 0.25);
+    }
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Synonym pair rows */
+    .pair-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .pair-row input {
+      margin-bottom: 0 !important;
+    }
+
+    /* Lang tabs for quiz */
+    .lang-tab {
+      background: var(--bg-white);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      margin-bottom: -1px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .lang-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Export dropdown */
+    .export-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .export-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--t-bg-overlay);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 6px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      min-width: 180px;
+      z-index: 100;
+      padding: 0.35rem 0;
+      margin-top: 4px;
+      animation: dropdownFadeIn 0.15s ease;
+    }
+    @keyframes dropdownFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .export-dropdown-menu.show {
+      display: block;
+    }
+    .export-dropdown-menu button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 1rem;
+      border: none;
+      background: transparent;
+      font-size: 0.84rem;
+      color: var(--text-primary, var(--t-text-primary));
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+    .export-dropdown-menu button:hover {
+      background: var(--accent-light, rgba(129, 140, 248, 0.15));
+      color: #fff;
+    }
+    .export-dropdown-menu .dropdown-divider {
+      height: 1px;
+      background: var(--border, var(--t-border));
+      margin: 0.25rem 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="play-admin.html" class="navbar-brand"><img src="/static/images/game_admin.png" class="navbar-logo" alt="Games Admin Logo">क्रीडा <span class="highlight">प्रबन्धकः</span></a>
+    </div>
+    <div class="navbar-links">
+      <a href="/admin/hub">🏠 Admin Hub</a>
+      <a href="/play/">Play Games</a>
+      <a href="play-admin.html" class="active">Dashboard</a>
+      <a href="#" id="logoutBtn" style="color: #fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container container-lg">
+    
+    <!-- Admin Tabs Navigation -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('synonyms')">🔗 पर्याय-मेलनम्</button>
+      <button class="admin-tab" onclick="switchTab('word-builder')">🧩 शब्द-रचना</button>
+      <button class="admin-tab" onclick="switchTab('word-search')">🔍 शब्दान्वेषणम्</button>
+    </div>
+
+    <!-- =========================================================================
+         TAB 2: SYNONYM MATCH
+         ========================================================================= -->
+    <div id="tab-synonyms" class="tab-content active">
+      <div class="admin-header">
+        <h1>🔗 Synonym Match Sets</h1>
+        <div class="btn-group">
+          <div class="export-dropdown">
+            <button class="btn btn-secondary btn-sm" id="exportSynBtn">📥 Export All ▾</button>
+            <div class="export-dropdown-menu" id="exportSynMenu">
+              <button onclick="exportSynonymJSON()">📄 Export as JSON</button>
+              <button onclick="exportSynonymExcel()">📊 Export as Excel (.xlsx)</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openUploadModal('synonyms')">📤 Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="openAiPromptModal()" style="background: linear-gradient(135deg, var(--t-accent-alpha-15), var(--t-accent-alpha-15)); border: 1.5px solid var(--t-accent-alpha-40); color: var(--t-text-secondary);">✨ AI Prompt Guide</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddSynonymModal()">➕ Add New Set</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="synTotalSets">...</div>
+          <div class="stat-label">Total Sets</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="synTotalPairs">...</div>
+          <div class="stat-label">Total Synonym Pairs</div>
+        </div>
+      </div>
+
+      <!-- Selection Action Bar -->
+      <div class="selection-bar" id="synSelectionBar" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="synSelectedCount" style="font-weight: 600; font-size: 0.88rem;">0 selected</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelectedSynonyms()">🗑️ Delete Selected</button>
+          <button class="btn btn-sm" onclick="clearSynSelection()" style="color: var(--text-muted);">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="synSelectAll" onclick="toggleSelectAllSyn(this.checked)"></th>
+              <th>ID</th>
+              <th>Set Title</th>
+              <th>Pairs Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="synSetsBody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem;"></div>
+                <div>Loading data...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 3: WORD BUILDER
+         ========================================================================= -->
+    <div id="tab-word-builder" class="tab-content">
+      <div class="admin-header">
+        <h1>🧩 Word Builder Sets</h1>
+        <div class="btn-group">
+          <div class="export-dropdown">
+            <button class="btn btn-secondary btn-sm" id="exportWbBtn">📥 Export All ▾</button>
+            <div class="export-dropdown-menu" id="exportWbMenu">
+              <button onclick="exportWbJSON()">📄 Export as JSON</button>
+              <button onclick="exportWbExcel()">📊 Export as Excel (.xlsx)</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openUploadModal('word-builder')">📤 Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="openAiPromptModal()" style="background: linear-gradient(135deg, var(--t-accent-alpha-15), var(--t-accent-alpha-15)); border: 1.5px solid var(--t-accent-alpha-40); color: var(--t-text-secondary);">✨ AI Prompt Guide</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddWbModal()">➕ Add New Set</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="wbTotalSets">...</div>
+          <div class="stat-label">Total Sets</div>
+        </div>
+      </div>
+
+      <!-- Selection Action Bar -->
+      <div class="selection-bar" id="wbSelectionBar" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="wbSelectedCount" style="font-weight: 600; font-size: 0.88rem;">0 selected</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelectedWb()">🗑️ Delete Selected</button>
+          <button class="btn btn-sm" onclick="clearWbSelection()" style="color: var(--text-muted);">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="wbSelectAll" onclick="toggleSelectAllWb(this.checked)"></th>
+              <th>ID</th>
+              <th>Set Title</th>
+              <th>Target Words</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="wbSetsBody">
+            <tr>
+              <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem;"></div>
+                <div>Loading data...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 4: WORD SEARCH
+         ========================================================================= -->
+    <div id="tab-word-search" class="tab-content">
+      <div class="admin-header">
+        <h1>🔍 Word Search Sets</h1>
+        <div class="btn-group">
+          <div class="export-dropdown">
+            <button class="btn btn-secondary btn-sm" id="exportWsBtn">📥 Export All ▾</button>
+            <div class="export-dropdown-menu" id="exportWsMenu">
+              <button onclick="exportWsJSON()">📄 Export as JSON</button>
+              <button onclick="exportWsExcel()">📊 Export as Excel (.xlsx)</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openUploadModal('word-search')">📤 Bulk Upload</button>
+          <button class="btn btn-secondary btn-sm" onclick="openAiPromptModal()" style="background: linear-gradient(135deg, var(--t-accent-alpha-15), var(--t-accent-alpha-15)); border: 1.5px solid var(--t-accent-alpha-40); color: var(--t-text-secondary);">✨ AI Prompt Guide</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddWsModal()">➕ Add New Set</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="wsTotalSets">...</div>
+          <div class="stat-label">Total Sets</div>
+        </div>
+      </div>
+
+      <!-- Selection Action Bar -->
+      <div class="selection-bar" id="wsSelectionBar" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="wsSelectedCount" style="font-weight: 600; font-size: 0.88rem;">0 selected</span>
+          <button class="btn btn-danger btn-sm" onclick="deleteSelectedWs()">🗑️ Delete Selected</button>
+          <button class="btn btn-sm" onclick="clearWsSelection()" style="color: var(--text-muted);">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="wsSelectAll" onclick="toggleSelectAllWs(this.checked)"></th>
+              <th>ID</th>
+              <th>Set Title</th>
+              <th>Grid Size</th>
+              <th>Target Words</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="wsSetsBody">
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem;"></div>
+                <div>Loading data...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       MODALS SECTION
+       ========================================================================= -->
+
+  <!-- Modal 2: Add/Edit Synonym Match Set -->
+  <div class="modal-overlay" id="synonymModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="synModalTitle">Add Synonym Match Set</h2>
+        <button class="modal-close" onclick="closeModal('synonymModal')">✕</button>
+      </div>
+      <form id="synForm" onsubmit="saveSynonymSet(event)">
+        <input type="hidden" id="editSynId">
+        <div class="form-group">
+          <label for="synTitle">Set Title (Devanagari / English)</label>
+          <input type="text" id="synTitle" class="form-input" placeholder="e.g. प्राणी-पर्यायाः" required>
+        </div>
+        <div class="form-group">
+          <label for="synTimeLimit">Time Limit (seconds)</label>
+          <input type="number" id="synTimeLimit" class="form-input" placeholder="e.g. 300 (5 minutes)" min="10" required>
+        </div>
+        <div class="form-group">
+          <label>Synonym Pairs (शब्दः ↔ पर्यायः)</label>
+          <div id="synPairsContainer" style="margin-bottom: 0.75rem;">
+            <!-- dynamic pair rows go here -->
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addSynonymPairRow()">➕ Add Pair Row</button>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="saveSynBtn">💾 Save Set</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Add/Edit Word Builder Set -->
+  <div class="modal-overlay" id="wbModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="wbModalTitle">Add Word Builder Set</h2>
+        <button class="modal-close" onclick="closeModal('wbModal')">✕</button>
+      </div>
+      <form id="wbForm" onsubmit="saveWbSet(event)">
+        <input type="hidden" id="editWbId">
+        <div class="form-group">
+          <label for="wbTitle">Set Title</label>
+          <input type="text" id="wbTitle" class="form-input" placeholder="e.g. देव-नामानि" required>
+        </div>
+        <div class="form-group">
+          <label for="wbTimeLimit">Time Limit (seconds)</label>
+          <input type="number" id="wbTimeLimit" class="form-input" placeholder="e.g. 300 (5 minutes)" min="10" required>
+        </div>
+        <div class="form-group">
+          <label for="wbTargets">Target Words to Find (Comma separated)</label>
+          <input type="text" id="wbTargets" class="form-input" placeholder="e.g. रामः, देवः" required>
+          <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">Words players must build to win.</small>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="saveWbBtn">💾 Save Set</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Add/Edit Word Search Set -->
+  <div class="modal-overlay" id="wsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="wsModalTitle">Add Word Search Set</h2>
+        <button class="modal-close" onclick="closeModal('wsModal')">✕</button>
+      </div>
+      <form id="wsForm" onsubmit="saveWsSet(event)">
+        <input type="hidden" id="editWsId">
+        <div class="form-group">
+          <label for="wsTitle">Set Title</label>
+          <input type="text" id="wsTitle" class="form-input" placeholder="e.g. फल-नामानि" required>
+        </div>
+        <div class="form-group">
+          <label for="wsTimeLimit">Time Limit (seconds)</label>
+          <input type="number" id="wsTimeLimit" class="form-input" placeholder="e.g. 300 (5 minutes)" min="10" required>
+        </div>
+        <div class="form-group">
+          <label for="wsGridSize">Grid Size</label>
+          <select id="wsGridSize" class="form-select" required>
+            <option value="4">4 × 4</option>
+            <option value="5">5 × 5</option>
+            <option value="6">6 × 6</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="wsTargets">Target Words list (Comma separated)</label>
+          <input type="text" id="wsTargets" class="form-input" placeholder="e.g. आम्रम्, कदली, द्राक्षा" required>
+          <small style="color: var(--text-muted); font-size: 0.8rem; display: block; margin-top: 4px;">Words placed inside the grid to find.</small>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="saveWsBtn">💾 Save Set</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Bulk Upload Excel/JSON -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>📤 Bulk Upload (<span id="uploadGameType">Game</span>)</h2>
+        <button class="modal-close" onclick="closeModal('uploadModal')">✕</button>
+      </div>
+      <div style="background: var(--accent-light); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.25rem; font-size: 0.88rem; border: 1px solid var(--t-accent-alpha-20);">
+        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent);">📝 Bulk Upload format:</h3>
+        <p id="uploadFormatInfo" style="margin-bottom: 0.75rem; color: var(--text-secondary);"></p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button id="btnSampleJSON" class="btn btn-secondary btn-sm">📄 Sample JSON</button>
+          <button id="btnSampleExcel" class="btn btn-secondary btn-sm" onclick="downloadSampleExcel()">📊 Excel template</button>
+          <button class="btn btn-sm" onclick="openAiPromptModal()" style="background: linear-gradient(135deg, var(--t-accent-alpha-15), var(--t-accent-alpha-15)); border: 1px solid var(--t-accent-alpha-40); color: var(--t-text-secondary);">✨ AI Prompt Guide</button>
+        </div>
+      </div>
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" accept=".json,.xlsx,.xls" id="fileInput" onchange="handleFileUpload(event)">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">
+          <strong>Click to browse</strong> or drag &amp; drop<br>
+          <small>JSON or Excel files, max 5MB</small>
+        </div>
+      </div>
+      
+      <!-- Import Preview -->
+      <div id="uploadPreviewArea" style="display: none; margin-top: 1rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 1rem; border-radius: var(--radius); font-size: 0.88rem; margin-bottom: 1rem;">
+          <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.95rem;">📊 Import Summary</h4>
+          <p style="margin: 0.25rem 0; color: var(--text-secondary);">Total Sets/Questions: <strong id="previewTotalCount" style="color: var(--text-primary);">0</strong></p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+          <button id="confirmImportBtn" class="btn btn-primary" style="flex: 1;" onclick="confirmImport()">🚀 Confirm Import</button>
+          <button class="btn btn-secondary" onclick="closeModal('uploadModal')">✕ Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: AI Prompt Guide -->
+  <div class="modal-overlay" id="aiPromptModal">
+    <div class="modal" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>✨ AI Game Set Prompts</h2>
+        <button class="modal-close" onclick="closeModal('aiPromptModal')">✕</button>
+      </div>
+      <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem;">
+        Copy the prompt template below and paste it into any AI tool (e.g. ChatGPT, Claude, or other AI assistants) to generate new game sets in the correct JSON format. Then save the response to a file and upload it.
+      </p>
+      
+      <div class="form-group">
+        <label for="aiPromptSelectGame">Select Game Type:</label>
+        <select id="aiPromptSelectGame" class="form-select" onchange="showSelectedPrompt()">
+          <option value="synonyms">🔗 पर्याय-मेलनम् (Synonym Match)</option>
+          <option value="word-builder">🧩 शब्द-र रचना (Word Builder)</option>
+          <option value="word-search">🔍 शब्दान्वेषणम् (Word Search)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Prompt Template:</label>
+        <div style="position: relative; display: flex; flex-direction: column; gap: 0.5rem;">
+          <textarea id="aiPromptTextarea" class="form-textarea" style="min-height: 250px; font-family: monospace; font-size: 0.82rem; background: var(--t-input-bg); line-height: 1.45; border-color: var(--t-accent-alpha-40); color: var(--text-primary);" readonly></textarea>
+          <button class="btn btn-primary btn-sm" onclick="copyPromptToClipboard()" style="background: var(--accent); align-self: flex-end;">📋 Copy Prompt</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       JAVASCRIPT APP CONTROLLER
+       ========================================================================= -->
+  <script>
+    // Constants
+    const API_BASE = '/api/v1';
+
+    // Global States
+    let currentTab = 'synonyms';
+    let uploadedData = null;
+    let uploadTargetType = ''; // 'synonyms', 'word-builder', 'word-search'
+
+
+    // Auth validation
+    if (sessionStorage.getItem('isPlayAdmin') !== 'true') {
+      window.location.href = 'play-admin-login.html';
+    }
+
+    // Logout controller
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('isPlayAdmin');
+      sessionStorage.removeItem('isAdmin');
+      window.location.href = '/logout?redirect=/play/play-admin-login.html';
+    });
+
+    // Close modals on escape
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
+      }
+    });
+
+    // Tab switcher
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.admin-tab').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelectorAll('.tab-content').forEach(cont => {
+        cont.classList.remove('active');
+      });
+      
+      const activeBtn = document.querySelector(`.admin-tab[onclick="switchTab('${tab}')"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      const activeContent = document.getElementById(`tab-${tab}`);
+      if (activeContent) activeContent.classList.add('active');
+
+      // Refresh data for the active tab
+      refreshData();
+    }
+
+    // Refresh active tab data
+    function refreshData() {
+      if (currentTab === 'synonyms') {
+        loadSynonymSets();
+      } else if (currentTab === 'word-builder') {
+        loadWbSets();
+      } else if (currentTab === 'word-search') {
+        loadWsSets();
+      }
+    }
+
+    // Initial load
+    window.addEventListener('load', () => {
+      switchTab('synonyms');
+      
+      // Close drop-downs if clicking elsewhere
+      window.addEventListener('click', (e) => {
+        if (!e.target.matches('.btn-sm')) {
+          document.querySelectorAll('.export-dropdown-menu').forEach(el => el.classList.remove('show'));
+        }
+      });
+
+      // Bind dropdown triggers
+      bindDropdown('exportSynBtn', 'exportSynMenu');
+      bindDropdown('exportWbBtn', 'exportWbMenu');
+      bindDropdown('exportWsBtn', 'exportWsMenu');
+
+
+    });
+
+    function bindDropdown(btnId, menuId) {
+      const btn = document.getElementById(btnId);
+      const menu = document.getElementById(menuId);
+      if (btn && menu) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.export-dropdown-menu').forEach(el => {
+            if (el !== menu) el.classList.remove('show');
+          });
+          menu.classList.toggle('show');
+        });
+      }
+    }
+
+    // Toast helpers
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // =========================================================================
+    // 🔗 TAB 2: SYNONYM MATCH CONTROLLER
+    // =========================================================================
+    let synonymSets = [];
+    let selectedSynIds = new Set();
+
+    async function loadSynonymSets() {
+      try {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets`);
+        const data = await res.json();
+        if (data.success) {
+          synonymSets = data.sets;
+          document.getElementById('synTotalSets').textContent = synonymSets.length;
+          
+          let totalPairs = synonymSets.reduce((sum, item) => sum + (item.pair_count || 0), 0);
+          document.getElementById('synTotalPairs').textContent = totalPairs;
+
+          renderSynTable();
+        }
+      } catch (err) {
+        showToast("Error loading synonym sets.", "error");
+      }
+    }
+
+    function renderSynTable() {
+      const body = document.getElementById('synSetsBody');
+      body.innerHTML = '';
+      synonymSets.forEach(set => {
+        const tr = document.createElement('tr');
+        if (selectedSynIds.has(set.id)) tr.className = 'row-selected';
+        tr.innerHTML = `
+          <td><input type="checkbox" class="syn-cb" data-id="${set.id}" ${selectedSynIds.has(set.id) ? 'checked' : ''} onchange="toggleSelectSyn(${set.id}, this.checked)"></td>
+          <td><strong>#${set.id}</strong></td>
+          <td style="font-family: var(--font-sanskrit); font-size: 1.1rem; font-weight: 700;">${set.title}</td>
+          <td>${set.pair_count} pairs</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="openEditSynonymModal(${set.id})">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteSynonymSet(${set.id})">🗑️</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+      updateSynSelectionBar();
+    }
+
+    function toggleSelectSyn(id, checked) {
+      if (checked) selectedSynIds.add(id);
+      else selectedSynIds.delete(id);
+      refreshData();
+    }
+
+    function toggleSelectAllSyn(checked) {
+      selectedSynIds.clear();
+      if (checked) {
+        document.querySelectorAll('.syn-cb').forEach(cb => {
+          selectedSynIds.add(parseInt(cb.dataset.id));
+        });
+      }
+      refreshData();
+    }
+
+    function clearSynSelection() {
+      selectedSynIds.clear();
+      document.getElementById('synSelectAll').checked = false;
+      refreshData();
+    }
+
+    function updateSynSelectionBar() {
+      const bar = document.getElementById('synSelectionBar');
+      if (selectedSynIds.size > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('synSelectedCount').textContent = `${selectedSynIds.size} sets selected`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    async function deleteSynonymSet(id) {
+      if (!confirm("Are you sure you want to delete this set?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set deleted.", "success");
+          selectedSynIds.delete(id);
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Error deleting set.", "error");
+      }
+    }
+
+    async function deleteSelectedSynonyms() {
+      if (!confirm(`Are you sure you want to delete ${selectedSynIds.size} set(s)?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedSynIds) })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Deleted ${data.deleted} set(s).`, "success");
+          selectedSynIds.clear();
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Bulk delete failed.", "error");
+      }
+    }
+
+    function addSynonymPairRow(word = "", synonym = "") {
+      const container = document.getElementById('synPairsContainer');
+      const row = document.createElement('div');
+      row.className = 'pair-row';
+      row.innerHTML = `
+        <input type="text" class="form-input pair-word" placeholder="Word (शब्दः)" value="${word}" required>
+        <input type="text" class="form-input pair-synonym" placeholder="Synonym (पर्यायः)" value="${synonym}" required>
+        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.pair-row').remove()">🗑️</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function openAddSynonymModal() {
+      document.getElementById('synModalTitle').textContent = "Add Synonym Match Set";
+      document.getElementById('editSynId').value = "";
+      document.getElementById('synTitle').value = "";
+      document.getElementById('synTimeLimit').value = 300;
+      document.getElementById('synPairsContainer').innerHTML = "";
+      addSynonymPairRow();
+      addSynonymPairRow(); // start with 2 empty rows
+      openModal('synonymModal');
+    }
+
+    async function openEditSynonymModal(id) {
+      try {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets/${id}`);
+        const data = await res.json();
+        if (data.success && data.set) {
+          const s = data.set;
+          document.getElementById('synModalTitle').textContent = "Edit Synonym Set";
+          document.getElementById('editSynId').value = s.id;
+          document.getElementById('synTitle').value = s.title;
+          document.getElementById('synTimeLimit').value = s.time_limit || 300;
+          
+          const container = document.getElementById('synPairsContainer');
+          container.innerHTML = "";
+          
+          s.pairs.forEach(p => {
+            addSynonymPairRow(p.word, p.synonym);
+          });
+          
+          if (s.pairs.length === 0) addSynonymPairRow();
+          
+          openModal('synonymModal');
+        }
+      } catch (err) {
+        showToast("Failed to load set details.", "error");
+      }
+    }
+
+    async function saveSynonymSet(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('editSynId').value;
+      const title = document.getElementById('synTitle').value.trim();
+      const time_limit = parseInt(document.getElementById('synTimeLimit').value) || 300;
+      
+      const pairs = [];
+      document.querySelectorAll('#synPairsContainer .pair-row').forEach(row => {
+        const word = row.querySelector('.pair-word').value.trim();
+        const synonym = row.querySelector('.pair-synonym').value.trim();
+        if (word && synonym) {
+          pairs.push({ word, synonym });
+        }
+      });
+
+      if (pairs.length === 0) {
+        showToast("Please enter at least one word pair.", "warning");
+        return;
+      }
+
+      const payload = { title, pairs, time_limit };
+      const url = id ? `${API_BASE}/play/synonym-match/sets/${id}` : `${API_BASE}/play/synonym-match/sets`;
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set saved successfully.", "success");
+          closeModal('synonymModal');
+          refreshData();
+        } else {
+          showToast(data.error || "Failed to save set.", "error");
+        }
+      } catch (err) {
+        showToast("Error saving set.", "error");
+      }
+    }
+
+    // Export helpers for Synonym Match
+    async function exportSynonymJSON() {
+      const allSetsWithPairs = [];
+      for (const set of synonymSets) {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets/${set.id}`);
+        const data = await res.json();
+        if (data.success) allSetsWithPairs.push(data.set);
+      }
+      
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allSetsWithPairs, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "synonym_sets_export.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    async function exportSynonymExcel() {
+      const rows = [];
+      for (const set of synonymSets) {
+        const res = await fetch(`${API_BASE}/play/synonym-match/sets/${set.id}`);
+        const data = await res.json();
+        if (data.success && data.set) {
+          data.set.pairs.forEach(p => {
+            rows.push({
+              "Set Title": data.set.title,
+              "Word (शब्दः)": p.word,
+              "Synonym (पर्यायः)": p.synonym
+            });
+          });
+        }
+      }
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "Synonyms");
+      XLSX.writeFile(wb, "synonym_sets_export.xlsx");
+    }
+
+
+    // =========================================================================
+    // 🧩 TAB 3: WORD BUILDER CONTROLLER
+    // =========================================================================
+    let wbSets = [];
+    let selectedWbIds = new Set();
+
+    async function loadWbSets() {
+      try {
+        const res = await fetch(`${API_BASE}/play/word-builder/sets`);
+        const data = await res.json();
+        if (data.success) {
+          wbSets = data.sets;
+          document.getElementById('wbTotalSets').textContent = wbSets.length;
+          renderWbTable();
+        }
+      } catch (err) {
+        showToast("Error loading word builder sets.", "error");
+      }
+    }
+
+    function renderWbTable() {
+      const body = document.getElementById('wbSetsBody');
+      body.innerHTML = '';
+      wbSets.forEach(set => {
+        const tr = document.createElement('tr');
+        if (selectedWbIds.has(set.id)) tr.className = 'row-selected';
+        
+        tr.innerHTML = `
+          <td><input type="checkbox" class="wb-cb" data-id="${set.id}" ${selectedWbIds.has(set.id) ? 'checked' : ''} onchange="toggleSelectWb(${set.id}, this.checked)"></td>
+          <td><strong>#${set.id}</strong></td>
+          <td style="font-family: var(--font-sanskrit); font-size: 1.1rem; font-weight: 700;">${set.title}</td>
+          <td>${set.target_words.join(', ')}</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="openEditWbModal(${set.id})">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteWbSet(${set.id})">🗑️</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+      updateWbSelectionBar();
+    }
+
+    function toggleSelectWb(id, checked) {
+      if (checked) selectedWbIds.add(id);
+      else selectedWbIds.delete(id);
+      refreshData();
+    }
+
+    function toggleSelectAllWb(checked) {
+      selectedWbIds.clear();
+      if (checked) {
+        document.querySelectorAll('.wb-cb').forEach(cb => {
+          selectedWbIds.add(parseInt(cb.dataset.id));
+        });
+      }
+      refreshData();
+    }
+
+    function clearWbSelection() {
+      selectedWbIds.clear();
+      document.getElementById('wbSelectAll').checked = false;
+      refreshData();
+    }
+
+    function updateWbSelectionBar() {
+      const bar = document.getElementById('wbSelectionBar');
+      if (selectedWbIds.size > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('wbSelectedCount').textContent = `${selectedWbIds.size} sets selected`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    async function deleteWbSet(id) {
+      if (!confirm("Delete this set?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/word-builder/sets/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set deleted.", "success");
+          selectedWbIds.delete(id);
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Error deleting set.", "error");
+      }
+    }
+
+    async function deleteSelectedWb() {
+      if (!confirm(`Delete ${selectedWbIds.size} set(s)?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/word-builder/sets/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedWbIds) })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Bulk deleted successfully.", "success");
+          selectedWbIds.clear();
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Bulk delete failed.", "error");
+      }
+    }
+
+    function openAddWbModal() {
+      isSyllablesCustomized = false;
+      document.getElementById('wbModalTitle').textContent = "Add Word Builder Set";
+      document.getElementById('editWbId').value = "";
+      document.getElementById('wbTitle').value = "";
+      document.getElementById('wbTimeLimit').value = 300;
+      document.getElementById('wbTargets').value = "";
+      openModal('wbModal');
+    }
+
+    function openEditWbModal(id) {
+      const set = wbSets.find(s => s.id === id);
+      if (!set) return;
+
+      isSyllablesCustomized = true;
+      document.getElementById('wbModalTitle').textContent = "Edit Word Builder Set";
+      document.getElementById('editWbId').value = set.id;
+      document.getElementById('wbTitle').value = set.title;
+      document.getElementById('wbTimeLimit').value = set.time_limit || 300;
+      document.getElementById('wbTargets').value = set.target_words.join(', ');
+      openModal('wbModal');
+    }
+
+    async function saveWbSet(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('editWbId').value;
+      const title = document.getElementById('wbTitle').value.trim();
+      const time_limit = parseInt(document.getElementById('wbTimeLimit').value) || 300;
+      const target_words = document.getElementById('wbTargets').value.split(',').map(t => t.trim()).filter(t => t);
+
+      if (target_words.length === 0) {
+        showToast("Target words cannot be empty.", "warning");
+        return;
+      }
+
+      const payload = { title, syllables: [], target_words, time_limit };
+      const url = id ? `${API_BASE}/play/word-builder/sets/${id}` : `${API_BASE}/play/word-builder/sets`;
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set saved successfully.", "success");
+          closeModal('wbModal');
+          refreshData();
+        } else {
+          showToast(data.error || "Failed to save set.", "error");
+        }
+      } catch (err) {
+        showToast("Error saving set.", "error");
+      }
+    }
+
+    function exportWbJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(wbSets, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "word_builder_sets_export.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function exportWbExcel() {
+      const rows = wbSets.map(set => ({
+        "Set Title": set.title,
+        "Syllables Pool": set.syllables.join(','),
+        "Target Words": set.target_words.join(',')
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "WordBuilder");
+      XLSX.writeFile(wb, "word_builder_sets_export.xlsx");
+    }
+
+
+    // =========================================================================
+    // 🔍 TAB 4: WORD SEARCH CONTROLLER
+    // =========================================================================
+    let wsSets = [];
+    let selectedWsIds = new Set();
+
+    async function loadWsSets() {
+      try {
+        const res = await fetch(`${API_BASE}/play/word-search/sets`);
+        const data = await res.json();
+        if (data.success) {
+          wsSets = data.sets;
+          document.getElementById('wsTotalSets').textContent = wsSets.length;
+          renderWsTable();
+        }
+      } catch (err) {
+        showToast("Error loading word search sets.", "error");
+      }
+    }
+
+    function renderWsTable() {
+      const body = document.getElementById('wsSetsBody');
+      body.innerHTML = '';
+      wsSets.forEach(set => {
+        const tr = document.createElement('tr');
+        if (selectedWsIds.has(set.id)) tr.className = 'row-selected';
+        
+        tr.innerHTML = `
+          <td><input type="checkbox" class="ws-cb" data-id="${set.id}" ${selectedWsIds.has(set.id) ? 'checked' : ''} onchange="toggleSelectWs(${set.id}, this.checked)"></td>
+          <td><strong>#${set.id}</strong></td>
+          <td style="font-family: var(--font-sanskrit); font-size: 1.1rem; font-weight: 700;">${set.title}</td>
+          <td>${set.grid_size} × ${set.grid_size}</td>
+          <td>${set.target_words.join(', ')}</td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="openEditWsModal(${set.id})">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteWsSet(${set.id})">🗑️</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+      updateWsSelectionBar();
+    }
+
+    function toggleSelectWs(id, checked) {
+      if (checked) selectedWsIds.add(id);
+      else selectedWsIds.delete(id);
+      refreshData();
+    }
+
+    function toggleSelectAllWs(checked) {
+      selectedWsIds.clear();
+      if (checked) {
+        document.querySelectorAll('.ws-cb').forEach(cb => {
+          selectedWsIds.add(parseInt(cb.dataset.id));
+        });
+      }
+      refreshData();
+    }
+
+    function clearWsSelection() {
+      selectedWsIds.clear();
+      document.getElementById('wsSelectAll').checked = false;
+      refreshData();
+    }
+
+    function updateWsSelectionBar() {
+      const bar = document.getElementById('wsSelectionBar');
+      if (selectedWsIds.size > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('wsSelectedCount').textContent = `${selectedWsIds.size} sets selected`;
+      } else {
+        bar.style.display = 'none';
+      }
+    }
+
+    async function deleteWsSet(id) {
+      if (!confirm("Delete this set?")) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/word-search/sets/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set deleted.", "success");
+          selectedWsIds.delete(id);
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Error deleting set.", "error");
+      }
+    }
+
+    async function deleteSelectedWs() {
+      if (!confirm(`Delete ${selectedWsIds.size} set(s)?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/play/word-search/sets/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedWsIds) })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Bulk deleted successfully.", "success");
+          selectedWsIds.clear();
+          refreshData();
+        }
+      } catch (err) {
+        showToast("Bulk delete failed.", "error");
+      }
+    }
+
+    function openAddWsModal() {
+      document.getElementById('wsModalTitle').textContent = "Add Word Search Set";
+      document.getElementById('editWsId').value = "";
+      document.getElementById('wsTitle').value = "";
+      document.getElementById('wsTimeLimit').value = 300;
+      document.getElementById('wsGridSize').value = "4";
+      document.getElementById('wsTargets').value = "";
+      openModal('wsModal');
+    }
+
+    function openEditWsModal(id) {
+      const set = wsSets.find(s => s.id === id);
+      if (!set) return;
+
+      document.getElementById('wsModalTitle').textContent = "Edit Word Search Set";
+      document.getElementById('editWsId').value = set.id;
+      document.getElementById('wsTitle').value = set.title;
+      document.getElementById('wsTimeLimit').value = set.time_limit || 300;
+      document.getElementById('wsGridSize').value = set.grid_size;
+      document.getElementById('wsTargets').value = set.target_words.join(', ');
+      openModal('wsModal');
+    }
+
+    async function saveWsSet(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('editWsId').value;
+      const title = document.getElementById('wsTitle').value.trim();
+      const time_limit = parseInt(document.getElementById('wsTimeLimit').value) || 300;
+      const grid_size = parseInt(document.getElementById('wsGridSize').value);
+      const target_words = document.getElementById('wsTargets').value.split(',').map(t => t.trim()).filter(t => t);
+
+      if (target_words.length === 0) {
+        showToast("Target words cannot be empty.", "warning");
+        return;
+      }
+
+      const payload = { title, grid_size, target_words, time_limit };
+      const url = id ? `${API_BASE}/play/word-search/sets/${id}` : `${API_BASE}/play/word-search/sets`;
+      const method = id ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Set saved successfully.", "success");
+          closeModal('wsModal');
+          refreshData();
+        } else {
+          showToast(data.error || "Failed to save set.", "error");
+        }
+      } catch (err) {
+        showToast("Error saving set.", "error");
+      }
+    }
+
+    function exportWsJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(wsSets, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "word_search_sets_export.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function exportWsExcel() {
+      const rows = wsSets.map(set => ({
+        "Set Title": set.title,
+        "Grid Size": set.grid_size,
+        "Target Words": set.target_words.join(',')
+      }));
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, "WordSearch");
+      XLSX.writeFile(wb, "word_search_sets_export.xlsx");
+    }
+
+
+    // =========================================================================
+    // 📤 BULK UPLOAD SYSTEM (SHARED)
+    // =========================================================================
+    
+    function openUploadModal(type) {
+      uploadTargetType = type;
+      uploadedData = null;
+      document.getElementById('uploadPreviewArea').style.display = 'none';
+      document.getElementById('fileInput').value = "";
+      
+      const gameSpan = document.getElementById('uploadGameType');
+      const infoP = document.getElementById('uploadFormatInfo');
+      const jsonBtn = document.getElementById('btnSampleJSON');
+      
+      if (type === 'synonyms') {
+        gameSpan.textContent = "Synonym Match";
+        infoP.innerHTML = `<strong>JSON Format:</strong> [{ "title": "...", "pairs": [{ "word": "...", "synonym": "..." }] }]<br><strong>Excel Columns:</strong> Set Title, Word (शब्दः), Synonym (पर्यायः)`;
+        jsonBtn.onclick = () => downloadSampleJSON('synonyms');
+      } else if (type === 'word-builder') {
+        gameSpan.textContent = "Word Builder";
+        infoP.innerHTML = `<strong>JSON Format:</strong> [{ "title": "...", "syllables": ["...", "..."], "target_words": ["...", "..."] }]<br><strong>Excel Columns:</strong> Set Title, Syllables Pool (comma separated), Target Words (comma separated)`;
+        jsonBtn.onclick = () => downloadSampleJSON('word-builder');
+      } else if (type === 'word-search') {
+        gameSpan.textContent = "Word Search";
+        infoP.innerHTML = `<strong>JSON Format:</strong> [{ "title": "...", "grid_size": 4, "target_words": ["...", "..."] }]<br><strong>Excel Columns:</strong> Set Title, Grid Size (4/5/6), Target Words (comma separated)`;
+        jsonBtn.onclick = () => downloadSampleJSON('word-search');
+      }
+      
+      openModal('uploadModal');
+    }
+
+    function downloadSampleJSON(type) {
+      let data = [];
+      let filename = "";
+      if (type === 'synonyms') {
+        filename = "sample-synonym-match.json";
+        data = [{
+          "title": "प्राणी-पर्यायाः / Animal Synonyms",
+          "pairs": [
+            { "word": "गजः", "synonym": "हस्ती" },
+            { "word": "सिंहः", "synonym": "केसरी" },
+            { "word": "अश्वः", "synonym": "हयः" }
+          ]
+        }];
+      } else if (type === 'word-builder') {
+        filename = "sample-word-builder.json";
+        data = [{
+          "title": "देव-नामानि / God Names",
+          "syllables": ["रा", "म", "ग", "ज", "दे", "व", "हा", "रि", "ः"],
+          "target_words": ["रामः", "देवः", "हरिः"]
+        }];
+      } else if (type === 'word-search') {
+        filename = "sample-word-search.json";
+        data = [{
+          "title": "फल-नामानि / Fruit Names",
+          "grid_size": 4,
+          "target_words": ["आम्रम्", "कदली", "द्राक्षा"]
+        }];
+      }
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function downloadSampleExcel() {
+      const wb = XLSX.utils.book_new();
+      let wsData = [];
+      let name = "";
+      
+      if (uploadTargetType === 'synonyms') {
+        name = "synonym_match_template.xlsx";
+        wsData = [
+          { "Set Title": "प्राणी-पर्यायाः / Animal Synonyms", "Word (शब्दः)": "गजः", "Synonym (पर्यायः)": "हस्ती" },
+          { "Set Title": "प्राणी-पर्यायाः / Animal Synonyms", "Word (शब्दः)": "सिंहः", "Synonym (पर्यायः)": "केसरी" }
+        ];
+      } else if (uploadTargetType === 'word-builder') {
+        name = "word_builder_template.xlsx";
+        wsData = [
+          { "Set Title": "देव-नामानि / God Names", "Syllables Pool": "रा, म, ग, ज, दे, व, ः", "Target Words": "रामः, devः" }
+        ];
+      } else if (uploadTargetType === 'word-search') {
+        name = "word_search_template.xlsx";
+        wsData = [
+          { "Set Title": "फल-नामानि / Fruit Names", "Grid Size": 4, "Target Words": "आम्रम्, कदली, द्राक्षा" }
+        ];
+      }
+
+      const ws = XLSX.utils.json_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "Template");
+      XLSX.writeFile(wb, name);
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      if (ext === 'json') {
+        reader.onload = function(evt) {
+          try {
+            let rawText = evt.target.result.trim();
+            if (rawText.startsWith("```")) {
+              rawText = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+            }
+            uploadedData = JSON.parse(rawText);
+            if (!Array.isArray(uploadedData)) {
+              uploadedData = [uploadedData];
+            }
+            showPreview(uploadedData.length);
+          } catch (err) {
+            alert("Invalid JSON file: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const rawRows = XLSX.utils.sheet_to_json(worksheet);
+            
+            // Format spreadsheet rows to matches API expectations
+            uploadedData = parseExcelRows(rawRows);
+            showPreview(uploadedData.length);
+          } catch (err) {
+            alert("Error parsing Excel file.");
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function parseExcelRows(rows) {
+      if (uploadTargetType === 'synonyms') {
+        // Group rows by Set Title
+        const setsMap = {};
+        const timeLimitsMap = {};
+        rows.forEach(r => {
+          const title = r["Set Title"] || r.title || "";
+          const word = r["Word (शब्दः)"] || r.word || "";
+          const synonym = r["Synonym (पर्यायः)"] || r.synonym || "";
+          const time_limit = parseInt(r["Time Limit"] || r.time_limit || r["Time Limit (seconds)"] || 300);
+          if (title && word && synonym) {
+            if (!setsMap[title]) {
+              setsMap[title] = [];
+              timeLimitsMap[title] = time_limit;
+            }
+            setsMap[title].push({ word, synonym });
+          }
+        });
+        return Object.keys(setsMap).map(title => ({
+          title,
+          pairs: setsMap[title],
+          time_limit: timeLimitsMap[title]
+        }));
+      } else if (uploadTargetType === 'word-builder') {
+        return rows.map(r => {
+          const title = r["Set Title"] || r.title || "";
+          const syllables = (r["Syllables Pool"] || r.syllables || "").split(',').map(s => s.trim()).filter(s => s);
+          const target_words = (r["Target Words"] || r.target_words || "").split(',').map(w => w.trim()).filter(w => w);
+          const time_limit = parseInt(r["Time Limit"] || r.time_limit || r.time_limit || r["Time Limit (seconds)"] || 300);
+          return { title, syllables, target_words, time_limit };
+        });
+      } else if (uploadTargetType === 'word-search') {
+        return rows.map(r => {
+          const title = r["Set Title"] || r.title || "";
+          const grid_size = parseInt(r["Grid Size"] || r.grid_size || 4);
+          const target_words = (r["Target Words"] || r.target_words || "").split(',').map(w => w.trim()).filter(w => w);
+          const time_limit = parseInt(r["Time Limit"] || r.time_limit || r.time_limit || r["Time Limit (seconds)"] || 300);
+          return { title, grid_size, target_words, time_limit };
+        });
+      }
+      return [];
+    }
+
+    function showPreview(count) {
+      document.getElementById('uploadPreviewArea').style.display = 'block';
+      document.getElementById('previewTotalCount').textContent = count;
+    }
+
+    async function confirmImport() {
+      if (!uploadedData || uploadedData.length === 0) return;
+      
+      let url = "";
+      let payload = {};
+      
+      if (uploadTargetType === 'synonyms') {
+        url = `${API_BASE}/play/synonym-match/import`;
+        payload = { sets: uploadedData };
+      } else if (uploadTargetType === 'word-builder') {
+        url = `${API_BASE}/play/word-builder/import`;
+        payload = { sets: uploadedData };
+      } else if (uploadTargetType === 'word-search') {
+        url = `${API_BASE}/play/word-search/import`;
+        payload = { sets: uploadedData };
+      }
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Imported ${data.added} sets successfully!`, "success");
+          closeModal('uploadModal');
+          refreshData();
+        } else {
+          showToast(data.error || "Failed to import.", "error");
+        }
+      } catch (err) {
+        showToast("Error importing data.", "error");
+      }
+    }
+
+    // AI Prompt Guide logic
+    const PROMPTS = {
+      synonyms: `You are an expert Sanskrit language AI model.
+Please generate a synonym-match game set.
+
+Topic: [ENTER TOPIC HERE, e.g. "Animals" or "Nature" or "Gods"]
+
+Your output must be formatted as a valid JSON object or a JSON array of one object.
+The set object must match this JSON structure:
+{
+  "title": "Set Title in Sanskrit (e.g. प्राणी-पर्यायाः)",
+  "pairs": [
+    { "word": "Sanskrit Word in Devanagari", "synonym": "Its synonym in Devanagari" }
+  ]
+}
+
+Requirements:
+- Provide exactly 6 to 10 synonym pairs.
+- Make sure the words are correct Sanskrit, commonly used, and spelled accurately in Devanagari.
+- Output ONLY the valid JSON data wrapped inside a markdown code block (e.g. \`\`\`json ... \`\`\`). Do not add any conversational text or comments outside the JSON.`,
+
+      "word-builder": `You are an expert Sanskrit language AI model.
+Please generate a word builder game set.
+
+Topic: [ENTER TOPIC HERE, e.g. "Devas" or "Fruits" or "Basic Verbs"]
+
+Your output must be formatted as a valid JSON object or a JSON array of one object.
+The set object must match this JSON structure:
+{
+  "title": "Set Title in Sanskrit (e.g. देव-नामानि)",
+  "syllables": ["Syllable 1", "Syllable 2", "Syllable 3", ...],
+  "target_words": ["Target Word 1", "Target Word 2", ...]
+}
+
+Requirements:
+- \`syllables\` must be a pool of individual Devanagari syllables/characters (e.g. "रा", "म", "ः", "ग", "ज").
+- \`target_words\` must be a list of 4 to 8 Sanskrit words in Devanagari that can be built by combining syllables from the pool.
+- Ensure that EVERY syllable required to form each target word is present in the \`syllables\` pool.
+- Output ONLY the valid JSON data wrapped inside a markdown code block (e.g. \`\`\`json ... \`\`\`). Do not add any conversational text or comments outside the JSON.`,
+
+      "word-search": `You are an expert Sanskrit language AI model.
+Please generate a word search grid game set.
+
+Topic: [ENTER TOPIC HERE, e.g. "Fruits" or "Colors" or "Rivers"]
+Grid Size: [ENTER GRID SIZE HERE: 4 or 5 or 6]
+
+Your output must be formatted as a valid JSON object or a JSON array of one object.
+The set object must match this JSON structure:
+{
+  "title": "Set Title in Sanskrit (e.g. फल-नामानि)",
+  "grid_size": 5,
+  "target_words": ["Word 1", "Word 2", "Word 3", ...]
+}
+
+Requirements:
+- Target words must be valid Sanskrit words in Devanagari.
+- Ensure the number of syllables/letters in each target word does not exceed the chosen \`grid_size\`.
+- Provide exactly 4 to 8 target words.
+- Output ONLY the valid JSON data wrapped inside a markdown code block (e.g. \`\`\`json ... \`\`\`). Do not add any conversational text or comments outside the JSON.`
+    };
+
+    function openAiPromptModal() {
+      // Auto-select prompt matching currentTab if valid
+      const select = document.getElementById('aiPromptSelectGame');
+      if (currentTab === 'synonyms' || currentTab === 'word-builder' || currentTab === 'word-search') {
+        select.value = currentTab;
+      }
+      showSelectedPrompt();
+      openModal('aiPromptModal');
+    }
+
+    function showSelectedPrompt() {
+      const game = document.getElementById('aiPromptSelectGame').value;
+      document.getElementById('aiPromptTextarea').value = PROMPTS[game] || '';
+    }
+
+    function copyPromptToClipboard() {
+      const textarea = document.getElementById('aiPromptTextarea');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        showToast("Prompt copied to clipboard!", "success");
+      }).catch(err => {
+        showToast("Failed to copy prompt.", "error");
+      });
+    }
+  </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

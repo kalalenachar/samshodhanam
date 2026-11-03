@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Sanskrit Digital Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <style>
+        /* Modern Glassmorphic Premium Styles */
+        .glass-panel {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            box-shadow: var(--t-shadow);
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .users-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            margin-top: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 992px) {
+            .users-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Left Side List View */
+        .users-list-container {
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 160px);
+            overflow: hidden;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px !important;
+            background: var(--t-input-bg);
+            color: var(--t-input-text);
+            border: 1px solid var(--t-input-border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        body:has(.admin-header) .search-wrapper .search-input {
+            padding-left: 40px !important;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--t-accent-alpha-15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .users-scroll {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+
+        /* Custom Scrollbar */
+        .users-scroll::-webkit-scrollbar,
+        .detail-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .users-scroll::-webkit-scrollbar-track,
+        .detail-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .users-scroll::-webkit-scrollbar-thumb,
+        .detail-scroll::-webkit-scrollbar-thumb {
+            background: var(--t-accent-alpha-15);
+            border-radius: 99px;
+        }
+        .users-scroll::-webkit-scrollbar-thumb:hover,
+        .detail-scroll::-webkit-scrollbar-thumb:hover {
+            background: var(--t-accent-alpha-30);
+        }
+
+        .user-item {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border-light);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-item:hover {
+            background: var(--t-bg-surface-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--t-shadow);
+            border-color: var(--t-border-hover);
+        }
+
+        .user-item.active {
+            background: var(--t-accent-alpha-12);
+            border-color: var(--t-accent-alpha-25);
+            box-shadow: var(--t-shadow);
+        }
+
+        .user-item.active::before {
+            background: var(--primary-color);
+        }
+
+        .user-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .user-item-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-item-stats {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .user-item-stats span {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        /* Right Side Detail View */
+        .user-detail-container {
+            min-height: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .detail-placeholder svg {
+            width: 80px;
+            height: 80px;
+            stroke: var(--primary-color);
+            opacity: 0.4;
+            margin-bottom: 16px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .detail-content {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* Details Header Card */
+        .detail-header-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--t-accent-alpha-15);
+            margin-bottom: 20px;
+        }
+
+        .detail-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px var(--t-accent-alpha-25);
+            background-size: cover !important;
+            background-position: center !important;
+        }
+
+        .user-list-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background-size: cover !important;
+            background-position: center !important;
+            box-shadow: 0 2px 8px var(--t-accent-alpha-15);
+        }
+
+        .user-info-text h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .user-info-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .detail-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Tabs System */
+        .tabs-header {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 99px 99px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Favorites / Booklist Content Grid */
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+            max-height: calc(100vh - 380px);
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--t-accent-alpha-10);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary-color);
+            background: var(--t-bg-surface);
+        }
+
+        .book-card-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+        .book-icon {
+            font-size: 20px;
+            padding: 8px;
+            background: var(--t-accent-alpha-08);
+            border-radius: 8px;
+            color: var(--primary-color);
+        }
+
+        .book-title-text {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .book-date-text {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .arrow-link {
+            font-size: 12px;
+            color: var(--primary-color);
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .book-card:hover .arrow-link {
+            opacity: 1;
+            transform: translateX(3px);
+        }
+
+        /* Booklist Accordion Layout */
+        .booklists-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: calc(100vh - 380px);
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .list-accordion {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--t-accent-alpha-12);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .list-accordion-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.5);
+            transition: background 0.2s ease;
+            user-select: none;
+        }
+
+        .list-accordion-header:hover {
+            background: var(--t-accent-alpha-05);
+        }
+
+        .list-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .list-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .list-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .list-badge {
+            font-size: 11px;
+            font-weight: 600;
+            background: var(--t-accent-alpha-10);
+            color: var(--primary-color);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .chevron-icon {
+            font-size: 14px;
+            color: var(--text-muted);
+            transition: transform 0.25s ease;
+        }
+
+        .list-accordion.expanded .chevron-icon {
+            transform: rotate(180deg);
+        }
+
+        .list-accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s cubic-bezier(0, 1, 0, 1);
+            background: rgba(255, 255, 255, 0.3);
+            border-top: 0px solid var(--t-accent-alpha-08);
+        }
+
+        .list-accordion.expanded .list-accordion-body {
+            max-height: 1000px;
+            transition: max-height 0.35s ease-in-out;
+            border-top-width: 1px;
+        }
+
+        .list-books-container {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Buttons Styling */
+        .btn-glass {
+            background: var(--t-accent-alpha-10);
+            color: var(--primary-color);
+            border: 1px solid var(--t-accent-alpha-20);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-glass:hover {
+            background: var(--primary-color);
+            color: var(--t-text-on-accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--t-accent-alpha-20);
+        }
+
+        .btn-glass-danger {
+            background: rgba(220, 53, 69, 0.08);
+            color: var(--danger-color);
+            border: 1px solid rgba(220, 53, 69, 0.15);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-glass-danger:hover {
+            background: var(--danger-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+        }
+
+        /* Sleek Toast / Flash Message System */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast-alert {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid var(--primary-color);
+            padding: 16px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 300px;
+            max-width: 450px;
+        }
+
+        .toast-alert.show {
+            transform: translateX(0);
+        }
+
+        .toast-alert.success {
+            border-left-color: var(--success-color);
+        }
+
+        .toast-alert.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .toast-alert-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-muted);
+            padding: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 26, 46, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: var(--t-bg-surface);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            overflow: hidden;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--light-bg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        .metadata-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            background: var(--t-accent-alpha-05);
+            border: 1px solid var(--t-accent-alpha-08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .meta-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meta-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .meta-val {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .btn-back {
+            display: none;
+        }
+
+        @media (max-width: 992px) {
+            .users-layout {
+                grid-template-columns: 1fr;
+                height: calc(100vh - 160px);
+            }
+            .users-layout.detail-active .users-list-container {
+                display: none;
+            }
+            .users-layout:not(.detail-active) .user-detail-container {
+                display: none;
+            }
+            .btn-back {
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: var(--primary-color);
+                cursor: pointer;
+                padding: 4px 8px;
+                border-radius: 6px;
+                margin-right: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header admin-header">
+        <h1><span class="emoji">⚙️</span> <span>Admin</span> Users</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub">🏠 Hub</a>
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_USERS' in session.get('admin_permissions', []) %}
+            <a href="/admin/users" class="active">Users</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/manage-admins">Admins</a>
+            {% endif %}
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container" style="max-width: 1400px; padding: 20px;">
+        <div class="users-layout">
+            <!-- Left Side User List -->
+            <div class="glass-panel users-list-container">
+                <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text-dark);"><span class="emoji">👥</span> User Directory</h2>
+                <div class="search-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="userSearch" class="search-input" placeholder="Search by email, name, or phone..." onkeyup="filterUsers()">
+                </div>
+                <div class="users-scroll" id="usersList">
+                    <!-- Dynamic List of Users -->
+                    <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+                        Loading users...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side User Context View -->
+            <div class="glass-panel user-detail-container" id="userDetailPanel">
+                <!-- Empty State PlaceHolder -->
+                <div class="detail-placeholder" id="emptyState">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text-dark);">No User Selected</h3>
+                    <p style="font-size: 13px; max-width: 320px; margin: 0 auto;">Select a registered account from the directory to review metadata, reset passwords, or manage user access.</p>
+                </div>
+
+                <!-- Hydrated Content Card -->
+                <div class="detail-content" id="detailContent">
+                    <div class="detail-header-card">
+                        <div class="detail-user-profile">
+                            <button class="btn-back" onclick="clearDetailView()">←</button>
+                            <div class="user-avatar" id="avatarDisplay">U</div>
+                            <div class="user-info-text">
+                                <h3 id="displayUsername">User Name</h3>
+                                <p id="displayEmail">user@example.com</p>
+                            </div>
+                        </div>
+                        <div class="detail-actions">
+                            <button class="btn-glass" onclick="openResetModal()">🔑 Reset Password</button>
+                            <button class="btn-glass-danger" onclick="confirmDeleteUser()">🗑️ Delete Account</button>
+                        </div>
+                    </div>
+
+                    <!-- Grid Info Panel -->
+                    <div class="metadata-section">
+                        <div class="meta-box">
+                            <span class="meta-label">📱 Mobile</span>
+                            <span class="meta-val" id="displayMobile">-</span>
+                        </div>
+                        <div class="meta-box">
+                            <span class="meta-label">📅 Registered</span>
+                            <span class="meta-val" id="displayRegistered">-</span>
+                        </div>
+                        <div class="meta-box">
+                            <span class="meta-label">🕒 Last Login</span>
+                            <span class="meta-val" id="displayLastLogin">-</span>
+                        </div>
+                        <div class="meta-box">
+                            <span class="meta-label">🆔 Account ID</span>
+                            <span class="meta-val" id="displayUserId">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Custom Tab Bar -->
+                    <div class="tabs-header">
+                        <button class="tab-btn active" onclick="switchTab(event, 'favsTab')">❤️ Favourites (<span id="favsCount">0</span>)</button>
+                        <button class="tab-btn" onclick="switchTab(event, 'listsTab')">📚 Custom Booklists (<span id="listsCount">0</span>)</button>
+                        <button class="tab-btn" onclick="switchTab(event, 'feedbackTab')">💬 Feedback (<span id="feedbackCount">0</span>)</button>
+                    </div>
+
+                    <!-- Favourites Tab Content -->
+                    <div class="tab-content active" id="favsTab">
+                        <div class="items-grid" id="favouritesGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Booklists Tab Content -->
+                    <div class="tab-content" id="listsTab">
+                        <div class="booklists-wrapper" id="booklistsAccordion">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Feedback Tab Content -->
+                    <div class="tab-content" id="feedbackTab">
+                        <div class="booklists-wrapper" id="feedbackListContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div class="modal-overlay" id="resetModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><span class="emoji">🔑</span> Reset Password</h3>
+                <button class="toast-close" style="font-size: 20px;" onclick="closeResetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="resetPasswordForm" onsubmit="handleResetPassword(event)">
+                    <div style="margin-bottom: 16px;">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="newPass" class="form-control" placeholder="Minimum 8 characters" required minlength="8">
+                    </div>
+                    <div>
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="confirmPass" class="form-control" placeholder="Match new password" required minlength="8">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" style="margin: 0; padding: 8px 16px;" onclick="closeResetModal()">Cancel</button>
+                <button type="submit" form="resetPasswordForm" class="btn btn-primary" style="margin: 0; padding: 8px 16px;">Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deletion Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-card">
+            <div class="modal-header" style="border-bottom-color: rgba(220, 53, 69, 0.1);">
+                <h3 style="color: var(--danger-color);"><span class="emoji">⚠️</span> Critical Warning</h3>
+                <button class="toast-close" style="font-size: 20px;" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 14px; margin-bottom: 16px; color: var(--text-dark); line-height: 1.5;">
+                    Are you absolutely sure you want to permanently delete user <strong id="deleteUserEmail"></strong>?
+                </p>
+                <p style="font-size: 13px; margin-bottom: 16px; color: var(--danger-color); font-weight: 600; padding: 10px; background: rgba(220, 53, 69, 0.05); border-radius: 8px;">
+                    This action is irreversible! All account details, favourites, and custom booklists will be wiped permanently.
+                </p>
+                <div>
+                    <label class="form-label" style="font-weight: 700;">Type "DELETE" to confirm:</label>
+                    <input type="text" id="confirmDeleteToken" class="form-control" placeholder="Type DELETE" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="margin: 0; padding: 8px 16px; background: #e0e0e0; color: var(--t-text-primary);" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" style="margin: 0; padding: 8px 16px;" onclick="executeDeleteUser()">Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Global State using sessionStorage to prevent persistence across admin logins
+        let allUsers = [];
+        let selectedUserId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUsers();
+            
+            // Check if there was a selected user from a previous refresh/action
+            const savedUserId = sessionStorage.getItem('selected_user_id');
+            if (savedUserId) {
+                selectedUserId = parseInt(savedUserId);
+            }
+        });
+
+        // Show Sleek Toast Notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-alert ${type}`;
+            toast.innerHTML = `
+                <span style="font-size: 18px;">${type === 'success' ? '✅' : '❌'}</span>
+                <span class="toast-alert-text">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
+        }
+
+        // Fetch User List
+        function fetchUsers(forceSelectId = null) {
+            const listEl = document.getElementById('usersList');
+            fetch('/admin/api/users')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        allUsers = data.users;
+                        renderUsersList();
+                        
+                        // Handle selections
+                        let targetId = forceSelectId || selectedUserId;
+                        if (targetId) {
+                            const userExists = allUsers.some(u => u.id === targetId);
+                            if (userExists) {
+                                selectUser(targetId);
+                            } else {
+                                clearDetailView();
+                            }
+                        }
+                    } else {
+                        listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--danger-color);">Failed to load users: ${data.message}</div>`;
+                    }
+                })
+                .catch(err => {
+                    listEl.innerHTML = '<div style="text-align: center; padding: 30px; color: var(--danger-color);">Error connecting to user API.</div>';
+                });
+        }
+
+        // Render Users in list
+        function renderUsersList() {
+            const listEl = document.getElementById('usersList');
+            if (allUsers.length === 0) {
+                listEl.innerHTML = `<div style="text-align: center; padding: 40px 0; color: var(--text-muted);">No users found.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = allUsers.map(user => {
+                const isActive = user.id === selectedUserId ? 'active' : '';
+                const lastLoginStr = user.last_login 
+                    ? formatDate(user.last_login) 
+                    : 'Never';
+                
+                let avatarStyle = '';
+                let avatarContent = '';
+                if (user.profile_pic) {
+                    const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+                    avatarStyle = `background-image: url('${picUrl}') !important;`;
+                } else {
+                    const gradient = user.avatar_gradient || 'linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)';
+                    avatarStyle = `background: ${gradient} !important;`;
+                    avatarContent = user.avatar_emoji || '👤';
+                }
+                
+                return `
+                    <div class="user-item ${isActive}" onclick="selectUser(${user.id})" id="userItem-${user.id}">
+                        <div style="display: flex; gap: 12px; align-items: center; width: 100%;">
+                            <div class="user-list-avatar" style="${avatarStyle}">
+                                ${avatarContent}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="user-item-header">
+                                    <span class="user-item-title">${escapeHtml(user.display_name)}</span>
+                                    <span style="font-size: 10px; color: var(--primary-color); font-weight: 600; background: var(--t-accent-alpha-08); padding: 1px 6px; border-radius: 8px;">
+                                        ID: ${user.id}
+                                    </span>
+                                </div>
+                                <div class="user-item-subtitle">${escapeHtml(user.email)}</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                            Last Login: ${lastLoginStr}
+                        </div>
+                        <div class="user-item-stats">
+                            <span>❤️ ${user.fav_count || 0} Favourites</span>
+                            <span>📚 ${user.list_count || 0} Booklists</span>
+                            <span>💬 ${user.feedback_count || 0} Feedback</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Filter User Directory Real-time
+        function filterUsers() {
+            const q = document.getElementById('userSearch').value.toLowerCase().trim();
+            const items = document.querySelectorAll('.user-item');
+            
+            allUsers.forEach((user, idx) => {
+                const item = document.getElementById(`userItem-${user.id}`);
+                if (!item) return;
+
+                const name = (user.display_name || '').toLowerCase();
+                const email = (user.email || '').toLowerCase();
+                const mobile = (user.mobile || '').toLowerCase();
+
+                if (name.includes(q) || email.includes(q) || mobile.includes(q) || String(user.id) === q) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Select a user
+        function selectUser(userId) {
+            selectedUserId = userId;
+            sessionStorage.setItem('selected_user_id', userId);
+            
+            // Mark item as active in DOM
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+            const activeItem = document.getElementById(`userItem-${userId}`);
+            if (activeItem) activeItem.classList.add('active');
+
+            // Show details card loader
+            document.getElementById('emptyState').style.display = 'none';
+            const detailContent = document.getElementById('detailContent');
+            detailContent.style.display = 'flex';
+            document.querySelector('.users-layout').classList.add('detail-active');
+            
+            // Temporary loading skeletons/styles
+            document.getElementById('displayUsername').textContent = 'Loading...';
+            document.getElementById('displayEmail').textContent = '';
+            document.getElementById('displayMobile').textContent = '...';
+            document.getElementById('displayRegistered').textContent = '...';
+            document.getElementById('displayLastLogin').textContent = '...';
+            document.getElementById('displayUserId').textContent = '...';
+            const avatarDisplay = document.getElementById('avatarDisplay');
+            avatarDisplay.style.backgroundImage = '';
+            avatarDisplay.style.background = 'linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)';
+            avatarDisplay.textContent = '...';
+            document.getElementById('favsCount').textContent = '0';
+            document.getElementById('listsCount').textContent = '0';
+            document.getElementById('feedbackCount').textContent = '0';
+            document.getElementById('favouritesGrid').innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 30px; color: var(--text-muted);">Fetching details...</div>';
+            document.getElementById('booklistsAccordion').innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">Fetching booklists...</div>';
+            document.getElementById('feedbackListContainer').innerHTML = '<div style="text-align: center; padding: 30px; color: var(--text-muted);">Fetching feedback...</div>';
+
+            // Fetch details
+            fetch(`/admin/api/user/${userId}/details`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        hydrateUserDetail(data);
+                    } else {
+                        showToast(data.message, 'danger');
+                        clearDetailView();
+                    }
+                })
+                .catch(err => {
+                    showToast('Connection error fetching user details', 'danger');
+                    clearDetailView();
+                });
+        }
+
+        // Hydrate details view with JSON data
+        function hydrateUserDetail(data) {
+            const user = data.user;
+            const favs = data.favourites || [];
+            const lists = data.booklists || [];
+
+            // Display Name, email, mobile, and register meta
+            document.getElementById('displayUsername').textContent = escapeHtml(user.display_name || user.email.split('@')[0]);
+            document.getElementById('displayEmail').textContent = escapeHtml(user.email);
+            document.getElementById('displayMobile').textContent = escapeHtml(user.mobile);
+            document.getElementById('displayUserId').textContent = user.id;
+            document.getElementById('displayRegistered').textContent = formatDate(user.created_at);
+            document.getElementById('displayLastLogin').textContent = user.last_login ? formatDate(user.last_login) : 'Never';
+            
+            // Set Avatar or Photo
+            const avatarDisplay = document.getElementById('avatarDisplay');
+            if (user.profile_pic) {
+                const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+                avatarDisplay.style.backgroundImage = `url('${picUrl}')`;
+                avatarDisplay.style.background = ''; // Clear fallback gradients
+                avatarDisplay.textContent = '';
+            } else {
+                avatarDisplay.style.backgroundImage = '';
+                avatarDisplay.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%)';
+                avatarDisplay.textContent = user.avatar_emoji || '👤';
+            }
+
+            // Set Favourites / Lists / Feedback Counts in Tabs
+            document.getElementById('favsCount').textContent = favs.length;
+            document.getElementById('listsCount').textContent = lists.length;
+            const feedbacks = data.feedbacks || [];
+            document.getElementById('feedbackCount').textContent = feedbacks.length;
+
+            // Hydrate Favourites
+            const favsGrid = document.getElementById('favouritesGrid');
+            if (favs.length === 0) {
+                favsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+                        🔒 User favourites are private to the user.
+                    </div>
+                `;
+            } else {
+                favsGrid.innerHTML = favs.map(fav => `
+                    <a href="/reader/${encodeURIComponent(fav.book_name)}/1?from=admin_users" class="book-card" target="_blank">
+                        <div class="book-card-info">
+                            <span class="book-icon">📖</span>
+                            <div>
+                                <div class="book-title-text" title="${escapeHtml(fav.book_name)}">${escapeHtml(fav.book_name)}</div>
+                                <div class="book-date-text">Added: ${formatDate(fav.added_at, true)}</div>
+                            </div>
+                        </div>
+                        <span class="arrow-link">↗</span>
+                    </a>
+                `).join('');
+            }
+
+            // Hydrate Booklists Accordions
+            const listContainer = document.getElementById('booklistsAccordion');
+            if (lists.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        📚 No custom booklists created.
+                    </div>
+                `;
+            } else {
+                listContainer.innerHTML = lists.map(list => {
+                    const books = list.items || [];
+                    const booksHtml = books.length === 0
+                        ? `<p style="font-size: 13px; color: var(--text-muted); font-style: italic; text-align: center; padding: 15px 0;">This list contains no books.</p>`
+                        : books.map(book => `
+                            <a href="/reader/${encodeURIComponent(book.book_name)}/1?from=admin_users" class="book-card" style="margin-bottom: 8px;" target="_blank">
+                                <div class="book-card-info">
+                                    <span class="book-icon" style="background: rgba(0, 212, 255, 0.08); color: var(--secondary-color);">📖</span>
+                                    <div>
+                                        <div class="book-title-text" title="${escapeHtml(book.book_name)}">${escapeHtml(book.book_name)}</div>
+                                        <div class="book-date-text">Added: ${formatDate(book.added_at, true)}</div>
+                                    </div>
+                                </div>
+                                <span class="arrow-link" style="color: var(--secondary-color);">↗</span>
+                            </a>
+                        `).join('');
+
+                    return `
+                        <div class="list-accordion" id="accordion-${list.id}">
+                            <div class="list-accordion-header" onclick="toggleAccordion(${list.id})">
+                                <div class="list-info">
+                                    <div class="list-name">${escapeHtml(list.name)}</div>
+                                    ${list.description ? `<div class="list-desc">${escapeHtml(list.description)}</div>` : ''}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span class="list-badge">${books.length} books</span>
+                                    <span class="chevron-icon">▼</span>
+                                </div>
+                            </div>
+                            <div class="list-accordion-body">
+                                <div class="list-books-container">
+                                    ${booksHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Hydrate Feedbacks
+            const feedbackContainer = document.getElementById('feedbackListContainer');
+            if (feedbacks.length === 0) {
+                feedbackContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        💬 No feedback submitted by this user.
+                    </div>
+                `;
+            } else {
+                feedbackContainer.innerHTML = feedbacks.map(fb => {
+                    const statusEmoji = fb.status === 'up' ? '👍' : '👎';
+                    const statusText = fb.status === 'up' 
+                        ? `<span style="color: var(--success-color); font-weight: 600; font-size: 13px;">Good</span>`
+                        : `<span style="color: var(--danger-color); font-weight: 600; font-size: 13px;">Error</span>`;
+                    
+                    return `
+                        <div class="comment-item" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding: 15px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span style="font-weight: 600; font-size: 14px; color: var(--text-dark);">
+                                    <a href="/reader/${encodeURIComponent(fb.book_id)}/${fb.page || 1}?from=admin_users" target="_blank" style="text-decoration: none; color: var(--primary-color);">
+                                        📖 ${escapeHtml(fb.book_id.replace(/_/g, ' '))}
+                                    </a>
+                                    ${fb.page ? `<span style="font-size: 12px; color: var(--text-muted); margin-left: 6px;">(Page ${fb.page})</span>` : ''}
+                                </span>
+                                <span style="font-size: 14px; display: flex; align-items: center; gap: 5px;">
+                                    ${statusEmoji} ${statusText}
+                                </span>
+                            </div>
+                            ${fb.comment ? `<p style="font-size: 13px; color: var(--text-dark); margin: 0; background: rgba(0,0,0,0.02); padding: 8px 12px; border-radius: 6px; border-left: 3px solid var(--primary-color);">${escapeHtml(fb.comment)}</p>` : '<p style="font-size: 13px; color: var(--text-muted); margin: 0; font-style: italic;">No comment provided.</p>'}
+                            <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: flex-end; align-items: center; margin-top: 4px;">
+                                <span>Submitted: ${formatDate(fb.created_at)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Toggle Accordion Panel
+        function toggleAccordion(listId) {
+            const accordion = document.getElementById(`accordion-${listId}`);
+            if (!accordion) return;
+            
+            const isExpanded = accordion.classList.contains('expanded');
+            
+            // Close other panels
+            document.querySelectorAll('.list-accordion').forEach(el => el.classList.remove('expanded'));
+            
+            if (!isExpanded) {
+                accordion.classList.add('expanded');
+            }
+        }
+
+        // Clear detail view when no user selected / deleted
+        function clearDetailView() {
+            selectedUserId = null;
+            sessionStorage.removeItem('selected_user_id');
+            document.getElementById('detailContent').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'flex';
+            document.querySelectorAll('.user-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('.users-layout').classList.remove('detail-active');
+        }
+
+        // Switch Tabs inside detail drawer
+        function switchTab(event, tabId) {
+            // Remove active states
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // Set active targets
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // =============================================================================
+        // MODALS & BUTTON INTERACTIONS
+        // =============================================================================
+
+        // Reset Password Dialog Controls
+        function openResetModal() {
+            document.getElementById('resetPasswordForm').reset();
+            document.getElementById('resetModal').classList.add('open');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.remove('open');
+        }
+
+        function handleResetPassword(e) {
+            e.preventDefault();
+            const pass = document.getElementById('newPass').value;
+            const confirmPass = document.getElementById('confirmPass').value;
+
+            if (pass !== confirmPass) {
+                showToast('Passwords do not match!', 'danger');
+                return;
+            }
+
+            if (pass.length < 8) {
+                showToast('Password must be at least 8 characters long!', 'danger');
+                return;
+            }
+
+            fetch(`/admin/api/user/${selectedUserId}/reset_password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('User password reset successfully!', 'success');
+                    closeResetModal();
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            })
+            .catch(() => {
+                showToast('Failed to connect to reset API', 'danger');
+            });
+        }
+
+        // Deletion Dialog Controls
+        function confirmDeleteUser() {
+            const user = allUsers.find(u => u.id === selectedUserId);
+            if (!user) return;
+
+            document.getElementById('deleteUserEmail').textContent = user.email;
+            document.getElementById('confirmDeleteToken').value = '';
+            document.getElementById('deleteModal').classList.add('open');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('open');
+        }
+
+        function executeDeleteUser() {
+            const token = document.getElementById('confirmDeleteToken').value.trim();
+            if (token !== 'DELETE') {
+                showToast('Please type "DELETE" exactly to confirm account deletion!', 'danger');
+                return;
+            }
+
+            const targetId = selectedUserId;
+            fetch(`/admin/api/user/${targetId}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('User account successfully deleted!', 'success');
+                    closeDeleteModal();
+                    clearDetailView();
+                    fetchUsers(); // Refresh list to update counts/existence
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            })
+            .catch(() => {
+                showToast('Failed to connect to delete API', 'danger');
+            });
+        }
+
+        // =============================================================================
+        // HELPERS
+        // =============================================================================
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        function formatDate(isoStr, dateOnly = false) {
+            if (!isoStr) return '-';
+            try {
+                // Handle ISO string formatting safely
+                const cleanStr = isoStr.includes('T') ? isoStr.replace('Z', '') : isoStr;
+                const d = new Date(cleanStr);
+                if (isNaN(d.getTime())) return isoStr;
+                
+                if (dateOnly) {
+                    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                }
+                
+                return d.toLocaleDateString(undefined, { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                }) + ' ' + d.toLocaleTimeString(undefined, { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } catch (e) {
+                return isoStr;
+            }
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script></body>
+
+</html>

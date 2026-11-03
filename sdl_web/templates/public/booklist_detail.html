@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ booklist.name }} - Booklist</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, #1e1b4b 50%, var(--t-bg-body-start) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            transition: color 0.2s;
+        }
+
+        .back-btn:hover {
+            color: var(--t-text-primary);
+        }
+
+        .booklist-header-card {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .booklist-title {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--t-text-secondary), #e879f9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .booklist-desc {
+            color: var(--t-text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .booklist-info {
+            font-size: 12px;
+            color: var(--t-text-muted);
+            display: flex;
+            gap: 16px;
+        }
+
+        .books-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .book-row {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .book-row:hover {
+            transform: translateY(-2px);
+            border-color: var(--t-accent-alpha-40);
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .book-meta {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .book-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--t-text-primary);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 4px;
+            transition: color 0.2s;
+        }
+
+        .book-name:hover {
+            color: var(--t-text-secondary);
+        }
+
+        .book-added-date {
+            font-size: 11px;
+            color: var(--t-text-muted);
+        }
+
+        .btn-remove-item {
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-remove-item:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background: rgba(15, 23, 42, 0.25);
+            border-radius: 16px;
+            border: 1px dashed var(--t-border);
+            color: var(--t-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+        }
+
+        /* Toast styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: #ef4444;
+            color: white;
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+        }
+
+        @media (max-width: 480px) {
+            .book-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .book-meta {
+                margin-right: 0;
+                margin-bottom: 4px;
+            }
+            .btn-remove-item {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo header-brand">
+            <a href="{{ url_for('index') }}" class="navbar-home-btn" title="Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+            <h1 class="navbar-title" style="font-size: 22px; margin: 0; ">Sanskrit Digital Library</h1>
+        </div>
+        <nav>
+            <a href="{{ url_for('search_page') }}">Search</a>
+            <a href="{{ url_for('browse') }}">Browse</a>
+            {% if user_logged_in %}
+            <div>
+                <a href="{% if session.get('logged_in') %}{{ url_for('admin_dashboard') }}{% else %}{{ url_for('user_sdl_profile') }}{% endif %}" class="user-avatar-nav-btn" style="{% if user_profile_pic_url %}background-image: url('{{ user_profile_pic_url }}') !important;{% else %}background: {{ user_avatar.gradient }} !important;{% endif %}" title="View Profile ({{ user_display_name }})">
+                    {% if not user_profile_pic_url %}
+                        {{ user_avatar.emoji }}
+                    {% endif %}
+                </a>
+            </div>
+            {% else %}
+            <a href="{{ url_for('user_sdl_profile') }}">👤 Profile</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container">
+        <a href="{{ url_for('user_sdl_profile') }}" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            Back to Profile
+        </a>
+
+        <div class="booklist-header-card">
+            <h2 class="booklist-title">{{ booklist.name }}</h2>
+            <p class="booklist-desc">{{ booklist.description or 'No description provided.' }}</p>
+            <div class="booklist-info">
+                <span>📚 {{ booklist['items']|length }} books in list</span>
+                <span>📅 Created on {{ booklist.created_at[:10] }}</span>
+            </div>
+        </div>
+
+        <div class="books-list" id="booksList">
+            {% if booklist['items']|length == 0 %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📖</div>
+                    <div class="empty-state-text">This list is currently empty. Open any book in the Reader to add it here.</div>
+                </div>
+            {% else %}
+                {% for item in booklist['items'] %}
+                    <div class="book-row" id="book-{{ item.book_name|replace(' ', '-') }}">
+                        <div class="book-meta">
+                            <a href="/view/{{ item.book_name }}" class="book-name">{{ item.book_name|replace('_', ' ') }}</a>
+                            <div class="book-added-date">Added on {{ item.added_at[:10] }}</div>
+                        </div>
+                        <button class="btn-remove-item" onclick="removeFromList('{{ booklist.id }}', '{{ item.book_name }}')">
+                            🗑️ Remove
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+
+    <div id="toast" class="toast">Removed from list</div>
+
+    <script>
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function removeFromList(booklistId, bookName) {
+            if (!confirm("Remove this book from the list?")) return;
+            fetch(`/api/user/booklist/${booklistId}/remove`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ book_name: bookName })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast("Book removed from list");
+                    location.reload(); // Refresh the list
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+</html>

@@ -1,0 +1,3562 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuizMaster — Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css?v=100">
+  <script src="db.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    .lang-tab {
+      background: var(--bg-white);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      margin-bottom: -1px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+
+    .lang-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* Admin Tab Bar */
+    .admin-tab-bar {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1.75rem;
+      border-bottom: 2px solid var(--border-light);
+    }
+
+    .admin-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .admin-tab:hover {
+      color: var(--text-primary);
+      background: var(--t-border-light);
+    }
+
+    .admin-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: transparent;
+    }
+
+    /* Export Dropdown */
+    .export-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .export-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--t-bg-overlay);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm, 6px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      min-width: 180px;
+      z-index: 100;
+      padding: 0.35rem 0;
+      margin-top: 4px;
+      animation: dropdownFadeIn 0.15s ease;
+    }
+
+    @keyframes dropdownFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .export-dropdown-menu.show {
+      display: block;
+    }
+
+    .export-dropdown-menu button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.55rem 1rem;
+      border: none;
+      background: transparent;
+      font-size: 0.84rem;
+      color: var(--text-primary, var(--t-text-primary));
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s ease;
+    }
+
+    .export-dropdown-menu button:hover {
+      background: var(--accent-light, rgba(129, 140, 248, 0.15));
+      color: #fff;
+    }
+
+    .export-dropdown-menu .dropdown-divider {
+      height: 1px;
+      background: var(--border, var(--t-border));
+      margin: 0.25rem 0;
+    }
+
+    /* Multi-select Dropdown styles */
+    .dropdown-multiselect {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-multiselect-toggle {
+      width: auto;
+      min-width: 160px;
+      max-width: 240px;
+      padding: 0.45rem 2rem 0.45rem 0.7rem;
+      font-size: 0.85rem;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      text-align: left;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .dropdown-multiselect-toggle::after {
+      content: '▾';
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .dropdown-multiselect-toggle:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .dropdown-multiselect-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--t-bg-overlay);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      min-width: 200px;
+      max-width: 320px;
+      max-height: 280px;
+      overflow-y: auto;
+      z-index: 150;
+      padding: 0.5rem;
+      margin-top: 4px;
+    }
+
+    .dropdown-multiselect-menu.show {
+      display: block;
+    }
+
+    .dropdown-multiselect-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s ease;
+      user-select: none;
+      margin-bottom: 2px;
+    }
+
+    .dropdown-multiselect-item:hover {
+      background: var(--accent-light);
+      color: #fff;
+    }
+
+    .dropdown-multiselect-item input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--accent);
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="index.html" class="navbar-brand"><img src="/static/images/app_quiz.png" class="navbar-logo" alt="QuizMaster Logo">Quiz<span class="highlight">Master</span></a>
+    </div>
+    <div class="navbar-links">
+      <a href="/admin/hub">🏠 Admin Hub</a>
+      <a href="index.html">Quiz Home</a>
+      <a href="admin-dashboard.html" class="active">Dashboard</a>
+      <a href="#" id="logoutBtn" style="color: #fca5a5;">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container container-lg">
+    <div class="admin-header">
+      <h1>📋 Dashboard</h1>
+      <div class="btn-group">
+        <div class="export-dropdown">
+          <button class="btn btn-secondary btn-sm" id="exportAllBtn">📥 Export All ▾</button>
+          <div class="export-dropdown-menu" id="exportAllMenu">
+            <button id="exportAllJsonBtn">📄 Export as JSON</button>
+            <button id="exportAllExcelBtn">📊 Export as Excel (.xlsx)</button>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="uploadModalBtn">📤 Bulk Upload</button>
+        <button class="btn btn-primary btn-sm" id="addModalBtn">➕ Add Question</button>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="admin-tab-bar">
+      <button class="admin-tab active" id="tabQuestionsBtn" onclick="switchTab('questions')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        Manage Questions
+      </button>
+      <button class="admin-tab" id="tabCategoriesBtn" onclick="switchTab('categories')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h6l2 2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path></svg>
+        Organise Categories
+      </button>
+      <button class="admin-tab" id="tabFeedbackBtn" onclick="switchTab('feedback')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        Question Feedback
+      </button>
+      <button class="admin-tab" id="tabResultsBtn" onclick="switchTab('results')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Results Log
+      </button>
+    </div>
+
+    <!-- Questions Tab Content -->
+    <div id="questionsTabContent">
+      <!-- Database Integration Banner -->
+      <div
+        style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.5; color: var(--text-primary);">
+        💾 <strong>Database Mode:</strong> Questions are stored in the server database (SQLite). Changes are saved
+        instantly and visible to all users. Use <strong>📥 Export All</strong> to download a JSON backup, or
+        <strong>📤 Bulk Upload</strong> to import questions from a JSON file.
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="totalCount">...</div>
+          <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="subjectCount">...</div>
+          <div class="stat-label">Subjects</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="filteredCount">...</div>
+          <div class="stat-label">Showing</div>
+        </div>
+      </div>
+
+      <!-- Filter & Sort Bar -->
+      <div class="card" style="padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">🔍 Filter:</span>
+            <input type="text" id="filterSearch" class="form-input" placeholder="Search questions, options, explanation..."
+              style="width: auto; min-width: 260px; padding: 0.45rem 0.7rem; font-size: 0.85rem;">
+            
+            <!-- Subject Multi-select -->
+            <div class="dropdown-multiselect" id="subjectDropdown">
+              <button class="dropdown-multiselect-toggle" id="subjectToggle">All Subjects</button>
+              <div class="dropdown-multiselect-menu" id="subjectMenu"></div>
+            </div>
+
+            <!-- Level Multi-select -->
+            <div class="dropdown-multiselect" id="levelDropdown">
+              <button class="dropdown-multiselect-toggle" id="levelToggle">All Levels</button>
+              <div class="dropdown-multiselect-menu" id="levelMenu"></div>
+            </div>
+
+            <button class="btn btn-sm" id="clearFilterBtn" style="color: var(--text-muted); font-size: 0.8rem;">✕
+              Clear</button>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">⇅ Sort By:</span>
+            <select id="sortBy" class="form-select"
+              style="width: auto; min-width: 160px; padding: 0.45rem 0.7rem; font-size: 0.85rem;">
+              <option value="id_desc">ID (Newest first)</option>
+              <option value="id_asc">ID (Oldest first)</option>
+              <option value="subject_asc">Subject (A-Z)</option>
+              <option value="subject_desc">Subject (Z-A)</option>
+              <option value="level_asc">Level (A-Z)</option>
+              <option value="level_desc">Level (Z-A)</option>
+              <option value="question_asc">Question (A-Z)</option>
+              <option value="question_desc">Question (Z-A)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selection Action Bar -->
+      <div class="selection-bar" id="selectionBar" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span id="selectedCount" style="font-weight: 600; font-size: 0.88rem;">0 selected</span>
+          <div class="export-dropdown">
+            <button class="btn btn-secondary btn-sm" id="exportSelectedBtn">📥 Export Selected ▾</button>
+            <div class="export-dropdown-menu" id="exportSelectedMenu">
+              <button id="exportSelectedJsonBtn">📄 Export as JSON</button>
+              <button id="exportSelectedExcelBtn">📊 Export as Excel (.xlsx)</button>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" id="deleteSelectedBtn">🗑️ Delete Selected</button>
+          <button class="btn btn-sm" id="clearSelectionBtn" style="color: var(--text-muted);">✕ Clear</button>
+        </div>
+      </div>
+
+      <!-- Questions Table -->
+      <div class="table-wrapper" id="tableWrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 40px;"><input type="checkbox" id="selectAll" title="Select all"></th>
+              <th>ID</th>
+              <th>Subject</th>
+              <th>Level</th>
+              <th>Question</th>
+              <th>Answer</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="questionsBody">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem;"></div>
+                <div>Loading data...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="icon">📭</div>
+        <h3>No questions found</h3>
+        <p class="mt-1" style="color: var(--text-secondary);">Add your first question or adjust the filter.</p>
+      </div>
+    </div>
+
+    <!-- Categories Tab Content -->
+    <div id="categoriesTabContent" style="display: none;">
+      <div class="fe-layout">
+        <!-- Left: Tree Sidebar -->
+        <div class="fe-sidebar card">
+          <div class="fe-sidebar-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h6l2 2h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path></svg>
+            Folder Tree
+          </div>
+          <div id="sidebarTree" class="fe-tree-list">
+            <!-- Tree populated dynamically -->
+          </div>
+          <div class="fe-sidebar-footer">
+            <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="saveCategoriesToServer()" id="feSaveBtn">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+              Save Structure
+            </button>
+            <div class="fe-save-status" id="feSaveStatus"></div>
+          </div>
+        </div>
+
+        <!-- Right: Explorer Pane -->
+        <div class="fe-pane card">
+          <!-- Toolbar -->
+          <div class="fe-toolbar">
+            <div class="fe-breadcrumb" id="feAdminBreadcrumb"></div>
+            <div class="fe-toolbar-actions">
+              <button class="fe-action-btn" onclick="openCreateFolderModal()" title="New Folder">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+                New Folder
+              </button>
+              <button class="fe-action-btn fe-action-btn--primary" onclick="openLinkQuizModal()" title="Link Quiz">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                Link Quiz
+              </button>
+            </div>
+          </div>
+
+          <!-- Explorer Icon Grid -->
+          <div class="fe-grid" id="feAdminGrid">
+            <div class="fe-empty-state">
+              <div class="fe-empty-icon">📂</div>
+              <div>Loading...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Feedback Tab Content -->
+    <div id="feedbackTabContent" style="display: none;">
+      <!-- Feedback Stats Row -->
+      <div class="stats-row" id="feedbackStatsRow">
+        <div class="stat-card">
+          <div class="stat-value" id="fbTotalQuestions">—</div>
+          <div class="stat-label">Questions with Feedback</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--success);" id="fbTotalUp">—</div>
+          <div class="stat-label">👍 Thumbs Up</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--danger);" id="fbTotalDown">—</div>
+          <div class="stat-label">👎 Thumbs Down</div>
+        </div>
+      </div>
+
+      <!-- Search & Action Bar -->
+      <div class="card" style="padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">🔍 Search:</span>
+            <input type="text" id="feedbackSearch" class="form-input" placeholder="Question, Subject, Level, ID…"
+              style="width: auto; min-width: 280px; padding: 0.45rem 0.7rem; font-size: 0.85rem;"
+              oninput="debounceFeedbackSearch()">
+          </div>
+          <div style="display: flex; gap: 0.65rem; align-items: center;">
+            <!-- Export dropdown -->
+            <div class="export-dropdown" id="fbExportDropdownWrap">
+              <button class="btn btn-secondary btn-sm" id="fbExportBtn"
+                onclick="event.stopPropagation(); toggleDropdown('fbExportMenu')">
+                📥 Export ▾
+              </button>
+              <div class="export-dropdown-menu" id="fbExportMenu">
+                <button onclick="exportFeedbackJSON()">📄 Export as JSON</button>
+                <button onclick="exportFeedbackCSV()">📊 Export as CSV</button>
+              </div>
+            </div>
+            <!-- Import -->
+            <button class="btn btn-secondary btn-sm" onclick="openModal('fbImportModal')">📤 Import JSON</button>
+            <!-- Clear all -->
+            <button class="btn btn-danger btn-sm" id="clearAllFeedbackBtn" onclick="clearQuizFeedbackAll()">
+              🗑️ Clear All
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback Table -->
+      <div class="table-wrapper" id="feedbackTableWrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Subject</th>
+              <th>Level</th>
+              <th style="text-align:center;">👍</th>
+              <th style="text-align:center;">👎</th>
+              <th>Recent Comment</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="feedbackTableBody">
+            <tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-secondary);">
+              <div class="loading-spinner" style="display:inline-block; margin-bottom:0.5rem;"></div>
+              <div>Loading feedback data…</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" id="feedbackEmptyState" style="display:none;">
+        <div class="icon">💬</div>
+        <h3>No feedback yet</h3>
+        <p class="mt-1" style="color:var(--text-secondary);">Students haven't submitted any ratings for quiz questions yet.</p>
+      </div>
+
+      <!-- Feedback Pagination -->
+      <div id="feedbackPagination" style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem; align-items:center; flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- Quiz Results Log Tab Content -->
+    <div id="resultsTabContent" style="display: none;">
+      <!-- Results Stats Row -->
+      <div class="stats-row" id="resultsStatsRow">
+        <div class="stat-card">
+          <div class="stat-value" id="resTotalAttempts">—</div>
+          <div class="stat-label">Total Quiz Attempts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--success);" id="resAvgPercentage">—</div>
+          <div class="stat-label">Average Score (%)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--accent);" id="resUniqueUsers">—</div>
+          <div class="stat-label">Unique Candidates</div>
+        </div>
+      </div>
+
+      <!-- Search & Action Bar -->
+      <div class="card" style="padding: 0.85rem 1.25rem; margin-bottom: 1rem;">
+        <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; justify-content: space-between;">
+          <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);">🔍 Search:</span>
+            <input type="text" id="resultsSearch" class="form-input" placeholder="User, Subject, Level, Lang…"
+              style="width: auto; min-width: 280px; padding: 0.45rem 0.7rem; font-size: 0.85rem;"
+              oninput="debounceResultsSearch()">
+          </div>
+          <div style="display: flex; gap: 0.65rem; align-items: center;">
+            <!-- Export dropdown -->
+            <div class="export-dropdown" id="resExportDropdownWrap">
+              <button class="btn btn-secondary btn-sm" id="resExportBtn"
+                onclick="event.stopPropagation(); toggleDropdown('resExportMenu')">
+                📥 Export ▾
+              </button>
+              <div class="export-dropdown-menu" id="resExportMenu">
+                <button onclick="exportResultsJSON()">📄 Export as JSON</button>
+                <button onclick="exportResultsCSV()">📊 Export as CSV</button>
+              </div>
+            </div>
+            <!-- Clear all -->
+            <button class="btn btn-danger btn-sm" id="clearAllResultsBtn" onclick="clearQuizResultsAll()">
+              🗑️ Clear All Logs
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Table -->
+      <div class="table-wrapper" id="resultsTableWrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Candidate / User Name</th>
+              <th>Subject</th>
+              <th>Level</th>
+              <th>Score</th>
+              <th>Percentage</th>
+              <th>Language</th>
+              <th>Date & Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+            <tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-secondary);">
+              <div class="loading-spinner" style="display:inline-block; margin-bottom:0.5rem;"></div>
+              <div>Loading results logs…</div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" id="resultsPagination" style="margin-top:1.5rem; justify-content:center; display:flex; gap:0.25rem;"></div>
+
+      <div class="empty-state" id="resultsEmptyState" style="display:none;">
+        <div class="icon">📝</div>
+        <h3>No quiz attempts yet</h3>
+        <p class="mt-1" style="color:var(--text-secondary);">No attempts have been recorded for the quizzes yet.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-quote">"ज्ञानेन सदृशं पवित्रमिह विद्यते"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull; 
+      <a href="/library">Sanskrit Digital Library</a> &bull; 
+      <a href="index.html">Back to Quiz</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="questionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Question</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+      <form id="questionForm">
+        <input type="hidden" id="editId">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <div class="form-group">
+            <label for="qSubject">Subject</label>
+            <input type="text" id="qSubject" class="form-input" list="subjectSuggestions" placeholder="e.g. Mathematics"
+              required>
+            <datalist id="subjectSuggestions"></datalist>
+          </div>
+          <div class="form-group">
+            <label for="qLevel">Level / Grantha</label>
+            <input type="text" id="qLevel" class="form-input" list="levelSuggestions" placeholder="e.g. Beginner"
+              required>
+            <datalist id="levelSuggestions"></datalist>
+          </div>
+        </div>
+        <!-- Language Tabs -->
+        <div
+          style="display: flex; gap: 0.25rem; border-bottom: 2px solid var(--border-light); margin-bottom: 1rem; padding-bottom: 0.25rem;">
+          <button type="button" class="btn btn-sm lang-tab active" data-lang="en">English</button>
+          <button type="button" class="btn btn-sm lang-tab" data-lang="sa">संस्कृतम्</button>
+          <button type="button" class="btn btn-sm lang-tab" data-lang="hi">हिन्दी</button>
+          <button type="button" class="btn btn-sm lang-tab" data-lang="kn">ಕನ್ನಡ</button>
+          <button type="button" class="btn btn-sm lang-tab" data-lang="te">తెలుగు</button>
+        </div>
+
+        <!-- Language Sections -->
+        <div class="lang-section" id="langSec_en">
+          <div class="form-group">
+            <label for="qText_en">Question (English)</label>
+            <textarea id="qText_en" class="form-textarea" placeholder="Enter the question text in English..."
+              required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="optA_en">Option A (English)</label>
+            <input type="text" id="optA_en" class="form-input" placeholder="Option A in English" required>
+          </div>
+          <div class="form-group">
+            <label for="optB_en">Option B (English)</label>
+            <input type="text" id="optB_en" class="form-input" placeholder="Option B in English" required>
+          </div>
+          <div class="form-group">
+            <label for="optC_en">Option C (English)</label>
+            <input type="text" id="optC_en" class="form-input" placeholder="Option C in English" required>
+          </div>
+          <div class="form-group">
+            <label for="optD_en">Option D (English)</label>
+            <input type="text" id="optD_en" class="form-input" placeholder="Option D in English" required>
+          </div>
+          <div class="form-group">
+            <label for="explanation_en">Explanation (English)</label>
+            <textarea id="explanation_en" class="form-textarea" placeholder="Why is this the correct answer in English?"
+              required></textarea>
+          </div>
+        </div>
+
+        <div class="lang-section" id="langSec_sa" style="display: none;">
+          <div class="form-group">
+            <label for="qText_sa">Question (Sanskrit)</label>
+            <textarea id="qText_sa" class="form-textarea"
+              placeholder="Enter the question text in Sanskrit..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="optA_sa">Option A (Sanskrit)</label>
+            <input type="text" id="optA_sa" class="form-input" placeholder="Option A in Sanskrit">
+          </div>
+          <div class="form-group">
+            <label for="optB_sa">Option B (Sanskrit)</label>
+            <input type="text" id="optB_sa" class="form-input" placeholder="Option B in Sanskrit">
+          </div>
+          <div class="form-group">
+            <label for="optC_sa">Option C (Sanskrit)</label>
+            <input type="text" id="optC_sa" class="form-input" placeholder="Option C in Sanskrit">
+          </div>
+          <div class="form-group">
+            <label for="optD_sa">Option D (Sanskrit)</label>
+            <input type="text" id="optD_sa" class="form-input" placeholder="Option D in Sanskrit">
+          </div>
+          <div class="form-group">
+            <label for="explanation_sa">Explanation (Sanskrit)</label>
+            <textarea id="explanation_sa" class="form-textarea"
+              placeholder="Why is this correct in Sanskrit?"></textarea>
+          </div>
+        </div>
+
+        <div class="lang-section" id="langSec_hi" style="display: none;">
+          <div class="form-group">
+            <label for="qText_hi">Question (Hindi)</label>
+            <textarea id="qText_hi" class="form-textarea" placeholder="Enter the question text in Hindi..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="optA_hi">Option A (Hindi)</label>
+            <input type="text" id="optA_hi" class="form-input" placeholder="Option A in Hindi">
+          </div>
+          <div class="form-group">
+            <label for="optB_hi">Option B (Hindi)</label>
+            <input type="text" id="optB_hi" class="form-input" placeholder="Option B in Hindi">
+          </div>
+          <div class="form-group">
+            <label for="optC_hi">Option C (Hindi)</label>
+            <input type="text" id="optC_hi" class="form-input" placeholder="Option C in Hindi">
+          </div>
+          <div class="form-group">
+            <label for="optD_hi">Option D (Hindi)</label>
+            <input type="text" id="optD_hi" class="form-input" placeholder="Option D in Hindi">
+          </div>
+          <div class="form-group">
+            <label for="explanation_hi">Explanation (Hindi)</label>
+            <textarea id="explanation_hi" class="form-textarea" placeholder="Why is this correct in Hindi?"></textarea>
+          </div>
+        </div>
+
+        <div class="lang-section" id="langSec_kn" style="display: none;">
+          <div class="form-group">
+            <label for="qText_kn">Question (Kannada)</label>
+            <textarea id="qText_kn" class="form-textarea"
+              placeholder="Enter the question text in Kannada..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="optA_kn">Option A (Kannada)</label>
+            <input type="text" id="optA_kn" class="form-input" placeholder="Option A in Kannada">
+          </div>
+          <div class="form-group">
+            <label for="optB_kn">Option B (Kannada)</label>
+            <input type="text" id="optB_kn" class="form-input" placeholder="Option B in Kannada">
+          </div>
+          <div class="form-group">
+            <label for="optC_kn">Option C (Kannada)</label>
+            <input type="text" id="optC_kn" class="form-input" placeholder="Option C in Kannada">
+          </div>
+          <div class="form-group">
+            <label for="optD_kn">Option D (Kannada)</label>
+            <input type="text" id="optD_kn" class="form-input" placeholder="Option D in Kannada">
+          </div>
+          <div class="form-group">
+            <label for="explanation_kn">Explanation (Kannada)</label>
+            <textarea id="explanation_kn" class="form-textarea"
+              placeholder="Why is this correct in Kannada?"></textarea>
+          </div>
+        </div>
+
+        <div class="lang-section" id="langSec_te" style="display: none;">
+          <div class="form-group">
+            <label for="qText_te">Question (Telugu)</label>
+            <textarea id="qText_te" class="form-textarea" placeholder="Enter the question text in Telugu..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="optA_te">Option A (Telugu)</label>
+            <input type="text" id="optA_te" class="form-input" placeholder="Option A in Telugu">
+          </div>
+          <div class="form-group">
+            <label for="optB_te">Option B (Telugu)</label>
+            <input type="text" id="optB_te" class="form-input" placeholder="Option B in Telugu">
+          </div>
+          <div class="form-group">
+            <label for="optC_te">Option C (Telugu)</label>
+            <input type="text" id="optC_te" class="form-input" placeholder="Option C in Telugu">
+          </div>
+          <div class="form-group">
+            <label for="optD_te">Option D (Telugu)</label>
+            <input type="text" id="optD_te" class="form-input" placeholder="Option D in Telugu">
+          </div>
+          <div class="form-group">
+            <label for="explanation_te">Explanation (Telugu)</label>
+            <textarea id="explanation_te" class="form-textarea" placeholder="Why is this correct in Telugu?"></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="correctAnswer">Correct Answer (Index based)</label>
+          <select id="correctAnswer" class="form-select" required>
+            <option value="">Select correct option</option>
+            <option value="0">Option A</option>
+            <option value="1">Option B</option>
+            <option value="2">Option C</option>
+            <option value="3">Option D</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="saveBtn">💾 Save Question</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Upload Modal -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>📤 Bulk Upload</h2>
+        <button class="modal-close" id="uploadModalClose">✕</button>
+      </div>
+      <div
+        style="background: var(--accent-light); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.25rem; font-size: 0.88rem; border: 1px solid var(--t-accent-alpha-20);">
+        <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent);">📝 File Instruction</h3>
+        <p style="margin-bottom: 0.75rem; color: var(--text-secondary);">
+          <strong>JSON format:</strong> An array of question objects with
+          <code>question</code> (multilingual object), <code>options</code> (multilingual object with 4 choices),
+          <code>answerIndex</code> (0-3), and <code>explanation</code> (multilingual object).
+        </p>
+        <p style="margin-bottom: 0.75rem; color: var(--text-secondary);">
+          <strong>Excel format:</strong> A spreadsheet with columns like <code>subject</code>, <code>level</code>,
+          <code>question_en</code>, <code>question_sa</code>, <code>options_en</code> (4 options separated by <code>|</code>),
+          <code>answerIndex</code>, <code>explanation_en</code>, etc. Download the sample for the exact format.
+        </p>
+        <p style="margin-bottom: 0.75rem; color: var(--text-secondary);">
+          Optional fields: <code>subject</code> and <code>level</code>. If missing, you will be prompted to specify defaults during the preview step.
+        </p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button class="btn btn-secondary btn-sm" id="downloadSampleExcelBtn">
+            📊 Download Sample Excel
+          </button>
+        </div>
+      </div>
+
+      <div id="defaultInputsContainer" style="display: none; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="uploadSubject">Default Subject</label>
+          <input type="text" id="uploadSubject" class="form-input" list="subjectSuggestions" placeholder="e.g. Science">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="uploadLevel">Default Level</label>
+          <input type="text" id="uploadLevel" class="form-input" list="levelSuggestions" placeholder="e.g. Beginner">
+        </div>
+      </div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" accept=".json,.xlsx,.xls" id="fileInput" multiple>
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">
+          <strong>Click to browse</strong> or drag &amp; drop<br>
+          <small>JSON or Excel files, max 5MB</small>
+        </div>
+      </div>
+      
+      <!-- Preview & Confirmation Area -->
+      <div id="uploadPreviewArea" style="display: none; margin-bottom: 1.25rem;">
+        <div id="previewWarning" class="toast error" style="position: static; animation: none; margin-bottom: 1rem; display: none;"></div>
+        <div id="previewSuccess" class="toast success" style="position: static; animation: none; margin-bottom: 1rem; display: none;"></div>
+        
+        <div style="background: var(--bg-card); border: 1px solid var(--border-light); padding: 1rem; border-radius: var(--radius); font-size: 0.88rem;">
+          <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.95rem;">📊 File Summary</h4>
+          <p style="margin: 0.25rem 0; color: var(--text-secondary);">Total Questions: <strong id="previewTotalCount" style="color: var(--text-primary);">0</strong></p>
+          
+          <div id="previewMetadataDetails" style="margin-top: 0.75rem;"></div>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+          <button id="confirmImportBtn" class="btn btn-primary" style="flex: 1;">🚀 Confirm Import</button>
+          <button id="cancelImportBtn" class="btn btn-secondary">✕ Cancel</button>
+        </div>
+      </div>
+
+      <div id="uploadResult" class="mt-2" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    // API_BASE is already declared in db.js
+
+    // ── Helpers ──
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function escapeHtml(s) {
+      if (typeof s !== 'string') return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function truncate(s, n = 60) {
+      if (!s) return '';
+      return s.length > n ? s.substring(0, n) + '…' : s;
+    }
+
+    function loc(field, lang) {
+      if (!field) return '';
+      if (typeof field === 'string') return field;
+      return field[lang] || field['en'] || Object.values(field)[0] || '';
+    }
+
+    // ── State ──
+    let allQuestions = []; // All questions from server (unfiltered)
+    let questions = [];    // Currently displayed (filtered)
+    let allSubjects = [];
+    let allLevels = {};
+    let selectedIds = new Set();
+    let currentFilterSubjects = new Set();
+    let currentFilterLevels = new Set();
+
+    // ── Auth Check ──
+    if (sessionStorage.getItem('isAdmin') !== 'true') {
+      window.location.href = 'admin-login.html';
+    }
+
+    // ── Load Questions from API ──
+    async function loadQuestions() {
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        allQuestions = data.questions;
+
+        // Calculate distinct subjects, levels, and counts
+        const meta = getSubjectsAndLevelsLocal(allQuestions);
+        allSubjects = meta.subjects;
+        allLevels = meta.levels;
+
+        document.getElementById('totalCount').textContent = allQuestions.length;
+        document.getElementById('subjectCount').textContent = allSubjects.length;
+
+        applyFilterAndSort();
+
+        updateFilterDropdowns();
+        updateSuggestions();
+      } catch (err) {
+        console.error('Error loading questions:', err);
+        showToast('Failed to load questions', 'error');
+      }
+    }
+
+    // ── Helper for Sorting ──
+    function sortQuestionsList(list, sortBy) {
+      if (sortBy === 'id_asc') {
+        list.sort((a, b) => a.id - b.id);
+      } else if (sortBy === 'id_desc') {
+        list.sort((a, b) => b.id - a.id);
+      } else if (sortBy === 'subject_asc') {
+        list.sort((a, b) => (a.subject || 'General').localeCompare(b.subject || 'General', undefined, { sensitivity: 'base' }));
+      } else if (sortBy === 'subject_desc') {
+        list.sort((a, b) => (b.subject || 'General').localeCompare(a.subject || 'General', undefined, { sensitivity: 'base' }));
+      } else if (sortBy === 'level_asc') {
+        list.sort((a, b) => (a.level || 'Default').localeCompare(b.level || 'Default', undefined, { sensitivity: 'base' }));
+      } else if (sortBy === 'level_desc') {
+        list.sort((a, b) => (b.level || 'Default').localeCompare(a.level || 'Default', undefined, { sensitivity: 'base' }));
+      } else if (sortBy === 'question_asc') {
+        list.sort((a, b) => {
+          const textA = loc(a.question, 'sa') || loc(a.question, 'en') || '';
+          const textB = loc(b.question, 'sa') || loc(b.question, 'en') || '';
+          return textA.localeCompare(textB, undefined, { sensitivity: 'base' });
+        });
+      } else if (sortBy === 'question_desc') {
+        list.sort((a, b) => {
+          const textA = loc(a.question, 'sa') || loc(a.question, 'en') || '';
+          const textB = loc(b.question, 'sa') || loc(b.question, 'en') || '';
+          return textB.localeCompare(textA, undefined, { sensitivity: 'base' });
+        });
+      }
+    }
+
+    // ── Apply Filters and Sort client-side ──
+    function applyFilterAndSort() {
+      let filtered = [...allQuestions];
+      
+      if (currentFilterSubjects.size > 0) {
+        filtered = filtered.filter(q => currentFilterSubjects.has(q.subject || 'General'));
+      }
+      if (currentFilterLevels.size > 0) {
+        filtered = filtered.filter(q => currentFilterLevels.has(q.level || 'Default'));
+      }
+
+      const searchVal = document.getElementById('filterSearch').value.trim().toLowerCase();
+      if (searchVal) {
+        filtered = filtered.filter(q => {
+          const qId = String(q.id || '');
+          const subj = String(q.subject || 'General').toLowerCase();
+          const lvl = String(q.level || 'Default').toLowerCase();
+          
+          const qText = q.question ? (typeof q.question === 'object' ? Object.values(q.question).join(' ').toLowerCase() : String(q.question).toLowerCase()) : '';
+          const qExpl = q.explanation ? (typeof q.explanation === 'object' ? Object.values(q.explanation).join(' ').toLowerCase() : String(q.explanation).toLowerCase()) : '';
+          
+          let qOpts = '';
+          if (q.options) {
+            if (Array.isArray(q.options)) {
+              qOpts = q.options.join(' ').toLowerCase();
+            } else if (typeof q.options === 'object') {
+              qOpts = Object.values(q.options).flatMap(o => Array.isArray(o) ? o : [o]).join(' ').toLowerCase();
+            }
+          }
+          
+          return qId.includes(searchVal) || 
+                 subj.includes(searchVal) || 
+                 lvl.includes(searchVal) || 
+                 qText.includes(searchVal) || 
+                 qExpl.includes(searchVal) || 
+                 qOpts.includes(searchVal);
+        });
+      }
+
+      const sortBy = document.getElementById('sortBy').value;
+      sortQuestionsList(filtered, sortBy);
+
+      questions = filtered;
+
+      document.getElementById('filteredCount').textContent = filtered.length;
+      renderTable();
+    }
+
+    function getSubjectsAndLevelsLocal(qs) {
+      const map = {};
+      for (const q of qs) {
+        const s = q.subject || 'General';
+        const l = q.level || 'Default';
+        if (!map[s]) map[s] = new Set();
+        map[s].add(l);
+      }
+      const subjects = Object.keys(map).sort();
+      const levels = {};
+      for (const s of subjects) levels[s] = Array.from(map[s]).sort();
+      const counts = {};
+      for (const q of qs) {
+        const key = `${q.subject || 'General'}|||${q.level || 'Default'}`;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+      return { subjects, levels, counts };
+    }
+
+    function updateFilterDropdowns() {
+      const subjectMenu = document.getElementById('subjectMenu');
+      subjectMenu.innerHTML = '';
+      
+      allSubjects.forEach(s => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-multiselect-item';
+        
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = s;
+        cb.checked = currentFilterSubjects.has(s);
+        
+        cb.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            currentFilterSubjects.add(s);
+          } else {
+            currentFilterSubjects.delete(s);
+          }
+          updateSubjectToggleText();
+          updateLevelFilter();
+          applyFilterAndSort();
+        });
+        
+        item.appendChild(cb);
+        
+        const label = document.createElement('span');
+        label.textContent = s;
+        item.appendChild(label);
+        
+        item.addEventListener('click', (e) => {
+          if (e.target !== cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+          }
+        });
+        
+        subjectMenu.appendChild(item);
+      });
+      
+      updateSubjectToggleText();
+      updateLevelFilter();
+    }
+
+    function updateLevelFilter() {
+      const fLevel = document.getElementById('levelDropdown');
+      const levelMenu = document.getElementById('levelMenu');
+      levelMenu.innerHTML = '';
+
+      const levelsToRender = new Set();
+      if (currentFilterSubjects.size === 0) {
+        Object.values(allLevels).forEach(arr => arr.forEach(l => levelsToRender.add(l)));
+      } else {
+        currentFilterSubjects.forEach(s => {
+          const lvls = allLevels[s] || [];
+          lvls.forEach(l => levelsToRender.add(l));
+        });
+      }
+
+      const availableLevels = Array.from(levelsToRender).sort();
+      
+      // Retain only selected levels that are still available
+      const nextFilterLevels = new Set();
+      currentFilterLevels.forEach(l => {
+        if (levelsToRender.has(l)) {
+          nextFilterLevels.add(l);
+        }
+      });
+      currentFilterLevels = nextFilterLevels;
+
+      availableLevels.forEach(l => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-multiselect-item';
+        
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = l;
+        cb.checked = currentFilterLevels.has(l);
+        
+        cb.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            currentFilterLevels.add(l);
+          } else {
+            currentFilterLevels.delete(l);
+          }
+          updateLevelToggleText();
+          applyFilterAndSort();
+        });
+        
+        item.appendChild(cb);
+        
+        const label = document.createElement('span');
+        label.textContent = l;
+        item.appendChild(label);
+        
+        item.addEventListener('click', (e) => {
+          if (e.target !== cb) {
+            cb.checked = !cb.checked;
+            cb.dispatchEvent(new Event('change'));
+          }
+        });
+        
+        levelMenu.appendChild(item);
+      });
+
+      updateLevelToggleText();
+    }
+
+    function updateSubjectToggleText() {
+      const toggle = document.getElementById('subjectToggle');
+      const size = currentFilterSubjects.size;
+      if (size === 0) {
+        toggle.textContent = 'All Subjects';
+        toggle.style.color = 'var(--text-muted)';
+      } else if (size === 1) {
+        toggle.textContent = Array.from(currentFilterSubjects)[0];
+        toggle.style.color = 'var(--text-primary)';
+      } else {
+        toggle.textContent = `${size} Subjects`;
+        toggle.style.color = 'var(--text-primary)';
+      }
+    }
+
+    function updateLevelToggleText() {
+      const toggle = document.getElementById('levelToggle');
+      const size = currentFilterLevels.size;
+      if (size === 0) {
+        toggle.textContent = 'All Levels';
+        toggle.style.color = 'var(--text-muted)';
+      } else if (size === 1) {
+        toggle.textContent = Array.from(currentFilterLevels)[0];
+        toggle.style.color = 'var(--text-primary)';
+      } else {
+        toggle.textContent = `${size} Levels`;
+        toggle.style.color = 'var(--text-primary)';
+      }
+    }
+
+    function updateSuggestions() {
+      const subDL = document.getElementById('subjectSuggestions');
+      subDL.innerHTML = '';
+      allSubjects.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        subDL.appendChild(opt);
+      });
+
+      const lvlDL = document.getElementById('levelSuggestions');
+      lvlDL.innerHTML = '';
+      const allLvls = new Set();
+      Object.values(allLevels).forEach(arr => arr.forEach(l => allLvls.add(l)));
+      Array.from(allLvls).sort().forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l;
+        lvlDL.appendChild(opt);
+      });
+    }
+
+    // Toggle dropdown menus
+    document.getElementById('subjectToggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('levelMenu').classList.remove('show');
+      document.getElementById('subjectMenu').classList.toggle('show');
+    });
+
+    document.getElementById('levelToggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('subjectMenu').classList.remove('show');
+      document.getElementById('levelMenu').classList.toggle('show');
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#subjectDropdown')) {
+        document.getElementById('subjectMenu').classList.remove('show');
+      }
+      if (!e.target.closest('#levelDropdown')) {
+        document.getElementById('levelMenu').classList.remove('show');
+      }
+    });
+
+    document.getElementById('filterSearch').addEventListener('input', () => {
+      selectedIds.clear();
+      applyFilterAndSort();
+    });
+
+    document.getElementById('clearFilterBtn').addEventListener('click', () => {
+      currentFilterSubjects.clear();
+      currentFilterLevels.clear();
+      document.getElementById('filterSearch').value = '';
+      selectedIds.clear();
+      updateFilterDropdowns();
+      applyFilterAndSort();
+    });
+
+    document.getElementById('sortBy').addEventListener('change', () => {
+      applyFilterAndSort();
+    });
+
+    // ── Render Table ──
+    function renderTable() {
+      const body = document.getElementById('questionsBody');
+      const empty = document.getElementById('emptyState');
+      const tableW = document.getElementById('tableWrapper');
+
+      if (questions.length === 0) {
+        tableW.style.display = 'none';
+        empty.style.display = 'block';
+        updateSelectionBar();
+        return;
+      }
+
+      tableW.style.display = 'block';
+      empty.style.display = 'none';
+
+      body.innerHTML = questions.map(q => {
+        const qText = loc(q.question, 'sa');
+        const opts = Array.isArray(q.options) ? q.options : (q.options.sa || q.options[Object.keys(q.options)[0]] || []);
+        const correctOptText = q.answerIndex !== undefined && opts[q.answerIndex] ? opts[q.answerIndex] : '';
+        return `
+        <tr class="${selectedIds.has(q.id) ? 'row-selected' : ''}">
+          <td><input type="checkbox" class="row-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? 'checked' : ''}></td>
+          <td><strong>#${q.id}</strong></td>
+          <td><span class="badge" style="margin:0; font-size: 0.72rem;">${escapeHtml(q.subject || 'General')}</span></td>
+          <td><span style="font-size: 0.82rem; color: var(--text-secondary);">${escapeHtml(q.level || 'Default')}</span></td>
+          <td title="${escapeHtml(qText)}">${escapeHtml(truncate(qText, 55))}</td>
+          <td><span style="font-size: 0.82rem;">${escapeHtml(truncate(correctOptText, 25))}</span></td>
+          <td>
+            <div class="btn-group">
+              <button class="btn btn-secondary btn-sm" onclick="editQuestion(${q.id})">✏️ Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.id})">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+
+      body.querySelectorAll('.row-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const id = parseInt(e.target.dataset.id);
+          if (e.target.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+          e.target.closest('tr').classList.toggle('row-selected', e.target.checked);
+          updateSelectionBar();
+        });
+      });
+
+      updateSelectionBar();
+    }
+
+    function updateSelectionBar() {
+      const bar = document.getElementById('selectionBar');
+      const selectAllCb = document.getElementById('selectAll');
+      const count = selectedIds.size;
+
+      bar.style.display = count > 0 ? 'block' : 'none';
+      if (count > 0) document.getElementById('selectedCount').textContent = `${count} selected`;
+
+      if (questions.length > 0 && count === questions.length) {
+        selectAllCb.checked = true;
+        selectAllCb.indeterminate = false;
+      } else if (count > 0) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = true;
+      } else {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+      }
+    }
+
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      if (e.target.checked) questions.forEach(q => selectedIds.add(q.id));
+      else selectedIds.clear();
+      renderTable();
+    });
+
+    document.getElementById('clearSelectionBtn').addEventListener('click', () => {
+      selectedIds.clear();
+      renderTable();
+    });
+
+    // ── Export Dropdown Toggle ──
+    function toggleDropdown(menuId) {
+      // Close all other dropdowns first
+      document.querySelectorAll('.export-dropdown-menu').forEach(m => {
+        if (m.id !== menuId) m.classList.remove('show');
+      });
+      document.getElementById(menuId).classList.toggle('show');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.export-dropdown')) {
+        document.querySelectorAll('.export-dropdown-menu').forEach(m => m.classList.remove('show'));
+      }
+    });
+
+    document.getElementById('exportAllBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown('exportAllMenu');
+    });
+
+    document.getElementById('exportSelectedBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDropdown('exportSelectedMenu');
+    });
+
+    // ── Export All ──
+    document.getElementById('exportAllJsonBtn').addEventListener('click', async () => {
+      document.getElementById('exportAllMenu').classList.remove('show');
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        downloadJSON(data.questions, 'questions.json');
+        showToast(`Exported ${data.questions.length} questions as JSON`, 'success');
+      } catch (err) {
+        showToast('Failed to export', 'error');
+      }
+    });
+
+    document.getElementById('exportAllExcelBtn').addEventListener('click', async () => {
+      document.getElementById('exportAllMenu').classList.remove('show');
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        downloadExcel(data.questions, 'questions.xlsx');
+        showToast(`Exported ${data.questions.length} questions as Excel`, 'success');
+      } catch (err) {
+        showToast('Failed to export', 'error');
+      }
+    });
+
+    // ── Export Selected ──
+    document.getElementById('exportSelectedJsonBtn').addEventListener('click', () => {
+      document.getElementById('exportSelectedMenu').classList.remove('show');
+      if (selectedIds.size === 0) { showToast('No questions selected', 'error'); return; }
+      const selected = questions.filter(q => selectedIds.has(q.id));
+      downloadJSON(selected, 'selected_questions.json');
+      showToast(`Exported ${selected.length} questions as JSON`, 'success');
+    });
+
+    document.getElementById('exportSelectedExcelBtn').addEventListener('click', () => {
+      document.getElementById('exportSelectedMenu').classList.remove('show');
+      if (selectedIds.size === 0) { showToast('No questions selected', 'error'); return; }
+      const selected = questions.filter(q => selectedIds.has(q.id));
+      downloadExcel(selected, 'selected_questions.xlsx');
+      showToast(`Exported ${selected.length} questions as Excel`, 'success');
+    });
+
+    // ── JSON Download (existing) ──
+    function downloadJSON(data, filename) {
+      const exportData = data.map(q => ({
+        id: q.id,
+        subject: q.subject,
+        level: q.level,
+        question: q.question,
+        options: q.options,
+        answerIndex: q.answerIndex,
+        explanation: q.explanation
+      }));
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Excel Download ──
+    const LANGS = ['en', 'sa', 'hi', 'kn', 'te'];
+    const EXCEL_COLUMNS = [
+      'id', 'subject', 'level',
+      ...LANGS.map(l => `question_${l}`),
+      ...LANGS.map(l => `options_${l}`),
+      'answerIndex',
+      ...LANGS.map(l => `explanation_${l}`)
+    ];
+
+    function questionsToRows(data) {
+      return data.map(q => {
+        const row = {};
+        row['id'] = q.id || '';
+        row['subject'] = q.subject || '';
+        row['level'] = q.level || '';
+
+        LANGS.forEach(l => {
+          row[`question_${l}`] = (q.question && typeof q.question === 'object') ? (q.question[l] || '') : (typeof q.question === 'string' && l === 'en' ? q.question : '');
+        });
+
+        LANGS.forEach(l => {
+          let opts = [];
+          if (q.options) {
+            if (q.options[l] && Array.isArray(q.options[l])) {
+              opts = q.options[l];
+            } else if (Array.isArray(q.options) && l === 'en') {
+              opts = q.options;
+            }
+          }
+          // Join options with " | " to make it clean and easy to edit in spreadsheet
+          row[`options_${l}`] = opts.map(o => String(o || '').trim()).join(' | ');
+        });
+
+        row['answerIndex'] = q.answerIndex !== undefined ? q.answerIndex : '';
+
+        LANGS.forEach(l => {
+          row[`explanation_${l}`] = (q.explanation && typeof q.explanation === 'object') ? (q.explanation[l] || '') : (typeof q.explanation === 'string' && l === 'en' ? q.explanation : '');
+        });
+
+        return row;
+      });
+    }
+
+    function downloadExcel(data, filename) {
+      const rows = questionsToRows(data);
+      const ws = XLSX.utils.json_to_sheet(rows, { header: EXCEL_COLUMNS });
+
+      // Auto-width columns
+      const colWidths = EXCEL_COLUMNS.map(col => {
+        let maxLen = col.length;
+        rows.forEach(r => {
+          const val = String(r[col] || '');
+          if (val.length > maxLen) maxLen = Math.min(val.length, 50);
+        });
+        return { wch: maxLen + 2 };
+      });
+      ws['!cols'] = colWidths;
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+      XLSX.writeFile(wb, filename);
+    }
+
+    // ── Sample Excel Download ──
+    document.getElementById('downloadSampleExcelBtn').addEventListener('click', () => {
+      const sampleData = [{
+        subject: 'Basic Sanskrit',
+        level: 'Level 1',
+        question: {
+          en: 'How many vowels (Svaras) are there in Sanskrit according to Panini\'s Shiva Sutras?',
+          sa: 'शिवसूत्रानुसारं संस्कृते कति स्वराः सन्ति?',
+          hi: 'पाणिनीय शिव सूत्रों के अनुसार संस्कृत में कितने स्वर हैं?',
+          kn: 'ಪಾಣಿನಿಯ ಶಿವ ಸೂತ್ರಗಳ ಪ್ರಕಾರ ಸಂಸ್ಕೃತದಲ್ಲಿ ಎಷ್ಟು ಸ್ವರಗಳಿವೆ?',
+          te: 'పాణిని శివ సూత్రాల ప్రకారం సంస్కృతంలో ఎన్ని అచ్చులు ఉన్నాయి?'
+        },
+        options: {
+          en: ['9', '13', '11', '14'],
+          sa: ['नव (९)', 'त्रयोदश (१३)', 'एकादश (११)', 'चतुर्दश (१४)'],
+          hi: ['9', '13', '11', '14'],
+          kn: ['9', '13', '11', '14'],
+          te: ['9', '13', '11', '14']
+        },
+        answerIndex: 0,
+        explanation: {
+          en: 'The Shiva Sutras list the 9 simple/compound vowels (ac) in the first four sutras.',
+          sa: 'प्रत्याहारसूत्राणां चतुर्षु सूत्रेषु नव स्वराः (अच्) परिगणिताः सन्ति।',
+          hi: 'शिव सूत्रों के पहले चार सूत्रों में 9 मूल और संयुक्त स्वर (अच्) बताए गए हैं।',
+          kn: 'ಶಿವ ಸೂತ್ರಗಳ ಮೊದಲ ನಾಲ್ಕು ಸೂತ್ರಗಳಲ್ಲಿ 9 ಮೂಲ ಮತ್ತು ಸಂಯುಕ್ತ ಸ್ವರಗಳನ್ನು (ಅಚ್) ಪಟ್ಟಿ ಮಾಡಲಾಗಿದೆ.',
+          te: 'శివ సూత్రాల మొదటి నాలుగు సూత్రాలలో 9 అచ్చులు (అచ్) పేర్కొనబడ్డాయి.'
+        }
+      }];
+      downloadExcel(sampleData, 'sample_questions.xlsx');
+      showToast('Sample Excel downloaded!', 'success');
+    });
+
+    // ── Delete Selected (API) ──
+    document.getElementById('deleteSelectedBtn').addEventListener('click', async () => {
+      const count = selectedIds.size;
+      if (count === 0) return;
+      if (!confirm(`Delete ${count} selected question${count > 1 ? 's' : ''}?`)) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions/bulk-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: Array.from(selectedIds) })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        showToast(`Deleted ${data.deleted} question(s)`, 'success');
+        selectedIds.clear();
+        loadQuestions();
+      } catch (err) {
+        showToast('Failed to delete questions', 'error');
+      }
+    });
+
+    // ── Add / Edit ──
+    document.getElementById('addModalBtn').addEventListener('click', () => {
+      document.getElementById('modalTitle').textContent = 'Add Question';
+      document.getElementById('questionForm').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('qSubject').value = currentFilterSubjects.size === 1 ? Array.from(currentFilterSubjects)[0] : '';
+      document.getElementById('qLevel').value = currentFilterLevels.size === 1 ? Array.from(currentFilterLevels)[0] : '';
+      document.getElementById('saveBtn').textContent = '💾 Save Question';
+      switchLangTab('sa');
+      openModal('questionModal');
+    });
+
+    function switchLangTab(lang) {
+      document.querySelectorAll('.lang-tab').forEach(btn => {
+        if (btn.dataset.lang === lang) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      document.querySelectorAll('.lang-section').forEach(sec => {
+        if (sec.id === `langSec_${lang}`) sec.style.display = 'block';
+        else sec.style.display = 'none';
+      });
+    }
+
+    document.querySelectorAll('.lang-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchLangTab(btn.dataset.lang);
+      });
+    });
+
+    window.editQuestion = function (id) {
+      const q = questions.find(x => x.id === id);
+      if (!q) return;
+
+      document.getElementById('modalTitle').textContent = 'Edit Question';
+      document.getElementById('editId').value = q.id;
+      document.getElementById('qSubject').value = q.subject || '';
+      document.getElementById('qLevel').value = q.level || '';
+
+      const langs = ['en', 'sa', 'hi', 'kn', 'te'];
+      langs.forEach(l => {
+        document.getElementById(`qText_${l}`).value = q.question && q.question[l] ? q.question[l] : (typeof q.question === 'string' && l === 'en' ? q.question : '');
+
+        let opts = [];
+        if (q.options && q.options[l]) {
+          opts = q.options[l];
+        } else if (Array.isArray(q.options) && l === 'en') {
+          opts = q.options;
+        }
+        document.getElementById(`optA_${l}`).value = opts[0] || '';
+        document.getElementById(`optB_${l}`).value = opts[1] || '';
+        document.getElementById(`optC_${l}`).value = opts[2] || '';
+        document.getElementById(`optD_${l}`).value = opts[3] || '';
+
+        document.getElementById(`explanation_${l}`).value = q.explanation && q.explanation[l] ? q.explanation[l] : (typeof q.explanation === 'string' && l === 'en' ? q.explanation : '');
+      });
+
+      document.getElementById('correctAnswer').value = q.answerIndex !== undefined ? q.answerIndex.toString() : '';
+      document.getElementById('saveBtn').textContent = '💾 Update Question';
+      switchLangTab('sa');
+      openModal('questionModal');
+    };
+
+    document.getElementById('questionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('editId').value;
+      const correctIdx = parseInt(document.getElementById('correctAnswer').value);
+      if (isNaN(correctIdx)) { showToast('Select correct answer', 'error'); return; }
+
+      const payload = {
+        subject: document.getElementById('qSubject').value.trim(),
+        level: document.getElementById('qLevel').value.trim(),
+        question: {},
+        options: {},
+        answerIndex: correctIdx,
+        explanation: {}
+      };
+
+      const langs = ['en', 'sa', 'hi', 'kn', 'te'];
+      langs.forEach(l => {
+        const qText = document.getElementById(`qText_${l}`).value.trim();
+        const optA = document.getElementById(`optA_${l}`).value.trim();
+        const optB = document.getElementById(`optB_${l}`).value.trim();
+        const optC = document.getElementById(`optC_${l}`).value.trim();
+        const optD = document.getElementById(`optD_${l}`).value.trim();
+        const expl = document.getElementById(`explanation_${l}`).value.trim();
+
+        if (qText) payload.question[l] = qText;
+        if (optA || optB || optC || optD) {
+          payload.options[l] = [optA, optB, optC, optD];
+        }
+        if (expl) payload.explanation[l] = expl;
+      });
+
+      if (!payload.subject || !payload.level) {
+        showToast('Subject and Level are required', 'error');
+        return;
+      }
+
+      try {
+        let res;
+        if (editId) {
+          res = await fetch(`${API_BASE}/quiz/questions/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          res = await fetch(`${API_BASE}/quiz/questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        showToast(editId ? 'Question updated!' : 'Question added!', 'success');
+        closeModal('questionModal');
+        loadQuestions();
+      } catch (err) {
+        showToast('Failed to save question: ' + err.message, 'error');
+      }
+    });
+
+    // ── Delete Single (API) ──
+    window.deleteQuestion = async function (id) {
+      if (!confirm('Delete this question?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        showToast('Question deleted', 'success');
+        loadQuestions();
+      } catch (err) {
+        showToast('Failed to delete question', 'error');
+      }
+    };
+
+
+
+    // ── Bulk Upload (API) ──
+    let currentUploadedQuestions = null;
+
+    document.getElementById('uploadModalBtn').addEventListener('click', () => {
+      resetUploadModal();
+      document.getElementById('uploadSubject').value = currentFilterSubjects.size === 1 ? Array.from(currentFilterSubjects)[0] : '';
+      document.getElementById('uploadLevel').value = currentFilterLevels.size === 1 ? Array.from(currentFilterLevels)[0] : '';
+      openModal('uploadModal');
+    });
+
+    function resetUploadModal() {
+      document.getElementById('uploadResult').style.display = 'none';
+      document.getElementById('uploadResult').innerHTML = '';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('uploadZone').style.display = 'block';
+      document.getElementById('uploadPreviewArea').style.display = 'none';
+      document.getElementById('defaultInputsContainer').style.display = 'none';
+      currentUploadedQuestions = null;
+    }
+
+    const uploadZone = document.getElementById('uploadZone');
+    ['dragover', 'dragenter'].forEach(evt => {
+      uploadZone.addEventListener(evt, (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      uploadZone.addEventListener(evt, () => { uploadZone.classList.remove('dragover'); });
+    });
+
+    uploadZone.addEventListener('drop', (e) => { e.preventDefault(); handleUploadFiles(e.dataTransfer.files); });
+    document.getElementById('fileInput').addEventListener('change', (e) => { handleUploadFiles(e.target.files); });
+
+    async function handleUploadFiles(files) {
+      if (!files || files.length === 0) return;
+      const resultDiv = document.getElementById('uploadResult');
+      resultDiv.style.display = 'none';
+      resultDiv.innerHTML = '';
+
+      let allUploaded = [];
+      let hasError = false;
+      let errorMessages = [];
+
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const uploaded = await readFileAsQuestions(files[i]);
+          if (uploaded && uploaded.length > 0) {
+            allUploaded = allUploaded.concat(uploaded);
+          }
+        } catch (err) {
+          hasError = true;
+          errorMessages.push(`File ${files[i].name}: ${err.message}`);
+        }
+      }
+
+      if (hasError) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Errors occurred:<br>${errorMessages.join('<br>')}</div>`;
+      }
+
+      if (allUploaded.length > 0) {
+        currentUploadedQuestions = allUploaded;
+        showUploadPreview(allUploaded);
+      }
+    }
+
+    function readFileAsQuestions(file) {
+      return new Promise((resolve, reject) => {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const reader = new FileReader();
+
+        if (ext === 'json') {
+          reader.onload = function (event) {
+            try {
+              let rawText = event.target.result.trim();
+              if (rawText.startsWith("```")) {
+                rawText = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+              }
+              let uploaded = JSON.parse(rawText);
+              if (!Array.isArray(uploaded)) {
+                uploaded = [uploaded];
+              }
+              resolve(uploaded);
+            } catch (err) {
+              reject(new Error(`Invalid JSON: ${err.message}`));
+            }
+          };
+          reader.onerror = () => reject(new Error('Failed to read JSON file'));
+          reader.readAsText(file);
+        } else if (ext === 'xlsx' || ext === 'xls') {
+          reader.onload = function (event) {
+            try {
+              const data = new Uint8Array(event.target.result);
+              const workbook = XLSX.read(data, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const sheet = workbook.Sheets[sheetName];
+              const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+              if (!rows || rows.length === 0) {
+                reject(new Error(`Excel file is empty or has no data rows.`));
+                return;
+              }
+
+              const uploaded = excelRowsToQuestions(rows);
+              resolve(uploaded);
+            } catch (err) {
+              reject(new Error(`Failed to parse Excel: ${err.message}`));
+            }
+          };
+          reader.onerror = () => reject(new Error('Failed to read Excel file'));
+          reader.readAsArrayBuffer(file);
+        } else {
+          reject(new Error(`Unsupported file type. Please upload a .json or .xlsx file.`));
+        }
+      });
+    }
+
+    // ── Excel → Question Objects ──
+    function excelRowsToQuestions(rows) {
+      const langs = ['en', 'sa', 'hi', 'kn', 'te'];
+      return rows.map(row => {
+        const q = {};
+
+        // Subject and level
+        q.subject = String(row['subject'] || '').trim() || undefined;
+        q.level = String(row['level'] || '').trim() || undefined;
+
+        // Question (multilingual object)
+        q.question = {};
+        langs.forEach(l => {
+          const val = String(row[`question_${l}`] || '').trim();
+          if (val) q.question[l] = val;
+        });
+        // Fallback: if no multilingual keys found, check for plain 'question' column
+        if (Object.keys(q.question).length === 0 && row['question']) {
+          q.question = { en: String(row['question']).trim() };
+        }
+
+        // Options (multilingual object with arrays)
+        q.options = {};
+        langs.forEach(l => {
+          const val = String(row[`options_${l}`] || '').trim();
+          if (val) {
+            const opts = val.split('|').map(s => s.trim());
+            while (opts.length < 4) opts.push('');
+            q.options[l] = opts.slice(0, 4);
+          } else {
+            // Fallback for legacy single option columns
+            const optA = String(row[`optionA_${l}`] || '').trim();
+            const optB = String(row[`optionB_${l}`] || '').trim();
+            const optC = String(row[`optionC_${l}`] || '').trim();
+            const optD = String(row[`optionD_${l}`] || '').trim();
+            if (optA || optB || optC || optD) {
+              q.options[l] = [optA, optB, optC, optD];
+            }
+          }
+        });
+        // General fallback: plain 'options' column
+        if (Object.keys(q.options).length === 0 && row['options']) {
+          const val = String(row['options']).trim();
+          const opts = val.split('|').map(s => s.trim());
+          while (opts.length < 4) opts.push('');
+          q.options = { en: opts.slice(0, 4) };
+        }
+
+        // Answer index
+        const ai = row['answerIndex'];
+        q.answerIndex = (ai !== undefined && ai !== '') ? parseInt(ai) : 0;
+
+        // Explanation (multilingual object)
+        q.explanation = {};
+        langs.forEach(l => {
+          const val = String(row[`explanation_${l}`] || '').trim();
+          if (val) q.explanation[l] = val;
+        });
+        // Fallback: plain 'explanation' column
+        if (Object.keys(q.explanation).length === 0 && row['explanation']) {
+          q.explanation = { en: String(row['explanation']).trim() };
+        }
+
+        return q;
+      });
+    }
+
+    function showUploadPreview(qs) {
+      document.getElementById('uploadZone').style.display = 'none';
+      const previewArea = document.getElementById('uploadPreviewArea');
+      previewArea.style.display = 'block';
+
+      document.getElementById('previewTotalCount').textContent = qs.length;
+
+      const subjects = {};
+      const levels = {};
+      let missingSubject = 0;
+      let missingLevel = 0;
+
+      qs.forEach(q => {
+        const s = q.subject;
+        const l = q.level;
+        if (s) {
+          subjects[s] = (subjects[s] || 0) + 1;
+        } else {
+          missingSubject++;
+        }
+        if (l) {
+          levels[l] = (levels[l] || 0) + 1;
+        } else {
+          missingLevel++;
+        }
+      });
+
+      const warnDiv = document.getElementById('previewWarning');
+      const succDiv = document.getElementById('previewSuccess');
+      const defaultInputs = document.getElementById('defaultInputsContainer');
+
+      if (missingSubject > 0 || missingLevel > 0) {
+        warnDiv.style.display = 'block';
+        succDiv.style.display = 'none';
+        
+        let warnMsg = '⚠️ Warning: ';
+        if (missingSubject > 0 && missingLevel > 0) {
+          warnMsg += `${missingSubject} questions lack a subject and ${missingLevel} lack a level.`;
+        } else if (missingSubject > 0) {
+          warnMsg += `${missingSubject} questions lack a subject.`;
+        } else {
+          warnMsg += `${missingLevel} questions lack a level.`;
+        }
+        warnMsg += ' Please specify default fallback values below.';
+        warnDiv.textContent = warnMsg;
+        
+        defaultInputs.style.display = 'grid';
+      } else {
+        warnDiv.style.display = 'none';
+        succDiv.style.display = 'block';
+        succDiv.textContent = '✅ Perfect: All questions contain subject and level metadata.';
+        defaultInputs.style.display = 'none';
+      }
+
+      const detailsDiv = document.getElementById('previewMetadataDetails');
+      let html = '';
+      
+      const subList = Object.keys(subjects);
+      if (subList.length > 0) {
+        html += `<div style="margin-bottom: 0.5rem;"><strong>Subjects detected:</strong><br>`;
+        subList.forEach(s => {
+          html += `<span class="badge" style="font-size: 0.72rem; margin: 0.2rem 0.2rem 0.2rem 0;">${escapeHtml(s)} (${subjects[s]})</span>`;
+        });
+        html += `</div>`;
+      }
+      
+      const lvlList = Object.keys(levels);
+      if (lvlList.length > 0) {
+        html += `<div style="margin-bottom: 0.5rem;"><strong>Levels/Granthas detected:</strong><br>`;
+        lvlList.forEach(l => {
+          html += `<span class="badge" style="background: #e2e8f0; color: #475569; font-size: 0.72rem; margin: 0.2rem 0.2rem 0.2rem 0;">${escapeHtml(l)} (${levels[l]})</span>`;
+        });
+        html += `</div>`;
+      }
+      
+      detailsDiv.innerHTML = html;
+    }
+
+    document.getElementById('confirmImportBtn').addEventListener('click', async () => {
+      if (!currentUploadedQuestions || currentUploadedQuestions.length === 0) return;
+      
+      const resultDiv = document.getElementById('uploadResult');
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = '<div class="loading-spinner"></div>';
+      
+      const confirmBtn = document.getElementById('confirmImportBtn');
+      const cancelBtn = document.getElementById('cancelImportBtn');
+      confirmBtn.disabled = true;
+      cancelBtn.disabled = true;
+
+      const defaultSubject = document.getElementById('uploadSubject').value.trim();
+      const defaultLevel = document.getElementById('uploadLevel').value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/quiz/questions/import`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            questions: currentUploadedQuestions,
+            defaultSubject: defaultSubject || 'General',
+            defaultLevel: defaultLevel || 'Default'
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          let html = `<div class="toast success" style="position: static; animation: none;">✅ Added ${data.added} questions (Total: ${data.total})</div>`;
+          
+          if (data.skipped && data.skipped.length > 0) {
+            html += `<div class="toast info" style="position: static; margin-top: 0.5rem; background: var(--bg-card); border: 1px solid var(--border-light); color: var(--text-secondary); animation: none;">`;
+            html += `<strong>ℹ️ Skipped ${data.skipped.length} duplicate(s):</strong><ul style="margin: 0.25rem 0 0 1.25rem; padding: 0; text-align: left;">`;
+            data.skipped.forEach(item => {
+              const qText = loc(item.question, 'sa') || loc(item.question, 'en');
+              html += `<li style="margin-bottom: 0.25rem;">"${escapeHtml(truncate(qText, 45))}" in <em>${escapeHtml(item.subject)}</em></li>`;
+            });
+            html += `</ul></div>`;
+          }
+          
+          if (data.errors && data.errors.length > 0) {
+            html += `<div class="toast error" style="position: static; margin-top: 0.5rem; animation: none;">⚠ ${data.errors.length} errors:<br>${data.errors.join('<br>')}</div>`;
+          }
+          resultDiv.innerHTML = html;
+          
+          currentUploadedQuestions = null;
+          document.getElementById('uploadPreviewArea').style.display = 'none';
+          document.getElementById('defaultInputsContainer').style.display = 'none';
+          
+          const resetBtn = document.createElement('button');
+          resetBtn.className = 'btn btn-secondary btn-block mt-2';
+          resetBtn.textContent = 'Upload Another File';
+          resetBtn.onclick = resetUploadModal;
+          resultDiv.appendChild(resetBtn);
+          
+          loadQuestions();
+        } else {
+          resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Failed to import: ${data.error}</div>`;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `<div class="toast error" style="position: static; animation: none;">❌ Network error: ${err.message}</div>`;
+      } finally {
+        confirmBtn.disabled = false;
+        cancelBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('cancelImportBtn').addEventListener('click', () => {
+      resetUploadModal();
+    });
+
+    // ── Modal Close ──
+    document.getElementById('modalClose').addEventListener('click', () => closeModal('questionModal'));
+    document.getElementById('uploadModalClose').addEventListener('click', () => closeModal('uploadModal'));
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', (e) => { if (e.target === el) el.classList.remove('active'); });
+    });
+
+    // ── Logout ──
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem('isAdmin');
+      window.location.href = '/logout?redirect=/quiz/admin-login.html';
+    });
+
+    // ── Tab Switching & Categories File Explorer ──
+    function switchTab(tab) {
+      const qTab = document.getElementById('questionsTabContent');
+      const cTab = document.getElementById('categoriesTabContent');
+      const fTab = document.getElementById('feedbackTabContent');
+      const rTab = document.getElementById('resultsTabContent');
+      const qBtn = document.getElementById('tabQuestionsBtn');
+      const cBtn = document.getElementById('tabCategoriesBtn');
+      const fBtn = document.getElementById('tabFeedbackBtn');
+      const rBtn = document.getElementById('tabResultsBtn');
+
+      [qTab, cTab, fTab, rTab].forEach(el => el && (el.style.display = 'none'));
+      [qBtn, cBtn, fBtn, rBtn].forEach(el => el && el.classList.remove('active'));
+
+      if (tab === 'questions') {
+        qTab.style.display = 'block';
+        qBtn.classList.add('active');
+      } else if (tab === 'categories') {
+        cTab.style.display = 'block';
+        cBtn.classList.add('active');
+        loadCategoriesTree();
+      } else if (tab === 'feedback') {
+        fTab.style.display = 'block';
+        fBtn.classList.add('active');
+        loadQuizFeedbackReport(1);
+      } else if (tab === 'results') {
+        rTab.style.display = 'block';
+        rBtn.classList.add('active');
+        loadQuizResultsLog(1);
+      }
+    }
+
+    // ── Quiz Feedback Report ──
+    let feedbackCurrentPage = 1;
+    let feedbackSearchDebounce = null;
+
+    function debounceFeedbackSearch() {
+      clearTimeout(feedbackSearchDebounce);
+      feedbackSearchDebounce = setTimeout(() => loadQuizFeedbackReport(1), 350);
+    }
+
+    async function loadQuizFeedbackReport(page) {
+      feedbackCurrentPage = page;
+      const q = document.getElementById('feedbackSearch')?.value.trim() || '';
+      const body = document.getElementById('feedbackTableBody');
+      const wrapper = document.getElementById('feedbackTableWrapper');
+      const empty = document.getElementById('feedbackEmptyState');
+      const pag = document.getElementById('feedbackPagination');
+
+      body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--text-secondary);">
+        <div class="loading-spinner" style="display:inline-block; margin-bottom:0.5rem;"></div>
+        <div>Loading…</div></td></tr>`;
+      wrapper.style.display = 'block';
+      empty.style.display = 'none';
+
+      try {
+        const params = new URLSearchParams({ page, q });
+        const res = await fetch(`/admin/api/quiz-feedback/all?${params}`);
+        const data = await res.json();
+
+        // Update stat cards
+        document.getElementById('fbTotalQuestions').textContent = data.total_items ?? '—';
+        document.getElementById('fbTotalUp').textContent = data.total_up ?? '—';
+        document.getElementById('fbTotalDown').textContent = data.total_down ?? '—';
+
+        if (!data.data || data.data.length === 0) {
+          wrapper.style.display = 'none';
+          empty.style.display = 'block';
+          pag.innerHTML = '';
+          return;
+        }
+
+        body.innerHTML = data.data.map(item => {
+          const upPct = item.up + item.down > 0
+            ? Math.round((item.up / (item.up + item.down)) * 100)
+            : null;
+          const thumbBg = item.down > item.up
+            ? 'rgba(239,68,68,0.08)'
+            : (item.up > 0 ? 'rgba(16,185,129,0.08)' : '');
+          const latestText = item.latest_text
+            ? `<span style="font-size:0.8rem; color:var(--text-secondary);">${escapeHtml(truncate(item.latest_text, 55))}</span>`
+            : `<span style="color:var(--text-muted); font-size:0.78rem;">—</span>`;
+          return `
+          <tr style="background:${thumbBg};">
+            <td><strong>#${item.question_id}</strong></td>
+            <td title="${escapeHtml(item.question_text)}">${escapeHtml(truncate(item.question_text, 60))}</td>
+            <td><span class="badge" style="margin:0; font-size:0.72rem;">${escapeHtml(item.subject)}</span></td>
+            <td style="font-size:0.82rem; color:var(--text-secondary);">${escapeHtml(item.level)}</td>
+            <td style="text-align:center;">
+              <span style="font-weight:700; color:var(--success); font-size:0.95rem;">👍 ${item.up}</span>
+            </td>
+            <td style="text-align:center;">
+              <span style="font-weight:700; color:var(--danger); font-size:0.95rem;">👎 ${item.down}</span>
+            </td>
+            <td>${latestText}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" onclick="viewQuizFeedback(${item.question_id}, 1)">✏️ View</button>
+                <button class="btn btn-danger btn-sm" onclick="clearQuizFeedbackQuestion(${item.question_id})">🗑️</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+
+        // Render pagination
+        renderFeedbackPagination(data.page, data.total_pages);
+      } catch (err) {
+        console.error('Error loading quiz feedback:', err);
+        body.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:2rem; color:var(--danger);">Failed to load feedback data.</td></tr>`;
+      }
+    }
+
+    function renderFeedbackPagination(currentPage, totalPages) {
+      const pag = document.getElementById('feedbackPagination');
+      if (totalPages <= 1) { pag.innerHTML = ''; return; }
+
+      let html = '';
+      html += `<button class="btn btn-secondary btn-sm" ${currentPage === 1 ? 'disabled' : ''} onclick="loadQuizFeedbackReport(${currentPage - 1})">‹ Prev</button>`;
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === currentPage) {
+          html += `<button class="btn btn-primary btn-sm" style="pointer-events:none;">${p}</button>`;
+        } else if (p <= 2 || p >= totalPages - 1 || Math.abs(p - currentPage) <= 1) {
+          html += `<button class="btn btn-secondary btn-sm" onclick="loadQuizFeedbackReport(${p})">${p}</button>`;
+        } else if (Math.abs(p - currentPage) === 2) {
+          html += `<span style="color:var(--text-muted); align-self:center;">…</span>`;
+        }
+      }
+      html += `<button class="btn btn-secondary btn-sm" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadQuizFeedbackReport(${currentPage + 1})">Next ›</button>`;
+      pag.innerHTML = html;
+    }
+
+    // ── View Quiz Feedback Details (Modal) ──
+    async function viewQuizFeedback(questionId, page) {
+      openModal('quizFeedbackDetailsModal');
+      const body = document.getElementById('qfDetailsBody');
+      const pag = document.getElementById('qfDetailsPagination');
+      body.innerHTML = `<div style="text-align:center; padding:2rem;"><div class="loading-spinner" style="display:inline-block;"></div><div style="margin-top:0.5rem; color:var(--text-secondary);">Loading…</div></div>`;
+      pag.innerHTML = '';
+
+      try {
+        const params = new URLSearchParams({ page });
+        const res = await fetch(`/admin/api/quiz-feedback/${questionId}?${params}`);
+        const data = await res.json();
+
+        document.getElementById('qfDetailsTitle').textContent = `Question #${data.question_id} Feedback`;
+        document.getElementById('qfDetailsUp').textContent = `👍 ${data.up} up`;
+        document.getElementById('qfDetailsDown').textContent = `👎 ${data.down} down`;
+
+        const comments = data.comments || [];
+        if (comments.length === 0) {
+          body.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--text-muted); font-size:0.9rem;">No comments for this question.</div>`;
+          return;
+        }
+
+        body.innerHTML = comments.map(c => {
+          const isUp = c.vote === 'up';
+          const dot = isUp ? '#34d399' : '#fca5a5';
+          const label = isUp ? '👍' : '👎';
+          const comment = c.text ? `<div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-secondary); font-style:italic;">&ldquo;${escapeHtml(c.text)}&rdquo;</div>` : '';
+          return `
+          <div style="padding:0.75rem 1rem; border-bottom:1px solid var(--border-light); display:flex; gap:0.75rem; align-items:flex-start;">
+            <span style="font-size:1.1rem; margin-top:0.1rem;">${label}</span>
+            <div style="flex:1;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.82rem; font-weight:600; color:${dot};">${escapeHtml(c.user)}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">${c.time ? new Date(c.time).toLocaleString() : ''}</span>
+              </div>
+              ${comment}
+            </div>
+          </div>`;
+        }).join('');
+
+        // Paginate details modal
+        if (data.total_pages > 1) {
+          let ph = '';
+          ph += `<button class="btn btn-secondary btn-sm" ${data.page === 1 ? 'disabled' : ''} onclick="viewQuizFeedback(${questionId}, ${data.page - 1})">‹</button>`;
+          ph += `<span style="font-size:0.82rem; color:var(--text-muted); align-self:center;">Page ${data.page} / ${data.total_pages}</span>`;
+          ph += `<button class="btn btn-secondary btn-sm" ${data.page === data.total_pages ? 'disabled' : ''} onclick="viewQuizFeedback(${questionId}, ${data.page + 1})">›</button>`;
+          pag.innerHTML = ph;
+        }
+
+        // Wire the clear button in modal
+        document.getElementById('qfDetailsClearBtn').onclick = () => clearQuizFeedbackQuestion(questionId, true);
+
+      } catch (err) {
+        body.innerHTML = `<div style="text-align:center; padding:2rem; color:var(--danger);">Failed to load details.</div>`;
+      }
+    }
+
+    // ── Clear Quiz Feedback ──
+    async function clearQuizFeedbackQuestion(questionId, fromModal = false) {
+      if (!confirm(`Clear all feedback for Question #${questionId}?`)) return;
+      try {
+        const res = await fetch('/admin/api/quiz-feedback/clear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question_id: questionId })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        showToast('Feedback cleared for Question #' + questionId, 'success');
+        if (fromModal) closeModal('quizFeedbackDetailsModal');
+        loadQuizFeedbackReport(feedbackCurrentPage);
+      } catch (err) {
+        showToast('Failed to clear feedback: ' + err.message, 'error');
+      }
+    }
+
+    async function clearQuizFeedbackAll() {
+      if (!confirm('Clear ALL quiz question feedback? This cannot be undone.')) return;
+      try {
+        const res = await fetch('/admin/api/quiz-feedback/clear', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message);
+        showToast('All quiz feedback cleared.', 'success');
+        loadQuizFeedbackReport(1);
+      } catch (err) {
+        showToast('Failed to clear all feedback: ' + err.message, 'error');
+      }
+    }
+
+    // ── Export Quiz Feedback ──
+    function exportFeedbackJSON() {
+      toggleDropdown('fbExportMenu', false);
+      window.location.href = '/admin/api/quiz-feedback/export/json';
+    }
+    function exportFeedbackCSV() {
+      toggleDropdown('fbExportMenu', false);
+      window.location.href = '/admin/api/quiz-feedback/export/csv';
+    }
+
+    // ── Import Quiz Feedback ──
+    let fbImportFile = null;
+
+    function resetFeedbackImport() {
+      fbImportFile = null;
+      document.getElementById('fbImportFileInput').value = '';
+      const zone = document.getElementById('fbImportZone');
+      zone.querySelector('.upload-text').innerHTML = '<strong>Click to browse</strong> or drag &amp; drop<br><small>JSON file only</small>';
+      zone.querySelector('.upload-icon').textContent = '📁';
+      const result = document.getElementById('fbImportResult');
+      result.style.display = 'none';
+      result.innerHTML = '';
+    }
+
+    function setupFeedbackImportListeners() {
+      const fileInput = document.getElementById('fbImportFileInput');
+      const zone = document.getElementById('fbImportZone');
+      if (!fileInput || !zone) return;
+
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file) { fbImportFile = file; updateImportZoneLabel(file.name); }
+      });
+
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
+      zone.addEventListener('dragleave', () => { zone.style.borderColor = ''; });
+      zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.style.borderColor = '';
+        const file = e.dataTransfer.files[0];
+        if (file && file.name.endsWith('.json')) {
+          fbImportFile = file;
+          updateImportZoneLabel(file.name);
+        } else {
+          showToast('Please drop a .json file.', 'error');
+        }
+      });
+    }
+
+    function updateImportZoneLabel(name) {
+      const zone = document.getElementById('fbImportZone');
+      zone.querySelector('.upload-icon').textContent = '✅';
+      zone.querySelector('.upload-text').innerHTML = `<strong>${escapeHtml(name)}</strong><br><small>Ready to import</small>`;
+    }
+
+    async function doFeedbackImport() {
+      if (!fbImportFile) {
+        showToast('Please select a JSON file first.', 'error');
+        return;
+      }
+      const resultEl = document.getElementById('fbImportResult');
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem;">⏳ Parsing file…</div>`;
+
+      try {
+        const text = await fbImportFile.text();
+        let parsed;
+        try { parsed = JSON.parse(text); } catch { throw new Error('Invalid JSON file.'); }
+
+        // Auto-detect format: flat array of rows OR summary-level array (with nested comments)
+        let rows = [];
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (item.comments && Array.isArray(item.comments)) {
+              // Summary-level export — expand to flat rows
+              for (const c of item.comments) {
+                rows.push({ question_id: item.question_id, vote: c.vote, comment: c.text || '' });
+              }
+            } else if (item.vote) {
+              rows.push(item); // already flat
+            }
+          }
+        } else {
+          throw new Error('Expected a JSON array.');
+        }
+
+        if (rows.length === 0) throw new Error('No importable rows found in file.');
+
+        resultEl.innerHTML = `<div style="color:var(--text-secondary); font-size:0.88rem;">⏳ Importing ${rows.length} rows…</div>`;
+
+        const res = await fetch('/admin/api/quiz-feedback/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows })
+        });
+        const data = await res.json();
+
+        if (!data.success) throw new Error(data.message);
+
+        let html = `<div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:var(--radius); padding:0.85rem 1rem; font-size:0.88rem;">
+          <div style="font-weight:700; color:var(--success); margin-bottom:0.25rem;">✅ Import complete</div>
+          <div style="color:var(--text-secondary);">Imported <strong>${data.imported}</strong> feedback row${data.imported !== 1 ? 's' : ''}.</div>`;
+        if (data.errors && data.errors.length > 0) {
+          html += `<div style="margin-top:0.5rem; color:var(--danger); font-size:0.8rem;">${data.errors.length} row(s) skipped:<br>${data.errors.slice(0, 5).map(e => escapeHtml(e)).join('<br>')}</div>`;
+        }
+        html += `</div>`;
+        resultEl.innerHTML = html;
+
+        showToast(`Imported ${data.imported} feedback rows.`, 'success');
+        loadQuizFeedbackReport(1);  // refresh table
+      } catch (err) {
+        resultEl.innerHTML = `<div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius); padding:0.85rem 1rem; font-size:0.88rem; color:var(--danger);">❌ ${escapeHtml(err.message)}</div>`;
+      }
+    }
+
+    // Wire import listeners once DOM is ready
+    document.addEventListener('DOMContentLoaded', setupFeedbackImportListeners);
+
+    // ── Quiz Results Log ──
+    let resultsCurrentPage = 1;
+    let resultsSearchDebounce = null;
+
+    function debounceResultsSearch() {
+      clearTimeout(resultsSearchDebounce);
+      resultsSearchDebounce = setTimeout(() => loadQuizResultsLog(1), 350);
+    }
+
+    async function loadQuizResultsLog(page) {
+      resultsCurrentPage = page;
+      const q = document.getElementById('resultsSearch')?.value.trim() || '';
+      const body = document.getElementById('resultsTableBody');
+      const wrapper = document.getElementById('resultsTableWrapper');
+      const empty = document.getElementById('resultsEmptyState');
+      const pag = document.getElementById('resultsPagination');
+
+      body.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--text-secondary);">
+        <div class="loading-spinner" style="display:inline-block; margin-bottom:0.5rem;"></div>
+        <div>Loading…</div></td></tr>`;
+      wrapper.style.display = 'block';
+      empty.style.display = 'none';
+
+      try {
+        const params = new URLSearchParams({ page, q });
+        const res = await fetch(`/admin/api/quiz-results/all?${params}`);
+        const data = await res.json();
+
+        // Update stat cards
+        document.getElementById('resTotalAttempts').textContent = data.total_attempts ?? '—';
+        document.getElementById('resAvgPercentage').textContent = (data.avg_percentage ?? '—') + '%';
+        document.getElementById('resUniqueUsers').textContent = data.unique_candidates ?? '—';
+
+        if (!data.data || data.data.length === 0) {
+          wrapper.style.display = 'none';
+          empty.style.display = 'block';
+          pag.innerHTML = '';
+          return;
+        }
+
+        body.innerHTML = data.data.map(item => {
+          const isPass = item.percentage >= 60;
+          const bg = isPass ? 'rgba(16,185,129,0.04)' : 'rgba(239,68,68,0.04)';
+          const takenDate = item.taken_at ? new Date(item.taken_at.replace(' ', 'T')).toLocaleString() : '—';
+          return `
+          <tr style="background:${bg};">
+            <td><strong>#${item.id}</strong></td>
+            <td><strong>${escapeHtml(item.display_name)}</strong></td>
+            <td><span class="badge" style="margin:0; font-size:0.72rem;">${escapeHtml(item.subject)}</span></td>
+            <td style="font-size:0.82rem; color:var(--text-secondary);">${escapeHtml(item.level)}</td>
+            <td>${item.score} / ${item.total}</td>
+            <td><strong style="color:${isPass ? 'var(--success)' : 'var(--danger)'};">${item.percentage}%</strong></td>
+            <td><span class="badge" style="margin:0; font-size:0.72rem; background:var(--accent); color:#fff; border-color:var(--accent);">${escapeHtml(item.lang)}</span></td>
+            <td style="font-size:0.82rem; color:var(--text-secondary);">${takenDate}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteQuizResult(${item.id})">🗑️</button>
+            </td>
+          </tr>`;
+        }).join('');
+
+        renderResultsPagination(data.page, data.total_pages);
+      } catch (err) {
+        console.error('Error loading quiz results:', err);
+        body.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:2rem; color:var(--danger);">Failed to load quiz results logs.</td></tr>`;
+      }
+    }
+
+    function renderResultsPagination(currentPage, totalPages) {
+      const pag = document.getElementById('resultsPagination');
+      if (totalPages <= 1) { pag.innerHTML = ''; return; }
+
+      let html = '';
+      html += `<button class="btn btn-secondary btn-sm" ${currentPage === 1 ? 'disabled' : ''} onclick="loadQuizResultsLog(${currentPage - 1})">‹ Prev</button>`;
+      for (let p = 1; p <= totalPages; p++) {
+        if (p === currentPage) {
+          html += `<button class="btn btn-primary btn-sm" style="pointer-events:none;">${p}</button>`;
+        } else if (p <= 2 || p >= totalPages - 1 || Math.abs(p - currentPage) <= 1) {
+          html += `<button class="btn btn-secondary btn-sm" onclick="loadQuizResultsLog(${p})">${p}</button>`;
+        } else if (Math.abs(p - currentPage) === 2) {
+          html += `<span style="color:var(--text-muted); align-self:center;">…</span>`;
+        }
+      }
+      html += `<button class="btn btn-secondary btn-sm" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadQuizResultsLog(${currentPage + 1})">Next ›</button>`;
+      pag.innerHTML = html;
+    }
+
+    async function deleteQuizResult(resultId) {
+      if (!confirm('Are you sure you want to delete this quiz result log?')) return;
+      try {
+        const res = await fetch(`/admin/api/quiz-results/delete/${resultId}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadQuizResultsLog(resultsCurrentPage);
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (err) {
+        showToast('Error deleting quiz result.', 'error');
+      }
+    }
+
+    async function clearQuizResultsAll() {
+      if (!confirm('WARNING: Are you absolutely sure you want to clear ALL quiz result logs? This cannot be undone.')) return;
+      try {
+        const res = await fetch('/admin/api/quiz-results/clear', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          loadQuizResultsLog(1);
+        } else {
+          showToast(data.message, 'error');
+        }
+      } catch (err) {
+        showToast('Error clearing quiz results.', 'error');
+      }
+    }
+
+    function exportResultsJSON() {
+      toggleDropdown('resExportMenu', false);
+      window.location.href = '/admin/api/quiz-results/export/json';
+    }
+
+    function exportResultsCSV() {
+      toggleDropdown('resExportMenu', false);
+      window.location.href = '/admin/api/quiz-results/export/csv';
+    }
+
+    // ── Export dropdown toggle ──
+    function toggleDropdown(id, forceState) {
+      const menu = document.getElementById(id);
+      if (!menu) return;
+      const open = forceState !== undefined ? forceState : menu.style.display !== 'block';
+      menu.style.display = open ? 'block' : 'none';
+    }
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.export-dropdown-menu').forEach(m => m.style.display = 'none');
+    });
+
+    let categoriesTree = [];
+    let currentAdminFolderId = 'root';
+    let dbSubjectsLevels = [];
+
+    async function loadCategoriesTree() {
+      try {
+        const res = await fetch('/api/v1/quiz/categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          categoriesTree = data.categories;
+          renderAdminTreeSidebar();
+          renderAdminExplorer();
+        }
+      } catch (err) {
+        console.error("Error loading categories:", err);
+      }
+    }
+
+    async function loadDbSubjectsLevels() {
+      try {
+        const res = await fetch('/api/v1/quiz/db-subjects-levels');
+        const data = await res.json();
+        if (data.success && data.pairs) {
+          dbSubjectsLevels = data.pairs;
+          populateLinkQuizzesList();
+        }
+      } catch (err) {
+        console.error("Error loading db options:", err);
+      }
+    }
+
+    function getLinkedQuizzes(nodes) {
+      // Only quizzes nested INSIDE a folder are considered "linked".
+      // Root-level quiz nodes are uncategorized defaults and should
+      // still appear in the Link Quiz picker so they can be assigned.
+      const linked = new Set();
+      function recurse(arr, insideFolder) {
+        for (const n of arr) {
+          if (n.type === 'quiz' && n.subject && n.level && insideFolder) {
+            linked.add(`${n.subject}|||${n.level}`);
+          }
+          if (n.children) {
+            // Children of a folder node are always "inside a folder"
+            recurse(n.children, true);
+          }
+        }
+      }
+      recurse(nodes, false); // root-level nodes are NOT inside a folder
+      return linked;
+    }
+
+    let filteredLinkQuizzes = [];
+
+    function populateLinkQuizzesList() {
+      const container = document.getElementById('linkQuizzesListContainer');
+      if (!container) return;
+
+      const linked = getLinkedQuizzes(categoriesTree);
+      
+      filteredLinkQuizzes = dbSubjectsLevels.filter(pair => {
+        const key = `${pair.subject}|||${pair.level}`;
+        return !linked.has(key);
+      });
+
+      renderLinkQuizzesList();
+    }
+
+    function renderLinkQuizzesList() {
+      const container = document.getElementById('linkQuizzesListContainer');
+      if (!container) return;
+
+      const searchInput = document.getElementById('linkQuizSearch');
+      const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const itemsToRender = filteredLinkQuizzes.filter(pair => {
+        const text = `${pair.subject} ${pair.level}`.toLowerCase();
+        return text.includes(searchVal);
+      });
+
+      if (itemsToRender.length === 0) {
+        container.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem;">No unlinked quizzes found</div>';
+        return;
+      }
+
+      container.innerHTML = itemsToRender.map((pair, idx) => {
+        const val = `${pair.subject}|||${pair.level}`;
+        return `
+          <div style="display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--border-light); font-size: 0.85rem;">
+            <input type="checkbox" class="link-quiz-cb" value="${escapeHtml(val)}" id="cb_link_${idx}" style="margin-top: 0.15rem; width: 15px; height: 15px; cursor: pointer; accent-color: var(--accent);">
+            <label for="cb_link_${idx}" style="cursor: pointer; flex: 1; color: var(--text-primary); line-height: 1.35; user-select: none;">
+              <strong>${escapeHtml(pair.subject)}</strong>
+              <span style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.1rem;">${escapeHtml(pair.level)}</span>
+            </label>
+          </div>
+        `;
+      }).join('');
+      
+      const selectAll = document.getElementById('selectAllLinkQuizzes');
+      if (selectAll) selectAll.checked = false;
+
+      // Wire up per-checkbox change to update count
+      container.querySelectorAll('.link-quiz-cb').forEach(cb => {
+        cb.addEventListener('change', updateLinkSelectionCount);
+      });
+      updateLinkSelectionCount();
+    }
+
+    function updateLinkSelectionCount() {
+      const checked = document.querySelectorAll('.link-quiz-cb:checked').length;
+      const badge = document.getElementById('linkSelectionCount');
+      const btn = document.getElementById('linkSubmitBtn');
+      if (badge) {
+        badge.textContent = `${checked} selected`;
+        badge.style.display = checked > 0 ? 'inline-flex' : 'none';
+      }
+      if (btn) {
+        btn.textContent = checked > 0
+          ? `➕ Link ${checked} Quiz${checked > 1 ? 'zes' : ''}`
+          : '➕ Link Selected Quizzes';
+      }
+    }
+
+    window.filterLinkQuizzesList = function() {
+      renderLinkQuizzesList();
+    };
+
+    window.toggleSelectAllLinkQuizzes = function(masterCb) {
+      document.querySelectorAll('.link-quiz-cb').forEach(cb => {
+        cb.checked = masterCb.checked;
+      });
+      updateLinkSelectionCount();
+    };
+
+    function findNodeById(nodes, id) {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children) {
+          const found = findNodeById(n.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function findParentNode(nodes, id, parent = null) {
+      for (const n of nodes) {
+        if (n.id === id) return parent;
+        if (n.children) {
+          const found = findParentNode(n.children, id, n);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function getAllFolders(nodes) {
+      let list = [{ id: 'root', path: '/' }];
+      function recurse(arr, currentPath) {
+        for (const n of arr) {
+          if (n.type === 'folder') {
+            const fullPath = currentPath + n.name + '/';
+            list.push({ id: n.id, path: fullPath });
+            if (n.children) recurse(n.children, fullPath);
+          }
+        }
+      }
+      recurse(nodes, '/');
+      return list;
+    }
+
+    // ── Breadcrumb navigation stack for admin explorer ──
+    let adminBreadcrumbs = []; // array of { id, name }
+
+    function navigateAdminFolder(folderId, folderName) {
+      if (folderId === 'root') {
+        adminBreadcrumbs = [];
+        currentAdminFolderId = 'root';
+      } else {
+        // Check if navigating back to a breadcrumb ancestor
+        const idx = adminBreadcrumbs.findIndex(b => b.id === folderId);
+        if (idx !== -1) {
+          adminBreadcrumbs = adminBreadcrumbs.slice(0, idx + 1);
+        } else {
+          adminBreadcrumbs.push({ id: folderId, name: folderName || folderId });
+        }
+        currentAdminFolderId = folderId;
+      }
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+    }
+
+    function renderTreeIcon(node, isActive) {
+      if (!node.icon) {
+        return `<svg width="13" height="13" viewBox="0 0 24 24" fill="${isActive ? 'rgba(129,140,248,0.4)' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+      }
+      if (node.icon.startsWith('/') || node.icon.startsWith('http')) {
+        return `<img src="${node.icon}" style="width:13px;height:13px;object-fit:contain;border-radius:2px;vertical-align:middle;display:inline-block;">`;
+      }
+      return `<span style="font-size:0.95rem;line-height:1;display:inline-block;width:13px;text-align:center;vertical-align:middle;">${node.icon}</span>`;
+    }
+
+    function renderFolderIconHTML(node) {
+      if (!node.icon) {
+        return `<svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(129,140,248,0.25)" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+      }
+      if (node.icon.startsWith('/') || node.icon.startsWith('http')) {
+        return `<img src="${node.icon}" style="width:36px;height:36px;object-fit:contain;border-radius:var(--radius-sm);">`;
+      }
+      return `<span style="font-size:2.2rem;line-height:1;display:inline-block;height:36px;">${node.icon}</span>`;
+    }
+
+    function renderAdminTreeSidebar() {
+      const container = document.getElementById('sidebarTree');
+      if (!container) return;
+      
+      const isRootActive = currentAdminFolderId === 'root';
+      let html = `
+        <div class="fe-tree-item ${isRootActive ? 'fe-tree-item--active' : ''}" onclick="navigateAdminFolder('root')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Root</span>
+        </div>`;
+      
+      function recurse(nodes, depth = 0) {
+        let subHtml = '';
+        for (const n of nodes) {
+          if (n.type === 'folder') {
+            const isActive = n.id === currentAdminFolderId;
+            const hasChildren = n.children && n.children.some(c => c.type === 'folder');
+            subHtml += `
+              <div class="fe-tree-group" style="padding-left: ${(depth + 1) * 14}px;">
+                <div class="fe-tree-item ${isActive ? 'fe-tree-item--active' : ''}" onclick="navigateAdminFolder('${n.id}', '${escapeJS(n.name)}')">
+                  ${renderTreeIcon(n, isActive)}
+                  <span>${escapeHtml(n.name)}</span>
+                </div>
+                ${hasChildren ? recurse(n.children, depth + 1) : ''}
+              </div>
+            `;
+          }
+        }
+        return subHtml;
+      }
+      html += recurse(categoriesTree);
+      container.innerHTML = html;
+    }
+
+    function renderAdminExplorer() {
+      const grid = document.getElementById('feAdminGrid');
+      const bcEl = document.getElementById('feAdminBreadcrumb');
+      if (!grid || !bcEl) return;
+
+      // Render breadcrumb
+      let bcHtml = `<span class="fe-bc-item" onclick="navigateAdminFolder('root')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        Root
+      </span>`;
+      adminBreadcrumbs.forEach((b, i) => {
+        bcHtml += `<span class="fe-bc-sep">›</span><span class="fe-bc-item ${i === adminBreadcrumbs.length - 1 ? 'fe-bc-item--active' : ''}" onclick="navigateAdminFolder('${b.id}', '${escapeJS(b.name)}')">${escapeHtml(b.name)}</span>`;
+      });
+      bcEl.innerHTML = bcHtml;
+
+      // Get current folder items
+      let items = [];
+      if (currentAdminFolderId === 'root' || !currentAdminFolderId) {
+        items = categoriesTree;
+      } else {
+        const node = findNodeById(categoriesTree, currentAdminFolderId);
+        items = node ? (node.children || []) : [];
+      }
+
+      // Separate folders and quizzes
+      const folders = items.filter(n => n.type === 'folder');
+      const quizzes = items.filter(n => n.type === 'quiz');
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="fe-empty-state">
+            <div class="fe-empty-icon">📂</div>
+            <div class="fe-empty-title">This folder is empty</div>
+            <div class="fe-empty-sub">Create a subfolder or link a quiz from the database.</div>
+            <div style="display:flex; gap:0.5rem; margin-top:1rem; justify-content:center;">
+              <button class="fe-action-btn" onclick="openCreateFolderModal()">+ New Folder</button>
+              <button class="fe-action-btn fe-action-btn--primary" onclick="openLinkQuizModal()">+ Link Quiz</button>
+            </div>
+          </div>`;
+        return;
+      }
+
+      let html = '';
+
+      if (folders.length > 0) {
+        html += `<div class="fe-section-label">Folders</div><div class="fe-icon-grid">`;
+        html += folders.map(n => `
+          <div class="fe-icon-card fe-icon-card--folder" ondblclick="navigateAdminFolder('${n.id}', '${escapeJS(n.name)}')">
+            <div class="fe-icon-card__body">
+              <div class="fe-icon-card__icon">
+                ${renderFolderIconHTML(n)}
+              </div>
+              <div class="fe-icon-card__name" title="${escapeHtml(n.name)}">${escapeHtml(n.name)}</div>
+              <div class="fe-icon-card__meta">${(n.children || []).length} items</div>
+            </div>
+            <div class="fe-icon-card__actions">
+              <button class="fe-card-act" onclick="navigateAdminFolder('${n.id}', '${escapeJS(n.name)}')" title="Open">Open</button>
+              <button class="fe-card-act" onclick="openRenameModal('${n.id}', '${escapeJS(n.name)}')" title="Rename">Rename</button>
+              <button class="fe-card-act" onclick="openMoveModal('${n.id}')" title="Move">Move</button>
+              <button class="fe-card-act fe-card-act--danger" onclick="deleteTreeNode('${n.id}')" title="Delete">Delete</button>
+            </div>
+          </div>`).join('');
+        html += `</div>`;
+      }
+
+      if (quizzes.length > 0) {
+        html += `<div class="fe-section-label" style="margin-top: ${folders.length > 0 ? '1.5rem' : '0'}">Quizzes</div><div class="fe-icon-grid">`;
+        html += quizzes.map(n => `
+          <div class="fe-icon-card fe-icon-card--quiz">
+            <div class="fe-icon-card__body">
+              <div class="fe-icon-card__icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              </div>
+              <div class="fe-icon-card__name" title="${escapeHtml(n.name)}">${escapeHtml(n.name)}</div>
+              <div class="fe-icon-card__meta fe-icon-card__meta--quiz">${escapeHtml(n.subject)} · ${escapeHtml(n.level)}</div>
+              <div class="fe-icon-card__count">${n.count || 0} Qs</div>
+            </div>
+            <div class="fe-icon-card__actions">
+              <button class="fe-card-act" onclick="openRenameModal('${n.id}', '${escapeJS(n.name)}')" title="Rename">Rename</button>
+              <button class="fe-card-act" onclick="openMoveModal('${n.id}')" title="Move">Move</button>
+              <button class="fe-card-act fe-card-act--danger" onclick="deleteTreeNode('${n.id}')" title="Delete">Delete</button>
+            </div>
+          </div>`).join('');
+        html += `</div>`;
+      }
+
+      grid.innerHTML = html;
+    }
+
+
+
+    window.openNewFolderIconPicker = function() {
+      const current = document.getElementById('newFolderIconValue').value;
+      openIconPicker(current, (selected) => {
+        document.getElementById('newFolderIconValue').value = selected;
+        const preview = document.getElementById('newFolderIconPreview');
+        if (!selected) {
+          preview.innerHTML = '📁';
+        } else if (selected.startsWith('/') || selected.startsWith('http')) {
+          preview.innerHTML = `<img src="${selected}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">`;
+        } else {
+          preview.innerHTML = selected;
+        }
+      });
+    };
+
+    window.clearNewFolderIcon = function() {
+      document.getElementById('newFolderIconValue').value = '';
+      document.getElementById('newFolderIconPreview').innerHTML = '📁';
+    };
+
+    function openCreateFolderModal() {
+      document.getElementById('newFolderName').value = '';
+      clearNewFolderIcon();
+      openModal('createFolderModal');
+    }
+
+    function handleCreateFolder(e) {
+      e.preventDefault();
+      const name = document.getElementById('newFolderName').value.trim();
+      const icon = document.getElementById('newFolderIconValue').value || '';
+      if (!name) return;
+
+      const newNode = {
+        id: 'node_' + Math.random().toString(36).substr(2, 9),
+        name: name,
+        type: 'folder',
+        icon: icon,
+        children: []
+      };
+
+      if (currentAdminFolderId === 'root' || !currentAdminFolderId) {
+        categoriesTree.push(newNode);
+      } else {
+        const folder = findNodeById(categoriesTree, currentAdminFolderId);
+        if (folder) {
+          if (!folder.children) folder.children = [];
+          folder.children.push(newNode);
+        }
+      }
+
+      closeModal('createFolderModal');
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+      saveCategoriesToServer(true);
+    }
+
+    function openLinkQuizModal() {
+      const searchInput = document.getElementById('linkQuizSearch');
+      if (searchInput) searchInput.value = '';
+      
+      const selectAll = document.getElementById('selectAllLinkQuizzes');
+      if (selectAll) selectAll.checked = false;
+
+      loadDbSubjectsLevels();
+      openModal('linkQuizModal');
+    }
+
+    function handleLinkQuiz(e) {
+      e.preventDefault();
+      
+      const checkboxes = document.querySelectorAll('.link-quiz-cb:checked');
+      if (checkboxes.length === 0) {
+        showToast("Please select at least one quiz to link", "warning");
+        return;
+      }
+
+      let countAdded = 0;
+      checkboxes.forEach(cb => {
+        const dbVal = cb.value;
+        const parts = dbVal.split('|||');
+        const subject = parts[0];
+        const level = parts[1];
+
+        let count = 0;
+        allQuestions.forEach(q => {
+          if ((q.subject || 'General') === subject && (q.level || 'Default') === level) {
+            count++;
+          }
+        });
+
+        const displayName = level || subject || 'Quiz';
+
+        const newNode = {
+          id: 'node_' + Math.random().toString(36).substr(2, 9),
+          name: displayName,
+          type: 'quiz',
+          subject: subject,
+          level: level,
+          count: count
+        };
+
+        if (currentAdminFolderId === 'root' || !currentAdminFolderId) {
+          categoriesTree.push(newNode);
+        } else {
+          const folder = findNodeById(categoriesTree, currentAdminFolderId);
+          if (folder) {
+            if (!folder.children) folder.children = [];
+            folder.children.push(newNode);
+          }
+          // Remove any root-level quiz node with the same subject+level
+          // (these are uncategorized defaults that have now been properly placed)
+          categoriesTree = categoriesTree.filter(n =>
+            !(n.type === 'quiz' && n.subject === subject && n.level === level)
+          );
+        }
+        countAdded++;
+      });
+
+      closeModal('linkQuizModal');
+      showToast(`Successfully linked ${countAdded} quiz(zes) to this folder!`, "success");
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+      saveCategoriesToServer(true);
+    }
+
+    window.openRenameModal = function(nodeId, currentName) {
+      document.getElementById('renameNodeId').value = nodeId;
+      document.getElementById('renameNewName').value = currentName;
+      
+      const node = findNodeById(categoriesTree, nodeId);
+      const iconGroup = document.getElementById('renameIconFormGroup');
+      const iconVal = document.getElementById('renameIconValue');
+      const iconPreview = document.getElementById('renameIconPreview');
+      
+      if (node && node.type === 'folder') {
+        iconGroup.style.display = 'block';
+        const currentIcon = node.icon || '';
+        iconVal.value = currentIcon;
+        if (!currentIcon) {
+          iconPreview.innerHTML = '📁';
+        } else if (currentIcon.startsWith('/') || currentIcon.startsWith('http')) {
+          iconPreview.innerHTML = `<img src="${currentIcon}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">`;
+        } else {
+          iconPreview.innerHTML = currentIcon;
+        }
+      } else {
+        iconGroup.style.display = 'none';
+        iconVal.value = '';
+      }
+      
+      openModal('renameModal');
+    };
+
+    window.openRenameIconPicker = function() {
+      const current = document.getElementById('renameIconValue').value;
+      openIconPicker(current, (selected) => {
+        document.getElementById('renameIconValue').value = selected;
+        const preview = document.getElementById('renameIconPreview');
+        if (!selected) {
+          preview.innerHTML = '📁';
+        } else if (selected.startsWith('/') || selected.startsWith('http')) {
+          preview.innerHTML = `<img src="${selected}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">`;
+        } else {
+          preview.innerHTML = selected;
+        }
+      });
+    };
+
+    window.clearRenameIcon = function() {
+      document.getElementById('renameIconValue').value = '';
+      document.getElementById('renameIconPreview').innerHTML = '📁';
+    };
+
+    function handleRename(e) {
+      e.preventDefault();
+      const id = document.getElementById('renameNodeId').value;
+      const newName = document.getElementById('renameNewName').value.trim();
+      const newIcon = document.getElementById('renameIconValue').value || '';
+      if (!newName) return;
+
+      const node = findNodeById(categoriesTree, id);
+      if (node) {
+        node.name = newName;
+        if (node.type === 'folder') {
+          node.icon = newIcon;
+        }
+      }
+
+      closeModal('renameModal');
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+      saveCategoriesToServer(true);
+    }
+
+    function openMoveModal(nodeId) {
+      document.getElementById('moveNodeId').value = nodeId;
+      
+      const select = document.getElementById('moveTargetFolder');
+      select.innerHTML = '';
+      
+      const folders = getAllFolders(categoriesTree);
+      
+      folders.forEach(f => {
+        if (f.id === nodeId) return;
+        
+        const opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = f.path;
+        select.appendChild(opt);
+      });
+
+      openModal('moveModal');
+    }
+
+    function handleMove(e) {
+      e.preventDefault();
+      const nodeId = document.getElementById('moveNodeId').value;
+      const targetFolderId = document.getElementById('moveTargetFolder').value;
+      if (!nodeId || !targetFolderId) return;
+
+      const node = findNodeById(categoriesTree, nodeId);
+      if (!node) return;
+
+      const parent = findParentNode(categoriesTree, nodeId);
+      if (parent) {
+        parent.children = parent.children.filter(c => c.id !== nodeId);
+      } else {
+        categoriesTree = categoriesTree.filter(c => c.id !== nodeId);
+      }
+
+      if (targetFolderId === 'root') {
+        categoriesTree.push(node);
+      } else {
+        const targetFolder = findNodeById(categoriesTree, targetFolderId);
+        if (targetFolder) {
+          if (!targetFolder.children) targetFolder.children = [];
+          targetFolder.children.push(node);
+        }
+      }
+
+      closeModal('moveModal');
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+      saveCategoriesToServer(true);
+    }
+
+    function deleteTreeNode(nodeId) {
+      if (!confirm("Are you sure you want to delete this folder/quiz link? (Note: Database questions are NOT deleted)")) return;
+
+      const parent = findParentNode(categoriesTree, nodeId);
+      if (parent) {
+        parent.children = parent.children.filter(c => c.id !== nodeId);
+      } else {
+        categoriesTree = categoriesTree.filter(c => c.id !== nodeId);
+      }
+
+      renderAdminTreeSidebar();
+      renderAdminExplorer();
+      saveCategoriesToServer(true);
+    }
+
+    async function saveCategoriesToServer(silent = false) {
+      const saveBtn = document.getElementById('feSaveBtn');
+      const saveStatus = document.getElementById('feSaveStatus');
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+      if (saveStatus) saveStatus.innerHTML = '';
+      try {
+        const res = await fetch('/api/v1/quiz/categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ categories: categoriesTree })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (!silent) {
+            showToast("Categories structure saved successfully!", "success");
+          }
+          if (saveStatus) saveStatus.innerHTML = '<span style="color:#34d399; font-size:0.75rem;">✓ Saved</span>';
+        } else {
+          showToast("Failed to save: " + data.error, "error");
+          if (saveStatus) saveStatus.innerHTML = '<span style="color:#fca5a5; font-size:0.75rem;">✗ Failed</span>';
+        }
+      } catch (err) {
+        showToast("Error saving categories: " + err.message, "error");
+        if (saveStatus) saveStatus.innerHTML = '<span style="color:#fca5a5; font-size:0.75rem;">✗ Error</span>';
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save Structure`;
+        }
+        setTimeout(() => { if (saveStatus) saveStatus.innerHTML = ''; }, 3000);
+      }
+    }
+
+    function escapeJS(s) {
+      if (typeof s !== 'string') return '';
+      return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    // ── Icon Picker State & Logic ──
+    const DEFAULT_EMOJIS = ['🎓', '📚', '🏛️', '📖', '🔤', '✍️', '🧠', '📜', '🌸', '🕉️', '⚡', '🎯', '📝', '🗂️', '🌿', '🔬', '📕', '🏫', '🎭', '🌺', '🎨', '💻', '🌍', '📐'];
+    let selectedIconPickerTab = 'emoji';
+    let selectedEmojiVal = '';
+    let iconPickerCallback = null;
+
+    function initEmojiGrid() {
+      const container = document.getElementById('emojiGridContainer');
+      if (!container) return;
+      container.innerHTML = DEFAULT_EMOJIS.map(emoji => `
+        <button type="button" class="btn btn-secondary emoji-pick-btn" 
+                style="font-size: 1.5rem; padding: 0.5rem; line-height: 1; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; cursor: pointer; transition: all 0.2s;" 
+                onclick="selectGridEmoji(this, '${emoji}')">
+          ${emoji}
+        </button>
+      `).join('');
+    }
+
+    window.selectGridEmoji = function(btn, emoji) {
+      document.querySelectorAll('.emoji-pick-btn').forEach(b => {
+        b.style.borderColor = '';
+        b.style.background = '';
+      });
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.background = 'var(--accent-light)';
+      selectedEmojiVal = emoji;
+      document.getElementById('customEmojiInput').value = '';
+    };
+
+    window.switchIconPickerTab = function(tab) {
+      selectedIconPickerTab = tab;
+      const emojiBtn = document.getElementById('btnIconTabEmoji');
+      const imageBtn = document.getElementById('btnIconTabImage');
+      const emojiSec = document.getElementById('iconPickerSec_emoji');
+      const imageSec = document.getElementById('iconPickerSec_image');
+      
+      if (tab === 'emoji') {
+        emojiBtn.classList.add('active');
+        imageBtn.classList.remove('active');
+        emojiSec.style.display = 'block';
+        imageSec.style.display = 'none';
+      } else {
+        emojiBtn.classList.remove('active');
+        imageBtn.classList.add('active');
+        emojiSec.style.display = 'none';
+        imageSec.style.display = 'block';
+      }
+    };
+
+    window.openIconPicker = function(currentVal, callback) {
+      iconPickerCallback = callback;
+      selectedEmojiVal = '';
+      document.getElementById('uploadedIconUrl').value = '';
+      document.getElementById('customEmojiInput').value = '';
+      document.getElementById('iconUploadPreviewContainer').style.display = 'none';
+      document.getElementById('iconUploadPreviewImg').src = '';
+      document.getElementById('iconFileInput').value = '';
+      
+      document.querySelectorAll('.emoji-pick-btn').forEach(b => {
+        b.style.borderColor = '';
+        b.style.background = '';
+      });
+
+      if (currentVal) {
+        if (currentVal.startsWith('/') || currentVal.startsWith('http')) {
+          switchIconPickerTab('image');
+          document.getElementById('uploadedIconUrl').value = currentVal;
+          document.getElementById('iconUploadPreviewImg').src = currentVal;
+          document.getElementById('iconUploadPreviewContainer').style.display = 'block';
+        } else {
+          switchIconPickerTab('emoji');
+          if (DEFAULT_EMOJIS.includes(currentVal)) {
+            const index = DEFAULT_EMOJIS.indexOf(currentVal);
+            const btn = document.querySelectorAll('.emoji-pick-btn')[index];
+            if (btn) selectGridEmoji(btn, currentVal);
+          } else {
+            document.getElementById('customEmojiInput').value = currentVal;
+            selectedEmojiVal = currentVal;
+          }
+        }
+      } else {
+        switchIconPickerTab('emoji');
+      }
+
+      openModal('iconPickerModal');
+    };
+
+    window.confirmIconSelection = function() {
+      let result = '';
+      if (selectedIconPickerTab === 'emoji') {
+        const customVal = document.getElementById('customEmojiInput').value.trim();
+        result = customVal || selectedEmojiVal || '';
+      } else {
+        result = document.getElementById('uploadedIconUrl').value || '';
+      }
+      
+      if (iconPickerCallback) {
+        iconPickerCallback(result);
+      }
+      closeModal('iconPickerModal');
+    };
+
+    window.clearIconUpload = function() {
+      document.getElementById('uploadedIconUrl').value = '';
+      document.getElementById('iconUploadPreviewContainer').style.display = 'none';
+      document.getElementById('iconUploadPreviewImg').src = '';
+      document.getElementById('iconFileInput').value = '';
+    };
+
+    async function handleIconImageUpload(file) {
+      if (!file) return;
+      const uploadText = document.querySelector('#iconUploadZone .upload-text');
+      const originalText = uploadText.innerHTML;
+      uploadText.innerHTML = '<strong>Uploading image...</strong>';
+      
+      const formData = new FormData();
+      formData.append('icon', file);
+      
+      try {
+        const res = await fetch('/api/v1/quiz/folder-icon', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          document.getElementById('uploadedIconUrl').value = data.url;
+          document.getElementById('iconUploadPreviewImg').src = data.url;
+          document.getElementById('iconUploadPreviewContainer').style.display = 'block';
+          showToast('Image uploaded successfully!', 'success');
+        } else {
+          showToast(data.error || 'Failed to upload image', 'error');
+        }
+      } catch (err) {
+        showToast('Network error uploading image', 'error');
+        console.error(err);
+      } finally {
+        uploadText.innerHTML = originalText;
+      }
+    }
+
+    function setupIconPickerEvents() {
+      initEmojiGrid();
+      const zone = document.getElementById('iconUploadZone');
+      const input = document.getElementById('iconFileInput');
+      if (!zone || !input) return;
+      
+      ['dragover', 'dragenter'].forEach(evt => {
+        zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(evt => {
+        zone.addEventListener(evt, () => { zone.classList.remove('dragover'); });
+      });
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleIconImageUpload(e.dataTransfer.files[0]);
+        }
+      });
+      input.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleIconImageUpload(e.target.files[0]);
+        }
+      });
+      
+      const customInput = document.getElementById('customEmojiInput');
+      customInput.addEventListener('input', () => {
+        if (customInput.value.trim()) {
+          document.querySelectorAll('.emoji-pick-btn').forEach(b => {
+            b.style.borderColor = '';
+            b.style.background = '';
+          });
+          selectedEmojiVal = '';
+        }
+      });
+    }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+      loadQuestions();
+      setupIconPickerEvents();
+    });
+  </script>
+
+  <!-- Create Folder Modal -->
+  <div class="modal-overlay" id="createFolderModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Create Folder</h2>
+        <button class="modal-close" onclick="closeModal('createFolderModal')">✕</button>
+      </div>
+      <form id="createFolderForm" onsubmit="handleCreateFolder(event)">
+        <div class="form-group">
+          <label for="newFolderName">Folder Name</label>
+          <input type="text" id="newFolderName" class="form-input" placeholder="e.g. UGC NET Exams" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label style="display: block; margin-bottom: 0.5rem;">Folder Icon (Optional)</label>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div id="newFolderIconPreview" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 1.5rem;">📁</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openNewFolderIconPicker()">Select Icon</button>
+            <button type="button" class="btn btn-sm" style="color: var(--text-muted); background: transparent; border: none; cursor: pointer;" onclick="clearNewFolderIcon()">Reset</button>
+          </div>
+          <input type="hidden" id="newFolderIconValue">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">📁 Create</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Link Quiz Modal -->
+  <div class="modal-overlay" id="linkQuizModal">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2>Link Database Quizzes</h2>
+        <button class="modal-close" onclick="closeModal('linkQuizModal')">✕</button>
+      </div>
+      <form id="linkQuizForm" onsubmit="handleLinkQuiz(event)">
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+          <label for="linkQuizSearch">Search available quizzes</label>
+          <input type="text" id="linkQuizSearch" class="form-input" placeholder="Search by subject or level..." oninput="filterLinkQuizzesList()" autocomplete="off">
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem; padding: 0 0.25rem;">
+          <input type="checkbox" id="selectAllLinkQuizzes" onchange="toggleSelectAllLinkQuizzes(this)" style="width:16px; height:16px; cursor:pointer;">
+          <label for="selectAllLinkQuizzes" style="font-weight: 600; cursor: pointer; color: var(--text-primary); user-select:none;">Select All Available</label>
+          <span id="linkSelectionCount" style="margin-left: auto; font-size: 0.78rem; font-weight: 700; padding: 0.18rem 0.6rem; border-radius: 99px; background: var(--t-accent-alpha-15); color: #a5b4fc; border: 1px solid var(--t-accent-alpha-25); display: none;">0 selected</span>
+        </div>
+        
+        <div class="form-group">
+          <label>Select Quizzes to Link (already linked are hidden)</label>
+          <div id="linkQuizzesListContainer" style="max-height: 250px; overflow-y: auto; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 0.5rem; background: var(--bg-body);">
+            <div style="padding: 1rem; text-align: center; color: var(--text-muted);">Loading database options...</div>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 1rem;" id="linkSubmitBtn">➕ Link Selected Quizzes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div class="modal-overlay" id="renameModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Rename Item</h2>
+        <button class="modal-close" onclick="closeModal('renameModal')">✕</button>
+      </div>
+      <form id="renameForm" onsubmit="handleRename(event)">
+        <input type="hidden" id="renameNodeId">
+        <div class="form-group">
+          <label for="renameNewName">New Name</label>
+          <input type="text" id="renameNewName" class="form-input" required autocomplete="off">
+        </div>
+        <div class="form-group" id="renameIconFormGroup" style="display: none;">
+          <label style="display: block; margin-bottom: 0.5rem;">Folder Icon</label>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div id="renameIconPreview" style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: var(--bg-body); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 1.5rem;">📁</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openRenameIconPicker()">Change Icon</button>
+            <button type="button" class="btn btn-sm" style="color: var(--text-muted); background: transparent; border: none; cursor: pointer;" onclick="clearRenameIcon()">Reset</button>
+          </div>
+          <input type="hidden" id="renameIconValue">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Rename</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Move Modal -->
+  <div class="modal-overlay" id="moveModal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Move Item</h2>
+        <button class="modal-close" onclick="closeModal('moveModal')">✕</button>
+      </div>
+      <form id="moveForm" onsubmit="handleMove(event)">
+        <input type="hidden" id="moveNodeId">
+        <div class="form-group">
+          <label for="moveTargetFolder">Select Target Folder</label>
+          <select id="moveTargetFolder" class="form-select" required>
+            <option value="">Loading folders...</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Move</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Icon Picker Modal -->
+  <div class="modal-overlay" id="iconPickerModal">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2>Choose Folder Icon</h2>
+        <button class="modal-close" onclick="closeModal('iconPickerModal')">✕</button>
+      </div>
+      
+      <!-- Tabs for Emoji vs Image Upload -->
+      <div style="display: flex; gap: 0.25rem; border-bottom: 2px solid var(--border-light); margin-bottom: 1rem; padding-bottom: 0.25rem;">
+        <button type="button" class="lang-tab active" id="btnIconTabEmoji" onclick="switchIconPickerTab('emoji')" style="flex: 1; text-align: center;">Emoji</button>
+        <button type="button" class="lang-tab" id="btnIconTabImage" onclick="switchIconPickerTab('image')" style="flex: 1; text-align: center;">Image Upload</button>
+      </div>
+      
+      <!-- Tab 1: Emoji -->
+      <div id="iconPickerSec_emoji">
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; margin-bottom: 1rem;" id="emojiGridContainer">
+          <!-- Populated in JS -->
+        </div>
+        <div class="form-group">
+          <label for="customEmojiInput">Custom Emoji / Character</label>
+          <input type="text" id="customEmojiInput" class="form-input" placeholder="Paste an emoji here..." maxlength="5" autocomplete="off">
+        </div>
+      </div>
+      
+      <!-- Tab 2: Image Upload -->
+      <div id="iconPickerSec_image" style="display: none;">
+        <div class="upload-zone" id="iconUploadZone" style="padding: 1.5rem 1rem; margin-bottom: 1rem; border: 2px dashed var(--border); border-radius: var(--radius); text-align: center; cursor: pointer; transition: all 0.2s;">
+          <input type="file" accept="image/*" id="iconFileInput" style="display: none;">
+          <div class="upload-icon" style="font-size: 2rem; margin-bottom: 0.5rem;" onclick="document.getElementById('iconFileInput').click()">🖼️</div>
+          <div class="upload-text" onclick="document.getElementById('iconFileInput').click()">
+            <strong>Click to browse</strong> or drag image here<br>
+            <small style="font-size: 0.75rem; color: var(--text-muted);">PNG, JPG, WEBP, GIF (Auto-optimized)</small>
+          </div>
+        </div>
+        
+        <!-- Preview of uploaded icon image -->
+        <div id="iconUploadPreviewContainer" style="display: none; text-align: center; margin-top: 1rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius);">
+          <div style="margin-bottom: 0.5rem; font-size: 0.82rem; color: var(--text-secondary);">Uploaded Image Preview</div>
+          <img id="iconUploadPreviewImg" src="" style="max-width: 64px; max-height: 64px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <div style="margin-top: 0.5rem;">
+            <button type="button" class="btn btn-danger btn-sm" onclick="clearIconUpload()">Remove Image</button>
+          </div>
+        </div>
+        
+        <!-- Hidden input to store uploaded URL -->
+        <input type="hidden" id="uploadedIconUrl">
+      </div>
+      
+      <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+        <button type="button" class="btn btn-primary" style="flex: 1;" onclick="confirmIconSelection()">Apply Icon</button>
+        <button type="button" class="btn btn-secondary" onclick="closeModal('iconPickerModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script>
+
+  <!-- Quiz Feedback Import Modal -->
+  <div class="modal-overlay" id="fbImportModal">
+    <div class="modal" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2>📤 Import Quiz Feedback</h2>
+        <button class="modal-close" onclick="closeModal('fbImportModal')">✕</button>
+      </div>
+      <div style="background:var(--accent-light); border:1px solid var(--t-accent-alpha-20); border-radius:var(--radius); padding:1rem; margin-bottom:1.25rem; font-size:0.88rem;">
+        <h3 style="font-size:0.92rem; color:var(--accent); margin-bottom:0.5rem;">📝 Format</h3>
+        <p style="color:var(--text-secondary); margin-bottom:0.5rem;">Upload a JSON file previously exported from this dashboard. Each row must contain <code>question_id</code> and <code>vote</code> (<code>"up"</code> or <code>"down"</code>). An optional <code>comment</code> field is also accepted.</p>
+        <p style="color:var(--text-secondary);">Summary-level exports (with nested <code>comments</code> arrays) will be auto-expanded row-by-row.</p>
+      </div>
+      <div class="upload-zone" id="fbImportZone" style="margin-bottom:1rem; cursor:pointer;" onclick="document.getElementById('fbImportFileInput').click()">
+        <input type="file" id="fbImportFileInput" accept=".json" style="display:none;">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">
+          <strong>Click to browse</strong> or drag &amp; drop<br>
+          <small>JSON file only</small>
+        </div>
+      </div>
+      <div id="fbImportResult" style="display:none; margin-bottom:1rem;"></div>
+      <div style="display:flex; gap:0.75rem;">
+        <button class="btn btn-primary" style="flex:1;" onclick="doFeedbackImport()">🚀 Import</button>
+        <button class="btn btn-secondary" onclick="closeModal('fbImportModal'); resetFeedbackImport()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Feedback Details Modal -->
+  <div class="modal-overlay" id="quizFeedbackDetailsModal">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header" style="flex-direction:column; gap:0.5rem; align-items:flex-start;">
+        <div style="display:flex; width:100%; align-items:center; justify-content:space-between;">
+          <h2 id="qfDetailsTitle" style="font-size:1rem;">Question Feedback</h2>
+          <button class="modal-close" onclick="closeModal('quizFeedbackDetailsModal')">✕</button>
+        </div>
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <span id="qfDetailsUp" style="font-size:0.9rem; font-weight:700; color:var(--success);"></span>
+          <span id="qfDetailsDown" style="font-size:0.9rem; font-weight:700; color:var(--danger);"></span>
+          <button id="qfDetailsClearBtn" class="btn btn-danger btn-sm" style="margin-left:auto;">🗑️ Clear Question Feedback</button>
+        </div>
+      </div>
+      <div id="qfDetailsBody" style="max-height:420px; overflow-y:auto; margin:0 -1.5rem;"></div>
+      <div id="qfDetailsPagination" style="display:flex; gap:0.5rem; justify-content:center; align-items:center; margin-top:1rem; flex-wrap:wrap;"></div>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function () {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) { }
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) { }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Sanskrit Digital Library</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0b0f1a;
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            overflow-x: hidden;
+        }
+
+        /* === ANIMATED AMBIENT BACKGROUND === */
+        .lib-bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .lib-bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.25;
+            animation: libOrbDrift 22s ease-in-out infinite;
+        }
+
+        .lib-bg-orb:nth-child(1) {
+            width: 480px;
+            height: 480px;
+            background: radial-gradient(circle, var(--t-accent), var(--t-accent-hover));
+            top: -12%;
+            left: -8%;
+            animation-duration: 28s;
+        }
+
+        .lib-bg-orb:nth-child(2) {
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle, var(--t-accent-hover), var(--t-accent));
+            top: 55%;
+            right: -6%;
+            animation-duration: 32s;
+            animation-delay: -7s;
+        }
+
+        .lib-bg-orb:nth-child(3) {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, #3b82f6, #1d4ed8);
+            bottom: -8%;
+            left: 35%;
+            animation-duration: 26s;
+            animation-delay: -12s;
+        }
+
+        @keyframes libOrbDrift {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(35px, -25px) scale(1.04);
+            }
+
+            50% {
+                transform: translate(-18px, 18px) scale(0.96);
+            }
+
+            75% {
+                transform: translate(25px, 32px) scale(1.02);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ===  PROFILE TOGGLE SWITCH === */
+        .profile-switch {
+            --_switch-bg-clr: #70a9c5;
+            --_switch-padding: 4px;
+            --_slider-bg-clr: rgba(12, 74, 110, 0.65);
+            --_slider-bg-clr-on: rgba(12, 74, 110, 0.65);
+            color: white;
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            background-color: var(--_switch-bg-clr);
+            border-radius: 9999px;
+            cursor: pointer;
+            padding: var(--_switch-padding);
+            user-select: none;
+            isolation: isolate;
+            text-decoration: none;
+        }
+
+        .profile-switch input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        .switch-label {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+        }
+
+        /* Active states */
+        .profile-switch:has(input:not(:checked)) .switch-label.left {
+            color: #ffffff;
+            opacity: 1;
+        }
+
+        .profile-switch:has(input:checked) .switch-label.right {
+            color: #ffffff;
+            opacity: 1;
+        }
+
+        /* The slider pill */
+        .profile-switch::before {
+            content: "";
+            position: absolute;
+            top: var(--_switch-padding);
+            bottom: var(--_switch-padding);
+            left: var(--_switch-padding);
+            width: calc(50% - var(--_switch-padding));
+            background-color: var(--_slider-bg-clr);
+            border-radius: 9999px;
+            transition: transform 0.35s cubic-bezier(0.47, 1.64, 0.41, 0.8), background-color 0.35s ease;
+            z-index: 1;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .3), 0 1px rgba(255, 255, 255, .3);
+        }
+
+        /* When checked, slide the pill to the right */
+        .profile-switch:has(input:checked)::before {
+            transform: translateX(100%);
+            background-color: var(--_slider-bg-clr-on);
+        }
+
+        /* Subtle hover effect */
+        .profile-switch:hover::before {
+            filter: brightness(1.1);
+        }
+
+        .header,
+        .profile-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-container {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .profile-sidebar {
+            animation: fadeInUp 0.7s ease-out 0.1s both;
+        }
+
+        .profile-content {
+            animation: fadeInUp 0.7s ease-out 0.2s both;
+        }
+
+        .profile-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 900px) {
+            .profile-container {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+
+        /* Sidebar Profile Card */
+        .profile-sidebar {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            height: fit-content;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--t-accent), var(--t-accent-hover));
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 0 28px var(--t-accent-alpha-30);
+            animation: avatarGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes avatarGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 28px var(--t-accent-alpha-30);
+            }
+
+            50% {
+                box-shadow: 0 0 45px var(--t-accent-alpha-45);
+            }
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            margin-bottom: 6px;
+        }
+
+        .profile-email {
+            font-size: 13px;
+            color: var(--t-text-muted);
+            margin-bottom: 24px;
+            word-break: break-all;
+        }
+
+        .profile-nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .profile-nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: var(--t-text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.25s ease;
+        }
+
+        .profile-nav-btn:hover {
+            background: var(--t-border-light);
+            color: var(--t-text-primary);
+        }
+
+        .profile-nav-btn.active {
+            background: linear-gradient(135deg, var(--t-accent-alpha-15), var(--t-accent-alpha-15));
+            border-left: 4px solid var(--t-accent);
+            color: var(--t-text-secondary);
+        }
+
+        /* Main Content Card */
+        .profile-content {
+            background: var(--t-bg-surface);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            min-height: 500px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--t-text-secondary), #e879f9);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Lists & Grids */
+        .fav-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 600px) {
+            .fav-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .fav-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.25s ease;
+        }
+
+        .fav-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--t-accent-alpha-40);
+            background: rgba(30, 41, 59, 0.8);
+        }
+
+        .fav-info {
+            flex: 1;
+            margin-right: 12px;
+        }
+
+        .fav-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--t-text-primary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 4px;
+            transition: color 0.2s;
+        }
+
+        .fav-title:hover {
+            color: var(--t-text-secondary);
+        }
+
+        .fav-date {
+            font-size: 11px;
+            color: var(--t-text-muted);
+        }
+
+        .btn-remove-fav {
+            background: transparent;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-remove-fav:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Booklist Styles */
+        .btn-create-list {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--t-accent), var(--t-accent-hover));
+            border: none;
+            border-radius: 8px;
+            color: var(--t-text-on-accent);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-create-list:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+        }
+
+        .booklists-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .booklist-item-row {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: all 0.25s ease;
+        }
+
+        @media (min-width: 600px) {
+            .booklist-item-row {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .booklist-item-row:hover {
+            border-color: var(--t-accent-alpha-40);
+            background: rgba(30, 41, 59, 0.7);
+        }
+
+        .booklist-meta {
+            flex: 1;
+        }
+
+        .booklist-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            margin-bottom: 4px;
+        }
+
+        .booklist-desc {
+            font-size: 13px;
+            color: var(--t-text-muted);
+            margin-bottom: 8px;
+        }
+
+        .booklist-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--t-text-muted);
+        }
+
+        .booklist-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid var(--t-border);
+            background: var(--t-border-light);
+            color: var(--t-text-secondary);
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action:hover {
+            background: var(--t-border-hover) !important;
+            color: var(--t-text-primary) !important;
+            border-color: var(--t-accent) !important;
+        }
+
+        .btn-action.delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+
+
+        /* Modal Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--t-text-primary) !important;
+            margin-bottom: 16px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 18px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--t-text-muted);
+            margin-bottom: 6px;
+        }
+
+        .modal-input {
+            width: 100%;
+            background: var(--t-input-bg);
+            border: 1px solid var(--t-input-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--t-input-text);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--t-input-focus-border);
+            background: var(--t-input-focus-bg);
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .modal-btn-cancel {
+            background: transparent;
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .modal-btn-save {
+            background: linear-gradient(135deg, var(--t-accent), var(--t-accent-hover));
+            border: none;
+            color: var(--t-text-on-accent);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Alerts & Empty states */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--t-text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .alert-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: #10b981;
+            color: white;
+            font-weight: 500;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .profile-container {
+                margin: 20px auto !important;
+                padding: 0 10px !important;
+                gap: 20px !important;
+            }
+
+            .profile-sidebar {
+                padding: 20px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+            }
+
+            .profile-avatar {
+                width: 60px !important;
+                height: 60px !important;
+                font-size: 24px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .profile-email {
+                margin-bottom: 15px !important;
+            }
+
+            .profile-nav-menu {
+                flex-direction: row !important;
+                width: 100% !important;
+                overflow-x: auto !important;
+                padding-bottom: 8px !important;
+                gap: 10px !important;
+                border-bottom: 1px solid var(--t-border) !important;
+                scrollbar-width: none !important;
+            }
+
+            .profile-nav-menu::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .profile-nav-btn {
+                width: auto !important;
+                white-space: nowrap !important;
+                padding: 8px 16px !important;
+                font-size: 13px !important;
+            }
+
+            .profile-nav-btn.active {
+                border-left: none !important;
+                border-bottom: 3px solid var(--t-accent) !important;
+                border-radius: 10px 10px 0 0 !important;
+                background: linear-gradient(135deg, var(--t-accent-alpha-08), var(--t-accent-alpha-08)) !important;
+            }
+
+            .profile-content {
+                padding: 20px !important;
+                min-height: auto !important;
+            }
+
+            .section-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 12px !important;
+            }
+        }
+
+        /* Vector Download Table Styles */
+        .vector-table th, .vector-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .vector-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.none {
+            background: rgba(255,255,255,0.06);
+            color: #94a3b8;
+        }
+        .status-badge.pending {
+            background: rgba(234, 179, 8, 0.15);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .status-badge.approved {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .status-badge.rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Ambient Background -->
+    <div class="lib-bg-canvas">
+        <div class="lib-bg-orb"></div>
+        <div class="lib-bg-orb"></div>
+        <div class="lib-bg-orb"></div>
+    </div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo header-brand">
+            <a href="/" class="navbar-home-btn" title="Main Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+            <h1 class="navbar-title" style="font-size: 22px; margin: 0; ">Sanskrit Digital Library</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <a href="{{ url_for('search_page') }}"
+                style="color:var(--t-text-secondary);text-decoration:none;font-size:13px;font-weight:600;padding:7px 14px;border-radius:8px;transition:all 0.2s;white-space:nowrap;">Library
+                Home</a>
+            <!-- Profile Toggle Switch: Library (left/unchecked) ↔ Quiz (right/checked) -->
+            <label class="profile-switch" id="profileToggle" title="Switch between Library and Quiz Profile">
+                <input type="checkbox" id="profileToggleCheckbox">
+                <span class="switch-label left">📚 Library</span>
+                <span class="switch-label right">🎯 Quiz</span>
+            </label>
+            <a href="{{ url_for('user_logout') }}"
+                style="color: #fca5a5;text-decoration:none;padding:6px 12px;font-size:14px;white-space:nowrap;">Logout</a>
+        </div>
+        <script>
+            // Toggle switch: Library (unchecked) -> Quiz Profile (checked)
+            (function () {
+                var cb = document.getElementById('profileToggleCheckbox');
+                var lbl = document.getElementById('profileToggle');
+                // Library profile = unchecked (current page)
+                cb.checked = false;
+                lbl.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // Navigate to quiz profile
+                    window.location.href = "/user/quiz-profile";
+                });
+            })();
+        </script>
+    </header>
+
+    <div class="profile-container">
+        <!-- Sidebar -->
+        <div class="profile-sidebar">
+            <div class="profile-avatar-container" onclick="openAvatarModal()"
+                style="position: relative; cursor: pointer; width: fit-content; margin: 0 auto;">
+                <div class="profile-avatar"
+                    style="{% if user_profile_pic_url %}background-image: url('{{ user_profile_pic_url }}') !important; background-size: cover !important; background-position: center !important;{% else %}background: {{ user_avatar.gradient }} !important;{% endif %}">
+                    {% if not user_profile_pic_url %}
+                    {{ user_avatar.emoji }}
+                    {% endif %}
+                </div>
+                <div class="avatar-edit-badge"
+                    style="position: absolute; bottom: 12px; right: 0; background: var(--t-accent); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid var(--t-bg-surface, #0b0f1a); box-shadow: 0 0 10px var(--t-accent-alpha-45);">
+                    ✏️
+                </div>
+            </div>
+            <div class="profile-name">{{ user.display_name }}</div>
+            <div class="profile-email">{{ user.email }}</div>
+
+            <div class="profile-nav-menu">
+                <button class="profile-nav-btn active" onclick="switchTab('favourites')">
+                    <span>❤️</span> Favourites
+                </button>
+                <button class="profile-nav-btn" onclick="switchTab('booklists')">
+                    <span>📚</span> Booklists
+                </button>
+                <button class="profile-nav-btn" onclick="switchTab('vector_downloads')">
+                    <span>⚡</span> Vector Downloads
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Panel -->
+        <div class="profile-content">
+            <!-- Favourites Tab -->
+            <div id="favourites" class="tab-pane active">
+                <div class="section-header">
+                    <h2 class="section-title">Favourite Books</h2>
+                </div>
+                <div id="favouritesList" class="fav-grid">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Booklists Tab -->
+            <div id="booklists" class="tab-pane">
+                <div class="section-header">
+                    <h2 class="section-title">My Booklists</h2>
+                    <button class="btn-create-list" onclick="openCreateModal()">+ Create List</button>
+                </div>
+                <div id="booklistsList" class="booklists-list">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Quiz Dashboard Cross-Link -->
+            <!-- Quiz History has been moved to a dedicated Quiz Dashboard at /user/quiz-profile -->
+
+
+
+            <!-- Vector Downloads Tab -->
+            <div id="vector_downloads" class="tab-pane">
+                <div class="section-header">
+                    <h2 class="section-title">Vector Database Downloads</h2>
+                </div>
+                <p style="margin-bottom: 20px; color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                    Download encrypted vector embedding databases of our library books for non-commercial AI usage. 
+                    The decryption keys are approved and dispatched by the Super Administrator via email.
+                </p>
+                <div style="background: var(--t-bg-surface); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 25px; margin-top: 15px;">
+                    <div class="table-responsive">
+                        <table class="vector-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; color: var(--t-text-primary);">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #94a3b8;">
+                                    <th style="padding: 12px 8px;">Book Name</th>
+                                    <th style="padding: 12px 8px; width: 220px;">Request Status</th>
+                                    <th style="padding: 12px 8px; width: 260px; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vectorRequestsTableBody">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">Loading available vector databases...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Create Booklist Modal -->
+    <div id="createModal" class="overlay">
+        <div class="modal">
+            <h3 class="modal-title">Create New Booklist</h3>
+            <div class="modal-form-group">
+                <label for="listName">NAME</label>
+                <input type="text" id="listName" class="modal-input" placeholder="e.g. My Study List">
+            </div>
+            <div class="modal-form-group">
+                <label for="listDesc">DESCRIPTION</label>
+                <input type="text" id="listDesc" class="modal-input" placeholder="e.g. Books on Rigveda Upanishads">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" onclick="closeCreateModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="createBooklist()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Booklist Modal -->
+    <div id="renameModal" class="overlay">
+        <div class="modal">
+            <h3 class="modal-title">Edit Booklist</h3>
+            <input type="hidden" id="renameListId">
+            <div class="modal-form-group">
+                <label for="renameListName">NAME</label>
+                <input type="text" id="renameListName" class="modal-input" placeholder="New name">
+            </div>
+            <div class="modal-form-group">
+                <label for="renameListDesc">DESCRIPTION</label>
+                <input type="text" id="renameListDesc" class="modal-input" placeholder="New description">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn-cancel" onclick="closeRenameModal()">Cancel</button>
+                <button class="modal-btn-save" onclick="saveBooklistRename()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avatar Selection Modal -->
+    <div id="avatarModal" class="overlay">
+        <div class="modal" style="max-width: 500px;">
+            <h3 class="modal-title">Select Avatar</h3>
+            <div class="avatar-grid"
+                style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; justify-items: center;">
+                {% for avatar in AVATARS %}
+                <div class="avatar-option {% if user_avatar and user_avatar.emoji == avatar.emoji and not user_profile_pic_url %}selected{% endif %}"
+                    onclick="selectAvatar({{ loop.index0 }})"
+                    style="background: {{ avatar.gradient }} !important; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 3px solid transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"
+                    data-index="{{ loop.index0 }}" title="Select Avatar">
+                    {{ avatar.emoji }}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div
+                style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px; font-weight: 500;">Or upload your own
+                    profile photo:</div>
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;"
+                    onchange="uploadProfilePic()">
+                <button class="btn-create-list" onclick="document.getElementById('profilePicInput').click()"
+                    style="padding: 8px 16px;">
+                    📷 Upload Photo
+                </button>
+            </div>
+
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="modal-btn-cancel" onclick="closeAvatarModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="alert-toast">Operation Successful</div>
+
+    <script>
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function openAvatarModal() {
+            document.getElementById('avatarModal').style.display = 'flex';
+        }
+        function closeAvatarModal() {
+            document.getElementById('avatarModal').style.display = 'none';
+        }
+        function selectAvatar(index) {
+            fetch('/api/user/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar_idx: index })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Avatar updated successfully!");
+                        closeAvatarModal();
+                        location.reload();
+                    } else {
+                        showToast(data.message || "Failed to update avatar", true);
+                    }
+                });
+        }
+        function uploadProfilePic() {
+            const fileInput = document.getElementById('profilePicInput');
+            if (fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('profile_pic', file);
+
+            showToast("Uploading profile picture...");
+
+            fetch('/api/user/profile/upload-pic', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Profile picture uploaded successfully!");
+                        closeAvatarModal();
+                        location.reload();
+                    } else {
+                        showToast(data.message || "Upload failed", true);
+                    }
+                })
+                .catch(() => {
+                    showToast("Failed to upload profile picture", true);
+                });
+        }
+
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.querySelectorAll('.profile-nav-btn').forEach(btn => btn.classList.remove('active'));
+
+            const targetPane = document.getElementById(tabId);
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+
+            // Find navigation button corresponding to tabId
+            const targetBtn = Array.from(document.querySelectorAll('.profile-nav-menu button')).find(btn => {
+                const onc = btn.getAttribute('onclick');
+                return onc && onc.includes(tabId);
+            });
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+            }
+
+            if (tabId === 'favourites') {
+                loadFavourites();
+            } else if (tabId === 'booklists') {
+                loadBooklists();
+            } else if (tabId === 'vector_downloads') {
+                loadVectorRequests();
+            }
+        }
+
+
+        /* loadQuizHistory removed — quiz history now lives on the dedicated Quiz Dashboard */
+
+        // =============================================================================
+        // VECTOR DOWNLOADS
+        // =============================================================================
+        function loadVectorRequests() {
+            const tbody = document.getElementById('vectorRequestsTableBody');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">⏳ Loading vector database catalog...</td></tr>';
+            
+            fetch('/api/user/vector-requests')
+                .then(res => res.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    if (!data.requests || data.requests.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-muted);">📭 No vector databases are currently available.</td></tr>';
+                        return;
+                    }
+                    data.requests.forEach(req => {
+                        const tr = document.createElement('tr');
+                        
+                        let statusHtml = '';
+                        let actionHtml = '';
+                        const escapedBook = escapeJs(req.book_name);
+                        
+                        if (req.status === 'none') {
+                            statusHtml = '<span class="status-badge none">Not Requested</span>';
+                            actionHtml = `<button class="btn-create-list" style="padding: 6px 12px; font-size: 13px;" onclick="confirmVectorDownload('${escapedBook}')">🔑 Download & Request Key</button>`;
+                        } else if (req.status === 'pending') {
+                            statusHtml = '<span class="status-badge pending">⏳ Key Pending Admin Approval</span>';
+                            actionHtml = `<button class="btn-create-list" style="padding: 6px 12px; font-size: 13px; background: rgba(255,255,255,0.05); color: #ccc;" onclick="downloadVectorFile('${escapedBook}')">Re-download ZIP</button>`;
+                        } else if (req.status === 'approved') {
+                            statusHtml = '<span class="status-badge approved">✅ Key Approved & Mailed</span>';
+                            actionHtml = `<button class="btn-create-list" style="padding: 6px 12px; font-size: 13px; background: var(--t-accent);" onclick="downloadVectorFile('${escapedBook}')">📥 Download ZIP</button>`;
+                        } else if (req.status === 'rejected') {
+                            statusHtml = '<span class="status-badge rejected">❌ Key Request Rejected</span>';
+                            actionHtml = `<button class="btn-create-list delete" style="padding: 6px 12px; font-size: 13px;" onclick="confirmVectorDownload('${escapedBook}')">🔄 Re-request & Download</button>`;
+                        }
+                        
+                        tr.innerHTML = `
+                            <td style="padding: 12px 8px; font-weight: 500;">📖 ${escapeHtml(req.book_name)}</td>
+                            <td style="padding: 12px 8px;">${statusHtml}</td>
+                            <td style="padding: 12px 8px; text-align: right;">${actionHtml}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 20px; color: #f87171;">⚠️ Failed to load vector database catalog.</td></tr>';
+                });
+        }
+
+        function confirmVectorDownload(bookName) {
+            const confirmMsg = "This vector database file is encrypted. Accessing it requires an approval key sent via email.\n\nDownloading this file will automatically submit an approval request to the Super Admin.\n\nDo you want to proceed and download the file now?";
+            if (confirm(confirmMsg)) {
+                fetch('/api/user/request-vector-download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ book_name: bookName })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Key request submitted! Initiating download...");
+                        downloadVectorFile(bookName);
+                        setTimeout(loadVectorRequests, 1500);
+                    } else {
+                        showToast(data.error || "Failed to submit key request", true);
+                    }
+                })
+                .catch(() => {
+                    showToast("Failed to submit request", true);
+                });
+            }
+        }
+
+        function downloadVectorFile(bookName) {
+            window.location.href = '/api/user/download-vector-db/' + encodeURIComponent(bookName);
+        }
+
+        function escapeJs(text) {
+            return text.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // =============================================================================
+        // FAVOURITES
+        // =============================================================================
+        function loadFavourites() {
+            fetch('/api/user/favourites')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('favouritesList');
+                    list.innerHTML = '';
+                    if (data.favourites.length === 0) {
+                        list.innerHTML = `
+                            <div class="empty-state" style="grid-column: 1/-1;">
+                                <div class="empty-state-icon">❤️</div>
+                                <div class="empty-state-text">No favourites added yet. Go browse the collection!</div>
+                            </div>`;
+                        return;
+                    }
+                    data.favourites.forEach(fav => {
+                        const card = document.createElement('div');
+                        card.className = 'fav-card';
+
+                        const date = new Date(fav.added_at).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+
+                        card.innerHTML = `
+                            <div class="fav-info">
+                                <a href="/view/${fav.book_name}" class="fav-title">${fav.book_name.replace(/_/g, ' ')}</a>
+                                <div class="fav-date">Added on ${date}</div>
+                            </div>
+                            <button class="btn-remove-fav" onclick="removeFavourite('${fav.book_name}')" title="Remove Favourite">
+                                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                </svg>
+                            </button>
+                        `;
+                        list.appendChild(card);
+                    });
+                });
+        }
+
+        function removeFavourite(bookName) {
+            fetch('/api/user/favourite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ book_name: bookName })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Removed from favourites");
+                        loadFavourites();
+                    }
+                });
+        }
+
+        // =============================================================================
+        // BOOKLISTS
+        // =============================================================================
+        function loadBooklists() {
+            fetch('/api/user/booklists')
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById('booklistsList');
+                    list.innerHTML = '';
+                    if (data.booklists.length === 0) {
+                        list.innerHTML = `
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📚</div>
+                                <div class="empty-state-text">You don't have any booklists yet.</div>
+                            </div>`;
+                        return;
+                    }
+                    data.booklists.forEach(bl => {
+                        const date = new Date(bl.updated_at).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                        });
+                        const row = document.createElement('div');
+                        row.className = 'booklist-item-row';
+                        row.innerHTML = `
+                            <div class="booklist-meta">
+                                <div class="booklist-name">${bl.name}</div>
+                                <div class="booklist-desc">${bl.description || 'No description'}</div>
+                                <div class="booklist-stats">
+                                    <span>📖 ${bl.book_count} books</span>
+                                    <span>Last updated: ${date}</span>
+                                </div>
+                            </div>
+                            <div class="booklist-actions">
+                                <a href="/user/booklist/${bl.id}" class="btn-action">👁️ View</a>
+                                <button class="btn-action" onclick="openRenameModal(${bl.id}, '${bl.name}', '${bl.description || ''}')">✏️ Edit</button>
+                                <button class="btn-action delete" onclick="deleteBooklist(${bl.id})">🗑️ Delete</button>
+                            </div>
+                        `;
+                        list.appendChild(row);
+                    });
+                });
+        }
+
+        function openCreateModal() {
+            document.getElementById('createModal').style.display = 'flex';
+        }
+        function closeCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('listName').value = '';
+            document.getElementById('listDesc').value = '';
+        }
+
+        function createBooklist() {
+            const name = document.getElementById('listName').value;
+            const description = document.getElementById('listDesc').value;
+            if (!name.trim()) {
+                showToast("Name is required", true);
+                return;
+            }
+            fetch('/api/user/booklist/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Booklist created!");
+                        closeCreateModal();
+                        loadBooklists();
+                    } else {
+                        showToast(data.message, true);
+                    }
+                });
+        }
+
+        function openRenameModal(id, name, desc) {
+            document.getElementById('renameListId').value = id;
+            document.getElementById('renameListName').value = name;
+            document.getElementById('renameListDesc').value = desc;
+            document.getElementById('renameModal').style.display = 'flex';
+        }
+        function closeRenameModal() {
+            document.getElementById('renameModal').style.display = 'none';
+        }
+
+        function saveBooklistRename() {
+            const id = document.getElementById('renameListId').value;
+            const name = document.getElementById('renameListName').value;
+            const description = document.getElementById('renameListDesc').value;
+            if (!name.trim()) {
+                showToast("Name is required", true);
+                return;
+            }
+            fetch(`/api/user/booklist/${id}/rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Booklist updated!");
+                        closeRenameModal();
+                        loadBooklists();
+                    } else {
+                        showToast(data.message, true);
+                    }
+                });
+        }
+
+        function deleteBooklist(id) {
+            if (!confirm("Are you sure you want to delete this booklist?")) return;
+            fetch(`/api/user/booklist/${id}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast("Booklist deleted");
+                        loadBooklists();
+                    } else {
+                        showToast(data.message, true);
+                    }
+                });
+        }
+
+
+
+        // On Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFavourites();
+
+            // Handle routing to specific tabs based on URL hash
+            if (window.location.hash) {
+                const requestedTab = window.location.hash.substring(1);
+                const allowedTabs = ['favourites', 'booklists', 'vector_downloads', 'sync'];
+                if (allowedTabs.includes(requestedTab)) {
+                    switchTab(requestedTab);
+                }
+            }
+        });
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+
+</html>

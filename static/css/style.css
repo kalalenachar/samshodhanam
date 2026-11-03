@@ -1,0 +1,4842 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Main CSS for Archive OCR Web App */
+
+/* Forcefully hide Keyman's On-Screen Keyboard (OSK) to prevent click blocking */
+.kmw-osk-inner,
+#kmw-osk,
+.kmw-osk-wrapper,
+.kmw-keyboard-icon {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+}
+
+:root {
+    --primary-color: var(--t-accent);
+    --primary-dark: var(--t-accent-hover);
+    --secondary-color: var(--t-accent);
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --dark-bg: var(--t-text-primary);
+    --light-bg: var(--t-bg-surface);
+    --white: var(--t-bg-surface);
+    --text-dark: var(--t-text-primary);
+    --text-muted: var(--t-text-muted);
+    --border-color: var(--t-border);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: clip;
+}
+
+/* Header */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 10000;
+    background: var(--t-bg-header) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--t-text-primary);
+    padding: 16px max(24px, calc((100% - 1400px) / 2)) !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--secondary-color);
+}
+
+.header h1 span {
+    color: var(--t-text-primary);
+    font-weight: 400;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.navbar-title {
+    font-size: 18px;
+    font-weight: 700;
+    background: var(--t-accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding-left: 0;
+}
+
+/* Home button in navbar */
+.navbar-home-btn {
+    color: var(--t-text-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 6px;
+    border-radius: 50%;
+    background: var(--t-hover-bg) ;
+    border: 1px solid var(--t-border);
+    cursor: pointer;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+.navbar-home-btn:hover {
+    background: var(--t-hover-bg);
+    transform: scale(1.05);
+    color: var(--t-accent);
+}
+
+/* 360 Badge/Button */
+.navbar-360-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.navbar-360-btn:hover {
+    background: rgba(245, 158, 11, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+
+/* OCR Count Badge */
+.ocr-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--t-hover-bg) ;
+    color: var(--t-text-primary) !important;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ocr-count-badge .stat-number {
+    font-size: 14px;
+    color: var(--t-accent) !important;
+}
+
+/* ===== Tools Dropdown ===== */
+.tools-dropdown-wrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.tools-dropdown-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--t-accent-alpha-15);
+    color: var(--t-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--t-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.tools-dropdown-btn:hover,
+.tools-dropdown-wrapper:hover .tools-dropdown-btn {
+    background: var(--t-border-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px var(--t-accent-alpha-25);
+}
+
+.tools-caret {
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+
+.tools-dropdown-wrapper:hover .tools-caret {
+    transform: rotate(180deg);
+}
+
+.tools-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--t-bg-elevated);
+    border: 1px solid var(--t-border);
+    border-radius: 14px;
+    padding: 6px;
+    min-width: 230px;
+    box-shadow: var(--t-shadow), 0 0 0 1px var(--t-border-light);
+    z-index: 9999;
+    animation: dropIn 0.18s ease-out;
+}
+
+/* Bridge the 8px gap so hover isn't lost when moving mouse down */
+.tools-dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    height: 12px;
+}
+
+@keyframes dropIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.tools-dropdown-wrapper:hover .tools-dropdown-menu {
+    display: block;
+}
+
+.tools-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--t-text-secondary);
+    transition: background 0.15s, color 0.15s;
+}
+
+.tools-dropdown-item:hover {
+    background: var(--t-hover-bg);
+    color: var(--t-text-primary);
+}
+
+.tools-dropdown-item.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.tools-item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--t-accent-alpha-15);
+    flex-shrink: 0;
+    color: var(--t-text-secondary);
+}
+
+.tools-item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.tools-item-text strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--t-text-primary);
+}
+
+.tools-item-text small {
+    font-size: 11px;
+    color: var(--t-text-muted);
+}
+
+/* Divider between tools */
+.tools-dropdown-item+.tools-dropdown-item {
+    border-top: 1px solid var(--t-border-light);
+    margin-top: 2px;
+    padding-top: 13px;
+}
+
+.header nav {
+    display: flex;
+    overflow: visible;
+    gap: 4px;
+    flex-wrap: nowrap;
+}
+
+/* ======================================================
+   ADMIN HEADER — Mobile scrollable nav
+   ====================================================== */
+@media (max-width: 768px) {
+    /* Stack header: title row then full-width nav row */
+    .header.admin-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 8px 12px !important;
+        gap: 6px !important;
+    }
+
+    /* Compact title on mobile */
+    .header.admin-header h1 {
+        font-size: 15px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .header.admin-header h1 .emoji {
+        display: none;          /* hide emoji to save space */
+    }
+
+    /* Full-width horizontally scrollable nav strip */
+    .header.admin-header nav {
+        width: 100%;
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        gap: 6px !important;
+        padding: 4px 12px 4px 2px !important;  /* Add extra padding at the right end for scrolling, small on left */
+        margin: 0 !important;
+        flex-wrap: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    .header.admin-header nav a {
+        font-size: 13px;
+        padding: 6px 12px !important;
+        flex-shrink: 0 !important;         /* prevent links from squishing */
+        white-space: nowrap !important;
+        display: inline-block !important;
+    }
+}
+
+/* For non-admin pages, keep the original behaviour */
+@media (max-width: 768px) {
+    .header:not(.admin-header) nav {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        max-width: 100%;
+    }
+}
+
+.header nav::-webkit-scrollbar {
+    display: none;
+}
+
+.header nav a {
+    color: var(--t-text-primary);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.header nav a:hover {
+    background: var(--t-hover-bg);
+    color: var(--t-text-primary);
+}
+
+.header nav a.active {
+    background: var(--t-accent);
+    color: var(--t-text-on-accent);
+    font-weight: 600;
+}
+
+/* Main Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Search Section */
+.search-section {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: var(--t-shadow);
+}
+
+.search-section h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--dark-bg);
+    font-size: 28px;
+}
+
+.search-box {
+    display: flex;
+    gap: 15px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 15px 20px;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-box input:focus {
+    border-color: var(--primary-color);
+}
+
+.search-box button {
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: var(--t-text-on-accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-box button:hover {
+    background: var(--primary-dark);
+}
+
+.search-box button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.search-type-selector {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.search-type-selector input[type="radio"] {
+    /* Hide default radio button */
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.search-type-selector label {
+    display: inline-block;
+    padding: 8px 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    color: var(--t-text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.search-type-selector input[type="radio"]:checked+label {
+    background: var(--t-accent-gradient);
+    color: var(--t-text-on-accent);
+    border-color: var(--t-accent);
+    box-shadow: 0 4px 10px var(--t-accent-alpha-30);
+}
+
+.search-type-selector label:hover {
+    border-color: var(--t-accent);
+    color: var(--t-accent);
+}
+
+/* Filters */
+
+/* Results Section */
+.results-section {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: var(--t-shadow);
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+.results-header h3 {
+    font-size: 18px;
+    color: var(--dark-bg);
+}
+
+.results-count {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Result Card */
+.result-card {
+    background: var(--light-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--primary-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.result-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.result-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.result-book {
+    font-weight: 600;
+    color: var(--dark-bg);
+    font-size: 16px;
+}
+
+.result-page {
+    background: var(--primary-color);
+    color: var(--t-text-on-accent);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.result-text {
+    color: var(--text-dark);
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 15px;
+}
+
+.result-text .highlight {
+    background: #FFEB3B;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.result-tags {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    filter: grayscale(0.5);
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: var(--t-text-on-accent);
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: #ffffff;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: #ffffff;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+
+.no-results h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* Admin Styles */
+.admin-header {
+    padding: 8px 20px !important;
+}
+
+.admin-header h1 {
+    font-size: 16px !important;
+}
+
+.login-container {
+    max-width: 400px;
+    width: 90%;
+    margin: 50px auto;
+    background: var(--white);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.login-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--dark-bg);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.3s;
+    background-color: var(--t-input-bg) !important;
+    color: var(--t-input-text) !important;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    border-color: var(--t-input-focus-border) !important;
+    background-color: var(--t-input-focus-bg) !important;
+}
+
+.form-group button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    background: var(--primary-color);
+    color: var(--t-text-on-accent);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.form-group button:hover {
+    background: var(--primary-dark);
+}
+
+/* Flash Messages */
+.flash-messages {
+    max-width: 400px;
+    margin: 0 auto 10px;
+}
+
+.flash-messages:empty {
+    display: none;
+}
+
+.flash {
+    padding: 12px 20px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.flash.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.flash.error {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Dashboard */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+    font-size: 24px;
+    color: var(--dark-bg);
+}
+
+/* Upload Section */
+.upload-section {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: var(--t-shadow);
+}
+
+.upload-section h3 {
+    margin-bottom: 20px;
+    color: var(--dark-bg);
+}
+
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s, background 0.3s;
+}
+
+.upload-zone:hover {
+    border-color: var(--primary-color);
+    background: var(--t-accent-alpha-05);
+}
+
+.upload-zone.dragover {
+    border-color: var(--primary-color);
+    background: var(--t-accent-alpha-10);
+}
+
+.upload-zone p {
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.upload-zone input[type="file"] {
+    display: none;
+}
+
+.upload-progress {
+    margin-top: 20px;
+    display: none;
+}
+
+.progress-bar {
+    height: 10px;
+    background: var(--border-color);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+/* Books Table */
+.books-section {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: var(--t-shadow);
+}
+
+.books-section h3 {
+    margin-bottom: 20px;
+    color: var(--dark-bg);
+}
+
+.books-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.books-table th,
+.books-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.books-table th {
+    background: var(--light-bg);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.books-table tr:hover {
+    background: var(--light-bg);
+}
+
+.books-table .actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .container {
+        padding: 15px;
+    }
+
+    .search-section {
+        padding: 25px 15px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .books-section header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .books-table thead,
+    .log-table thead,
+    .feedback-table thead {
+        display: none;
+    }
+
+    .books-table,
+    .books-table tbody,
+    .books-table tr,
+    .books-table td,
+    .log-table,
+    .log-table tbody,
+    .log-table tr,
+    .log-table td,
+    .feedback-table,
+    .feedback-table tbody,
+    .feedback-table tr,
+    .feedback-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .books-table tr,
+    .log-table tr,
+    .feedback-table tr {
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        background: var(--t-bg-surface);
+    }
+
+    .books-table td,
+    .log-table td,
+    .feedback-table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border-bottom: 1px solid var(--t-border-light);
+    }
+
+    .books-table td:last-child,
+    .log-table td:last-child,
+    .feedback-table td:last-child {
+        border-bottom: none;
+    }
+
+    .books-table td::before,
+    .log-table td::before,
+    .feedback-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        text-align: left;
+        font-weight: 700;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .books-table td.actions,
+    .log-table td.actions,
+    .feedback-table td.actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-left: 15px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .books-table td.actions::before,
+    .log-table td.actions::before,
+    .feedback-table td.actions::before {
+        display: none;
+    }
+
+    .books-table tr.details-row td,
+    .log-table tr.details-row td {
+        padding-left: 15px !important;
+        text-align: left !important;
+    }
+
+    .books-table tr.details-row td::before,
+    .log-table tr.details-row td::before {
+        display: none !important;
+    }
+
+    /* Dashboard specific responsive fixes */
+    .admin-controls-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .mobile-select-all {
+        display: flex !important;
+    }
+
+    .admin-filters {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    .admin-filters input {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .dashboard-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+
+    .dashboard-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    .dashboard-actions .btn {
+        width: 100% !important;
+    }
+
+    /* Edit Book specific responsive fixes */
+    .edit-header-flex {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+
+    .scratchpad-flex {
+        flex-direction: column !important;
+    }
+
+    .scratchpad-flex button {
+        width: 100% !important;
+    }
+
+    .meta-field-group {
+        width: 100% !important;
+    }
+
+    .bulk-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .bulk-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px 14px !important;
+        height: 56px !important;
+        gap: 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-logo {
+        width: auto !important;
+        justify-content: flex-start !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    .navbar-title {
+        padding-left: 0 !important;
+        text-align: left !important;
+    }
+
+    .header nav {
+        width: auto !important;
+        justify-content: flex-end !important;
+        padding-bottom: 0 !important;
+    }
+
+    .search-box {
+        flex-direction: column;
+    }
+
+    .search-box button {
+        width: 100%;
+    }
+
+    .result-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .search-type-selector {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .navbar-title {
+        font-size: 16px;
+    }
+
+    .search-section h2 {
+        font-size: 22px;
+    }
+
+    .login-container {
+        padding: 25px 20px;
+    }
+
+    .btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .result-actions {
+        flex-direction: column;
+    }
+}
+
+/* Sanskrit Toggle Styles */
+.sanskrit-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    background: #f8f9ff;
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: 1px solid #eef0ff;
+}
+
+.sanskrit-toggle-container label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--t-bg-surface);
+    transition: .4s;
+}
+
+input:checked+.slider {
+    background-color: var(--primary-color);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+.slider.round {
+    border-radius: 20px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* =============================================================================
+   USER SYSTEM STYLES (Favourites, Booklists)
+   ============================================================================= */
+
+/* Navbar User Buttons */
+.user-profile-btn {
+    color: var(--t-accent) !important;
+    font-weight: 600 !important;
+    border: 1px solid var(--t-border) !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    background: rgba(0, 212, 255, 0.05) !important;
+    transition: all 0.2s ease !important;
+}
+
+.user-profile-btn:hover {
+    background: var(--t-accent-alpha-15) !important;
+    border-color: rgba(0, 212, 255, 0.6) !important;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2) !important;
+}
+
+/* Nav Avatar Button */
+.header nav a.user-avatar-nav-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 50% !important;
+    color: white !important;
+    font-size: 18px !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin-left: 6px !important;
+    align-self: center !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+.header nav a.user-avatar-nav-btn:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 0 12px var(--t-accent-alpha-45) !important;
+    border-color: var(--t-accent) !important;
+}
+
+/* User Profile Menu Dropdown */
+.user-menu-container {
+    position: relative;
+    display: inline-flex;
+    align-self: center;
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: var(--t-bg-overlay);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+.user-dropdown-menu::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 12px;
+    width: 10px;
+    height: 10px;
+    background: var(--t-bg-overlay);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transform: rotate(45deg);
+}
+
+.user-dropdown-menu::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: transparent;
+    z-index: -1;
+}
+
+.user-menu-container:hover .user-dropdown-menu {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.user-dropdown-menu a {
+    padding: 10px 16px !important;
+    font-size: 13px !important;
+    color: var(--t-text-secondary) !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+    text-align: left !important;
+    border: none !important;
+    background: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+}
+
+.user-dropdown-menu a:hover {
+    background: rgba(129, 140, 248, 0.15) !important;
+    color: white !important;
+    padding-left: 20px !important;
+}
+
+/* Avatar Option Modal Selections */
+.avatar-option {
+    transition: all 0.25s ease !important;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 15px var(--t-accent-alpha-60) !important;
+}
+
+.avatar-option.selected {
+    border-color: var(--t-accent) !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 0 18px rgba(0, 212, 255, 0.8) !important;
+}
+
+
+/* Favourites button active state styling */
+#favouriteBtn {
+    transition: all 0.2s ease;
+}
+#favouriteBtn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Booklist Dropdown Menu */
+.booklist-dropdown-menu label {
+    transition: background 0.15s ease;
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+.booklist-dropdown-menu label:hover {
+    background: var(--t-hover-bg) ;
+}
+.booklist-dropdown-menu input[type="checkbox"] {
+    accent-color: var(--t-accent);
+}
+
+/* Scrollbar for booklist choices */
+#booklistChoices::-webkit-scrollbar {
+    width: 6px;
+}
+#booklistChoices::-webkit-scrollbar-track {
+    background: var(--t-hover-bg) ;
+    border-radius: 3px;
+}
+#booklistChoices::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+}
+#booklistChoices::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+/* =============================================================================
+   GLASSMORPHIC DARK THEME GLOBAL OVERRIDES
+   Inspired by the Login and Profile page themes
+   ============================================================================= */
+
+body {
+    background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%) fixed !important;
+    color: var(--t-text-primary) !important;
+    font-family: 'Inter', sans-serif !important;
+    min-height: 100vh !important;
+    position: relative !important;
+}
+
+
+
+/* Glassmorphic cards & containers */
+.ocr-container,
+.search-section,
+.results-section,
+.collection-card,
+.preview-modal-content,
+.autocomplete-dropdown,
+.login-container,
+.upload-section,
+.books-section,
+.sanskrit-toggle-container,
+.fav-card,
+.booklist-item-row,
+.profile-sidebar,
+.profile-content,
+.modal,
+.admin-card,
+.stat-card,
+.dashboard-card,
+.card,
+.download-modal,
+.feedback-content,
+.comment-item {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 20px !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: var(--t-shadow) !important;
+}
+
+.search-container,
+.feature-card,
+.result-card,
+.basic-result-card {
+    background: var(--t-bg-elevated) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1.5px solid var(--t-glass-border) !important;
+    border-radius: 20px !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: var(--t-shadow) !important;
+}
+
+/* Specific component tweaks to ensure transparent sections */
+.collections-section,
+.features-section,
+.visual-pane,
+.hero,
+.header-spacer {
+    background: transparent !important;
+}
+
+/* Clean up hero section formatting */
+.hero {
+    color: var(--t-text-primary) !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Sleek search highlights matching accent colors */
+.highlight {
+    background: rgba(129, 140, 248, 0.3) !important;
+    border-bottom: 2px solid var(--t-accent) !important;
+    color: var(--t-text-primary) !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+}
+
+/* Headings with premium gradients */
+h1, h2, .section-title, .hero h1, .search-section h2, .logo-area h1, .navbar-title, .section-header h2 {
+    background: var(--t-accent-gradient) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 700 !important;
+}
+
+/* Secondary headings */
+h3, h4, h5, h6, .preview-modal-title, .reader-title, .book-name, .feature-title, .collection-name {
+    color: var(--t-text-primary) !important;
+}
+
+/* Ensure all text within containers is light and legible */
+p, label, li, small, td, th, span, div, em, strong {
+    color: inherit; /* inherit light from glassmorphic containers */
+}
+
+/* Inputs and Select drop downs */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+select,
+textarea,
+.form-control,
+.search-input,
+.modal-input,
+.page-input {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 12px !important;
+    color: var(--t-text-primary) !important;
+    transition: all 0.25s ease !important;
+    outline: none !important;
+    padding: 12px 16px !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.search-input:focus,
+.modal-input:focus,
+.page-input:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.15) !important;
+    background: var(--t-bg-elevated) !important;
+}
+
+/* Buttons styles */
+.btn,
+.btn-primary,
+.btn-submit,
+.search-box button,
+.search-button,
+.btn-create-list,
+.modal-btn-save,
+.btn-view,
+.btn-modal-reader,
+button[type="submit"],
+.btn-action,
+.btn-feedback-action {
+    background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    color: var(--t-text-on-accent) !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 4px 12px var(--t-accent-alpha-30) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 12px 24px !important;
+    font-size: 15px !important;
+    text-shadow: none !important;
+    text-decoration: none !important;
+}
+
+.btn-primary:hover,
+.btn-submit:hover,
+.search-box button:hover,
+.search-button:hover,
+.btn-create-list:hover,
+.modal-btn-save:hover,
+.btn-view:hover,
+.btn-modal-reader:hover,
+button[type="submit"]:hover,
+.btn-action:hover,
+.btn-feedback-action:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px var(--t-accent-alpha-40) !important;
+    filter: brightness(1.1) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+.btn:active,
+.btn-primary:active,
+.btn-submit:active,
+.search-box button:active,
+.search-button:active,
+.btn-create-list:active,
+.modal-btn-save:active,
+.btn-view:active,
+.btn-modal-reader:active,
+button[type="submit"]:active,
+.btn-action:active {
+    transform: translateY(0) !important;
+}
+
+.btn:disabled,
+.btn-primary:disabled,
+.search-box button:disabled,
+.search-button:disabled,
+button:disabled {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+}
+
+/* Secondary & Back/Cancel buttons */
+.btn-modal-close,
+.modal-btn-cancel,
+.back-button,
+.back-home,
+.btn-back,
+.btn-danger,
+.btn-feedback-clear {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-secondary) !important;
+    box-shadow: none !important;
+    padding: 10px 20px !important;
+}
+
+.btn-modal-close:hover,
+.modal-btn-cancel:hover,
+.back-button:hover,
+.back-home:hover,
+.btn-back:hover,
+.btn-danger:hover,
+.btn-feedback-clear:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Header/Navbar styles */
+.header,
+.reader-header,
+.ocr-header {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 15px 30px !important;
+}
+
+.header nav a,
+.reader-header a,
+.ocr-header a {
+    color: var(--t-text-secondary) !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
+}
+
+.header nav a:hover,
+.reader-header a:hover,
+.ocr-header a:hover {
+    color: var(--t-text-primary) !important;
+    background: var(--t-hover-bg) !important;
+}
+
+.header nav a.active,
+.reader-header a.active {
+    background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%) !important;
+    color: var(--t-text-on-accent) !important;
+    box-shadow: 0 0 14px var(--t-accent-alpha-60) !important;
+}
+
+/* Tables styling inside administrative dashboards */
+.books-table th {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.books-table tr:hover {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.books-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Drag & Drop area on OCR page */
+.file-drop-area {
+    background: var(--t-hover-bg) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+    border-radius: 12px !important;
+    color: var(--t-text-primary) !important;
+}
+
+.file-drop-area:hover,
+.file-drop-area.dragover {
+    border-color: var(--t-accent) !important;
+    background: rgba(129, 140, 248, 0.1) !important;
+}
+
+.file-drop-area p,
+.file-drop-area small,
+.file-drop-area div,
+.file-drop-area em {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Document Reader overrides */
+.ocr-pane,
+.ocr-header {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ocr-text {
+    color: var(--t-text-primary) !important;
+    font-family: 'Noto Serif Devanagari', 'Inter', serif !important;
+}
+
+.ocr-scroll-page {
+    background: var(--t-bg-surface) !important;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1) !important;
+}
+
+.ocr-page-label {
+    color: var(--t-text-secondary) !important;
+}
+
+.zoom-btn,
+.nav-btn,
+.page-input {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+.zoom-btn:hover,
+.nav-btn:hover:not(:disabled) {
+    background: var(--t-hover-bg) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    color: white !important;
+}
+
+.page-total {
+    color: #94a3b8 !important;
+}
+
+.subbook-select {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Custom styled scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--t-hover-bg);
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Sanskrit Keyboard customization for theme */
+.sanskrit-toggle-container {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.sanskrit-toggle-container label {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Selectable tag styling */
+.star-tag, .badge {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #a7f3d0 !important;
+}
+
+.feedback-actions {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Autocomplete suggestion styles */
+.autocomplete-item strong {
+    color: var(--t-text-secondary) !important;
+}
+
+/* ==========================================================================
+   PREMIUM GLASSMORPHIC DARK THEME GLOBAL OVERRIDES
+   Harmonizes all pages to match the correct login & user profile theme.
+   ========================================================================== */
+
+/* Global Glassmorphic Containers */
+.container,
+.docs-container {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Glassmorphic card and container elements text colors */
+.ocr-container, .search-container, .search-section, .results-section, .result-card, .collection-card, .feature-card, .preview-modal-content, .autocomplete-dropdown, .login-container, .upload-section, .books-section, .sanskrit-toggle-container, .fav-card, .booklist-item-row, .profile-sidebar, .profile-content, .modal, .admin-card, .stat-card, .dashboard-card, .card, .download-modal, .feedback-content, .comment-item, .container, .docs-container {
+    color: var(--t-text-primary) !important;
+}
+
+/* Inherit text styles for child elements to prevent template light color overrides */
+.ocr-container p, .search-container p, .search-section p, .results-section p, .result-card p, .collection-card p, .feature-card p, .preview-modal-content p, .login-container p, .upload-section p, .books-section p, .profile-sidebar p, .profile-content p, .modal p, .admin-card p, .stat-card p, .dashboard-card p, .card p, .container p, .docs-container p,
+.ocr-container span, .search-container span, .search-section span, .results-section span, .result-card span, .collection-card span, .feature-card span, .preview-modal-content span, .login-container span, .upload-section span, .books-section span, .profile-sidebar span, .profile-content span, .modal span, .admin-card span, .stat-card span, .dashboard-card span, .card span, .container span, .docs-container span,
+.ocr-container li, .search-container li, .search-section li, .results-section li, .result-card li, .collection-card li, .feature-card li, .preview-modal-content li, .login-container li, .upload-section li, .books-section li, .profile-sidebar li, .profile-content li, .modal li, .admin-card li, .stat-card li, .dashboard-card li, .card li, .container li, .docs-container li,
+.ocr-container label, .search-container label, .search-section label, .results-section label, .result-card label, .collection-card label, .feature-card label, .preview-modal-content label, .login-container label, .upload-section label, .books-section label, .sanskrit-toggle-container label, .profile-sidebar label, .profile-content label, .modal label, .admin-card label, .stat-card label, .dashboard-card label, .card label, .container label, .docs-container label,
+.ocr-container small, .search-container small, .search-section small, .results-section small, .result-card small, .collection-card small, .feature-card small, .preview-modal-content small, .login-container small, .upload-section small, .books-section small, .profile-sidebar small, .profile-content small, .modal small, .admin-card small, .stat-card small, .dashboard-card small, .card small, .container small, .docs-container small {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Specific Page & Component Tweaks */
+
+/* Varga Panchama page elements */
+.info-box {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-left: 4px solid var(--t-accent) !important;
+    color: var(--t-text-secondary) !important;
+    margin-bottom: 28px;
+    border-radius: 14px;
+    padding: 18px 22px;
+}
+
+.info-box h3 {
+    color: var(--t-text-secondary) !important;
+}
+
+.info-pill {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Transliterator page elements */
+.script-group label,
+.arrow-label,
+.mode-indicator {
+    color: var(--t-text-secondary) !important;
+}
+
+.script-group select {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+/* Browse by Tag page elements */
+.sidebar-section,
+.browse-header,
+.item-card {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px saturate(180%)) !important;
+    -webkit-backdrop-filter: blur(16px saturate(180%)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    color: var(--t-text-primary) !important;
+}
+
+.sidebar-section h3 {
+    color: var(--t-text-secondary) !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.collection-list a {
+    color: var(--t-text-secondary) !important;
+}
+
+.collection-list a:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.collection-list a.active {
+    background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+.item-title {
+    color: var(--t-text-primary) !important;
+}
+
+.item-meta {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Pagination overrides */
+.pagination a,
+.pagination span {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.pagination a:hover {
+    border-color: var(--t-accent) !important;
+    color: var(--t-accent) !important;
+    background: var(--t-hover-bg) !important;
+}
+
+.pagination .active {
+    background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent-hover) 100%) !important;
+    border-color: var(--t-accent) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+/* OCR page overrides */
+.file-drop-area {
+    background: var(--t-hover-bg) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.file-drop-area p,
+.file-drop-area small,
+#fileList,
+#statusText {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Search page & index page overrides */
+.preview-modal-header,
+.preview-modal-footer {
+    border-color: var(--t-border-light) !important;
+}
+
+.preview-modal-title,
+.preview-modal-body {
+    color: var(--t-text-primary) !important;
+}
+
+.autocomplete-dropdown {
+    background: var(--t-bg-overlay) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+.autocomplete-item {
+    color: var(--t-text-secondary) !important;
+}
+
+.autocomplete-item:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+}
+
+.features-section {
+    background: transparent !important;
+}
+
+.feature-desc {
+    color: var(--t-text-secondary) !important;
+}
+
+/* API Documentation page overrides */
+.docs-container h1 {
+    background: var(--t-accent-gradient) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    border-bottom: 2px solid rgba(165, 180, 252, 0.3) !important;
+}
+
+.docs-container h2 {
+    color: var(--t-text-secondary) !important;
+}
+
+.docs-container code {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-secondary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.endpoint {
+    background: var(--t-bg-surface) !important;
+    border-left: 4px solid var(--t-accent) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.method {
+    color: #34d399 !important;
+}
+
+.url {
+    color: var(--t-text-secondary) !important;
+}
+
+.params table {
+    background: transparent !important;
+}
+
+.params th, .params td {
+    color: var(--t-text-secondary) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.docs-container pre {
+    background: var(--t-bg-surface-hover) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-primary) !important;
+}
+
+/* Admin Dashboard refresh progress container fixes */
+#cacheProgressContainer {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 152, 0, 0.3) !important;
+}
+#cacheStatusText {
+    color: #ff9800 !important;
+}
+
+/* Alert styling logic - children of alert panels must inherit their functional coloring */
+.alert, .alert *, .flash, .flash * {
+    color: inherit !important;
+}
+
+/* ==========================================================================
+   HEADER DROPDOWN & SEARCH INTERFACE THEME HARMONIZATION
+   Resolves the stacking context bug for Tools dropdown and styles search panels.
+   ========================================================================== */
+
+/* Fix header stacking context so dropdown menu renders on top of hero/containers */
+.header, .admin-header {
+    position: relative !important;
+    z-index: 10000 !important;
+}
+
+/* Ensure the tools dropdown menu has high visibility and doesn't get cut off */
+.tools-dropdown-menu {
+    z-index: 10001 !important;
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    box-shadow: var(--t-shadow), 0 0 0 1px var(--t-border) !important;
+}
+
+/* Premium Glassmorphic Search Mode Toggle & Group */
+.search-mode-toggle .toggle-group {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+.search-mode-toggle .toggle-btn {
+    color: var(--t-text-secondary) !important;
+}
+
+.search-mode-toggle .toggle-btn.active {
+    background: var(--t-accent-gradient) !important;
+    color: var(--t-text-on-accent) !important;
+    box-shadow: 0 4px 15px var(--t-accent-alpha-40) !important;
+}
+
+.search-mode-toggle .toggle-btn:not(.active):hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+/* Search Logic Pills styling and dynamic active/inactive states */
+.search-logic-group span {
+    color: var(--t-text-secondary) !important;
+}
+
+.search-logic-group > div {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
+}
+
+.logic-label {
+    background: transparent !important;
+    color: var(--t-text-secondary) !important;
+    transition: all 0.2s ease !important;
+}
+
+.logic-label.active {
+    background: var(--t-accent-gradient) !important;
+    color: var(--t-text-on-accent) !important;
+    box-shadow: 0 4px 12px var(--t-accent-alpha-30) !important;
+}
+
+.logic-label:not(.active):hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+/* Search Forms & Chip Containers overrides */
+.basic-search-form {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 14px !important;
+    padding: 6px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.basic-search-form .tags-wrapper {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 8px !important;
+    min-height: 40px !important;
+    flex: 1 !important;
+}
+
+.basic-search-form input,
+.tags-wrapper input {
+    color: var(--t-text-primary) !important;
+    background: transparent !important;
+}
+
+.basic-search-form input::placeholder,
+.tags-wrapper input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Tag wrappers outside basic form (Advanced search & others) */
+.tags-wrapper,
+.negative-tags-wrapper {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 10px !important;
+}
+
+.tags-wrapper:focus-within,
+.negative-tags-wrapper:focus-within {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2) !important;
+}
+
+/* Overrides for selection boxes and clear form buttons */
+.search-container select {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+}
+
+.search-container select option {
+    background: #1e1e38 !important;
+    color: var(--t-text-primary) !important;
+}
+
+.search-container .search-button.clear-btn {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+    border: 1px solid var(--t-border) !important;
+    transition: all 0.2s ease !important;
+}
+
+.search-container .search-button.clear-btn:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: var(--t-text-primary) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Stricter specificity override for dark/hidden text headings to be crisp white */
+.search-section h2,
+.results-header h3,
+.result-book,
+.login-container h2,
+.dashboard-header h2,
+.upload-section h3,
+.books-section h3,
+.admin-card h3,
+.stat-card h3,
+.dashboard-card h3,
+.card h3,
+.container h1, .container h2, .container h3, .container h4,
+.docs-container h2, .docs-container h3, .docs-container h4 {
+    color: var(--t-text-primary) !important;
+}
+
+/* ==========================================================================
+   SEARCH RESULTS LAYOUT & VISIBILITY REFINEMENTS
+   Improves text contrast for Sanskrit titles, body text and makes button elements
+   extremely compact and elegant instead of large, bulky, or wrapping-heavy.
+   ========================================================================== */
+
+/* Force all book titles inside result cards to be crisp, high-contrast white */
+.result-title,
+.basic-result-title {
+    color: var(--t-text-primary) !important;
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+    margin-bottom: 12px !important;
+    line-height: 1.4 !important;
+}
+
+/* Improve results meta info contrast (e.g. Page numbers) */
+.result-meta {
+    color: var(--t-text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+/* Force Sanskrit result text snippets to have crisp contrast and readable heights */
+.result-text {
+    color: var(--t-text-secondary) !important;
+    font-family: 'Noto Serif Devanagari', 'Inter', serif !important;
+    line-height: 1.7 !important;
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    margin-bottom: 14px !important;
+    transition: all 0.2s ease !important;
+}
+
+.result-text:hover {
+    background: var(--t-bg-surface) !important;
+    border-color: var(--t-border-light) !important;
+}
+
+/* Standardize result card container backgrounds, glass highlights and borders */
+.result-card {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-left: 4px solid var(--t-accent) !important;
+    border-radius: 12px !important;
+    padding: 18px 20px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Result Card Footer alignment & wrap support to prevent button text wrapping */
+.result-footer {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    align-items: center !important;
+    margin-top: auto !important;
+    padding-top: 10px !important;
+}
+
+/* Make search buttons compact, elegant and white-space wrapping safe */
+.btn-view {
+    padding: 6px 12px !important;
+    font-size: 11.5px !important;
+    white-space: nowrap !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    font-weight: 600 !important;
+    background: var(--t-accent-gradient) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 10px var(--t-accent-alpha-20) !important;
+    transition: all 0.2s ease !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+.btn-view:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 15px var(--t-accent-alpha-30) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Custom styles for specific orange-themed view-all buttons */
+.result-footer button.btn-view[style*="background: #e67e22"],
+.result-footer button.btn-view[style*="background: #f39c12"] {
+    background: linear-gradient(135deg, #e67e22, #d35400) !important;
+    box-shadow: 0 4px 10px rgba(230, 126, 34, 0.2) !important;
+}
+
+.result-footer button.btn-view[style*="background: #e67e22"]:hover,
+.result-footer button.btn-view[style*="background: #f39c12"]:hover {
+    box-shadow: 0 6px 15px rgba(230, 126, 34, 0.3) !important;
+}
+
+/* Make Thumbs Feedback buttons match the beautiful translucent glass theme */
+.btn-feedback {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-feedback:hover {
+    transform: scale(1.1) !important;
+    background: var(--t-hover-bg) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-feedback.up:hover {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border-color: #10b981 !important;
+}
+
+.btn-feedback.down:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+}
+
+.btn-feedback.active-up {
+    background: #10b981 !important;
+    color: white !important;
+    border-color: #10b981 !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-feedback.active-down {
+    background: #ef4444 !important;
+    color: white !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* ==========================================================================
+   BASIC SEARCH SUGGESTIONS & DROP DOWN HARMONIZATION
+   ========================================================================== */
+
+.basic-suggestions {
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5) !important;
+    z-index: 10005 !important;
+}
+
+.basic-suggestion-item {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.2s ease !important;
+}
+
+.basic-suggestion-item:last-child {
+    border-bottom: none !important;
+}
+
+.basic-suggestion-item:hover,
+.basic-suggestion-item.active {
+    background: var(--t-hover-bg) !important;
+}
+
+.basic-suggestion-text {
+    color: var(--t-text-primary) !important;
+    font-weight: 500 !important;
+}
+
+.basic-suggestion-type {
+    font-size: 10px !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   BASIC SEARCH RESULTS PANEL & GRID HARMONIZATION
+   ========================================================================== */
+
+.basic-results {
+    background: transparent !important;
+    padding: 50px 20px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.basic-results-header h2 {
+    color: var(--t-text-primary) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+}
+
+.basic-results-header span {
+    color: #94a3b8 !important;
+}
+
+.basic-result-card {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-left: 4px solid var(--t-accent) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    padding: 18px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.basic-result-card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.basic-result-title {
+    color: var(--t-text-primary) !important;
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+}
+
+.basic-result-link {
+    padding: 8px 16px !important;
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    background: var(--t-accent-gradient) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 10px var(--t-accent-alpha-20) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+.basic-result-link:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 15px var(--t-accent-alpha-30) !important;
+    background: linear-gradient(135deg, var(--t-accent), var(--t-accent)) !important;
+}
+
+.basic-result-link[style*="background: #f39c12"],
+.basic-result-link[style*="background:#f39c12"] {
+    background: linear-gradient(135deg, #e67e22, #d35400) !important;
+    box-shadow: 0 4px 10px rgba(230, 126, 34, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.basic-result-link[style*="background: #f39c12"]:hover,
+.basic-result-link[style*="background:#f39c12"]:hover {
+    background: linear-gradient(135deg, #d35400, #e67e22) !important;
+    box-shadow: 0 6px 15px rgba(230, 126, 34, 0.3) !important;
+}
+
+.basic-result-download {
+    background: rgba(16, 185, 129, 0.08) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2) !important;
+    color: #10b981 !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    margin-left: auto !important;
+}
+
+.basic-result-download:hover {
+    background: #10b981 !important;
+    color: white !important;
+    border-color: #10b981 !important;
+    transform: scale(1.05) !important;
+}
+
+.basic-result-cover {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.basic-result-cover-placeholder {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.basic-no-results {
+    text-align: center !important;
+    padding: 60px 20px !important;
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    max-width: 600px !important;
+    margin: 40px auto !important;
+}
+
+.basic-no-results h3 {
+    color: var(--t-text-primary) !important;
+    margin-bottom: 10px !important;
+}
+
+.basic-no-results p {
+    color: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   PREMIUM BOOK READER DARK HARMONIZATION
+   ========================================================================== */
+
+body.reader-page-body {
+    background: transparent !important;
+    background-image: radial-gradient(at 0% 0%, var(--t-accent-alpha-10) 0px, transparent 50%),
+                      radial-gradient(at 50% 0%, var(--t-accent-alpha-08) 0px, transparent 50%),
+                      radial-gradient(at 100% 0%, var(--t-accent-alpha-08) 0px, transparent 50%) !important;
+    color: var(--t-text-primary) !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.reader-header {
+    background: var(--t-bg-header) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
+    z-index: 1000 !important;
+}
+
+.reader-title {
+    color: var(--t-text-primary) !important;
+    font-weight: 700 !important;
+}
+
+.reader-meta {
+    color: #94a3b8 !important;
+}
+
+.subbook-select {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.subbook-select:hover {
+    background: var(--t-bg-elevated) !important;
+    border-color: var(--t-accent) !important;
+}
+
+.subbook-select option {
+    background: var(--t-bg-overlay) !important;
+    color: var(--t-text-primary) !important;
+}
+
+/* Back button in reader */
+.reader-header .btn-back {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.reader-header .btn-back:hover {
+    background: var(--t-accent-alpha-20) !important;
+    border-color: var(--t-accent) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+/* Action button overrides inside reader header */
+.reader-header .btn-action {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    padding: 8px 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+}
+
+.reader-header .btn-action:hover {
+    background: var(--t-hover-bg) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Favorite active state styling */
+.reader-header #favouriteBtn.active {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+    color: #f87171 !important;
+}
+
+/* Booklist dropdown menu styling */
+.booklist-dropdown-menu {
+    background: var(--t-bg-overlay) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 8px !important;
+    z-index: 1000 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* Floating control buttons (FABs) */
+.fab {
+    background: var(--t-accent-gradient) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 8px 30px var(--t-accent-alpha-30) !important;
+    color: var(--t-text-on-accent) !important;
+    transition: all 0.2s ease !important;
+}
+
+.fab:hover {
+    transform: scale(1.08) translateY(-2px) !important;
+    box-shadow: 0 12px 35px var(--t-accent-alpha-40) !important;
+}
+
+/* Reader Content Area */
+.reader-container {
+    background: #090d16 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.visual-pane iframe {
+    border: none !important;
+    background: transparent !important;
+}
+
+.resize-splitter {
+    background: var(--t-hover-bg) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.4) !important;
+}
+
+.resize-splitter:hover, 
+.resize-splitter.dragging {
+    background: var(--t-accent) !important;
+}
+
+/* OCR Text Display Pane */
+.reader-container {
+    --ocr-bg: var(--t-hover-bg) !important;
+    --ocr-text: #f8fafc !important;
+}
+
+.ocr-header {
+    background: var(--t-bg-surface) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 12px 20px !important;
+}
+
+.ocr-scroll-page {
+    background: var(--t-hover-bg) !important;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.08) !important;
+}
+
+.ocr-page-label {
+    color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.ocr-text {
+    color: var(--t-text-primary) !important;
+    font-family: 'Noto Serif Devanagari', 'Inter', serif !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+    background: transparent !important;
+}
+
+/* Zoom Controls and Navigation Buttons inside Reader */
+.zoom-btn, 
+.ocr-pane .nav-btn,
+.fullscreen-top-bar .nav-btn {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.zoom-btn:hover:not(:disabled), 
+.ocr-pane .nav-btn:hover:not(:disabled),
+.fullscreen-top-bar .nav-btn:hover:not(:disabled) {
+    background: var(--t-accent-alpha-25) !important;
+    border-color: var(--t-accent) !important;
+    color: var(--t-text-secondary) !important;
+    transform: translateY(-1px) !important;
+}
+
+.zoom-btn:disabled, 
+.ocr-pane .nav-btn:disabled,
+.fullscreen-top-bar .nav-btn:disabled {
+    opacity: 0.25 !important;
+    cursor: not-allowed !important;
+    background: var(--t-hover-bg) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.page-input {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+}
+
+.page-input:focus {
+    border-color: var(--t-accent) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px var(--t-accent-alpha-25) !important;
+}
+
+.page-total {
+    color: #94a3b8 !important;
+}
+
+/* Beautiful Search Highlights in OCR Text */
+.highlight {
+    background-color: rgba(234, 179, 8, 0.3) !important;
+    color: #fef08a !important;
+    border-bottom: 2px solid #eab308 !important;
+    padding: 0 4px !important;
+    border-radius: 4px !important;
+    font-weight: 600 !important;
+}
+
+.no-reader {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.no-reader h2 {
+    color: white !important;
+}
+
+/* ==========================================================================
+   PREMIUM ADMIN PANEL GLASSMORPHIC DARK HARMONIZATION
+   ========================================================================== */
+
+/* Target any body containing the admin header to override light-themed backgrounds */
+body:has(.admin-header),
+body.users-layout-body {
+    background: transparent !important;
+    background-image: radial-gradient(at 0% 0%, var(--t-accent-alpha-12) 0px, transparent 50%),
+                      radial-gradient(at 50% 0%, var(--t-accent-alpha-12) 0px, transparent 50%),
+                      radial-gradient(at 100% 0%, var(--t-accent-alpha-10) 0px, transparent 50%) !important;
+    color: var(--t-text-primary) !important;
+}
+
+/* Z-index correction for tools dropdown over admin grids */
+.admin-header {
+    position: relative !important;
+    z-index: 10000 !important;
+}
+
+/* Glassmorphic Panels and Cards */
+body:has(.admin-header) .glass-panel,
+body:has(.admin-header) .admin-card,
+body:has(.admin-header) .card,
+body:has(.admin-header) .config-panel,
+body:has(.admin-header) .upload-card-wrapper,
+body:has(.admin-header) .users-list-container,
+body:has(.admin-header) .user-item,
+body:has(.admin-header) .feedback-table-container,
+body:has(.admin-header) .audit-log-container {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 0 16px var(--t-accent-alpha-08) !important;
+    color: var(--t-text-primary) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body:has(.admin-header) .glass-panel:hover,
+body:has(.admin-header) .admin-card:hover,
+body:has(.admin-header) .card:hover,
+body:has(.admin-header) .config-panel:hover,
+body:has(.admin-header) .upload-card-wrapper:hover {
+    border-color: var(--t-accent-alpha-35) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 22px var(--t-accent-alpha-25) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Custom Scrollbar for scroll zones */
+body:has(.admin-header) .users-scroll::-webkit-scrollbar,
+body:has(.admin-header) .detail-scroll::-webkit-scrollbar,
+body:has(.admin-header) .feedback-list::-webkit-scrollbar {
+    width: 6px !important;
+}
+body:has(.admin-header) .users-scroll::-webkit-scrollbar-track,
+body:has(.admin-header) .detail-scroll::-webkit-scrollbar-track,
+body:has(.admin-header) .feedback-list::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+body:has(.admin-header) .users-scroll::-webkit-scrollbar-thumb,
+body:has(.admin-header) .detail-scroll::-webkit-scrollbar-thumb,
+body:has(.admin-header) .feedback-list::-webkit-scrollbar-thumb {
+    background: var(--t-accent-alpha-30) !important;
+    border-radius: 99px !important;
+}
+
+/* User list item hover / active states */
+body:has(.admin-header) .user-item {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body:has(.admin-header) .user-item:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: var(--t-accent-alpha-30) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px var(--t-accent-alpha-12) !important;
+}
+
+body:has(.admin-header) .user-item.active {
+    background: var(--t-accent-alpha-12) !important;
+    border-color: var(--t-accent-alpha-45) !important;
+    box-shadow: 0 8px 24px var(--t-accent-alpha-18) !important;
+}
+
+/* Inputs & Form Elements */
+body:has(.admin-header) input[type="text"],
+body:has(.admin-header) input[type="password"],
+body:has(.admin-header) input[type="number"],
+body:has(.admin-header) textarea,
+body:has(.admin-header) select,
+body:has(.admin-header) .search-input,
+body:has(.admin-header) .premium-input,
+body:has(.admin-header) .styled-textarea,
+body:has(.admin-header) .styled-input,
+body:has(.admin-header) .feedback-toolbar input[type="text"],
+body:has(.admin-header) #modalCommentSearch {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    outline: none !important;
+    transition: all 0.3s ease !important;
+}
+
+body:has(.admin-header) input::placeholder,
+body:has(.admin-header) textarea::placeholder {
+    color: #94a3b8 !important;
+    opacity: 0.85 !important;
+}
+
+body:has(.admin-header) input:focus,
+body:has(.admin-header) textarea:focus,
+body:has(.admin-header) select:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+    background: var(--t-bg-elevated) !important;
+}
+
+body:has(.admin-header) select option {
+    background-color: var(--t-bg-overlay) !important;
+    color: var(--t-text-primary) !important;
+}
+
+/* Text elements & Headers */
+body:has(.admin-header) h1,
+body:has(.admin-header) h2,
+body:has(.admin-header) h3,
+body:has(.admin-header) h4,
+body:has(.admin-header) h5,
+body:has(.admin-header) .panel-title,
+body:has(.admin-header) .user-item-title,
+body:has(.admin-header) #feedbackBookTitle,
+body:has(.admin-header) #downloadTitle {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) p,
+body:has(.admin-header) label,
+body:has(.admin-header) .user-item-subtitle,
+body:has(.admin-header) .text-counter,
+body:has(.admin-header) #downloadDetail,
+body:has(.admin-header) .sanskrit-toggle-container label {
+    color: var(--t-text-secondary) !important;
+}
+
+/* Tables in Admin Panels */
+body:has(.admin-header) .books-table,
+body:has(.admin-header) .log-table,
+body:has(.admin-header) .feedback-table {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+body:has(.admin-header) .books-table th,
+body:has(.admin-header) .log-table th,
+body:has(.admin-header) .feedback-table th {
+    background-color: var(--t-bg-elevated) !important;
+    color: var(--t-text-primary) !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.12) !important;
+    padding: 12px 16px !important;
+}
+
+body:has(.admin-header) .books-table td,
+body:has(.admin-header) .log-table td,
+body:has(.admin-header) .feedback-table td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: var(--t-text-secondary) !important;
+    padding: 12px 16px !important;
+    background: transparent !important;
+}
+
+body:has(.admin-header) .books-table tbody tr:hover,
+body:has(.admin-header) .log-table tbody tr:hover,
+body:has(.admin-header) .feedback-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Details row in audit log */
+body:has(.admin-header) .details-row {
+    background: var(--t-bg-surface) !important;
+}
+
+body:has(.admin-header) .data-box {
+    background: var(--t-bg-surface-hover) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) .data-box pre {
+    color: var(--t-text-primary) !important;
+}
+
+/* Badges in tables and logs */
+body:has(.admin-header) .badge {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body:has(.admin-header) .badge-success {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+body:has(.admin-header) .type-badge {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Elevated hover and action buttons for admin grids */
+body:has(.admin-header) .btn {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+body:has(.admin-header) .btn-primary,
+body:has(.admin-header) a.btn-primary,
+body:has(.admin-header) button.btn-primary {
+    background: var(--t-accent-gradient) !important;
+    border: none !important;
+    color: var(--t-text-on-accent) !important;
+    box-shadow: 0 4px 12px var(--t-accent-alpha-20) !important;
+}
+
+body:has(.admin-header) .btn-primary:hover:not(:disabled),
+body:has(.admin-header) a.btn-primary:hover:not(:disabled),
+body:has(.admin-header) button.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px var(--t-accent-alpha-30) !important;
+}
+
+body:has(.admin-header) .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+body:has(.admin-header) .btn-danger:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Modal Overlay & Card Popups (Reset password, delete user, feedback view) */
+.modal,
+.modal-overlay,
+#downloadOverlay,
+#feedbackViewModal,
+#generateModal {
+    background-color: var(--t-bg-header) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    z-index: 10000 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.modal-card,
+.modal-content,
+.feedback-content,
+.download-modal {
+    background: var(--t-bg-overlay) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 16px !important;
+    padding: 30px !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+}
+
+.modal-header,
+.modal-footer,
+.feedback-header,
+#feedbackStats {
+    border-color: var(--t-border-light) !important;
+    background: transparent !important;
+}
+
+/* Inside Modals styling */
+.modal-body,
+.feedback-list,
+.permissions-grid {
+    background: transparent !important;
+}
+
+.comment-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: transparent !important;
+}
+
+.comment-time {
+    color: #94a3b8 !important;
+}
+
+.comment-text {
+    color: var(--t-text-primary) !important;
+}
+
+.permissions-grid {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Toast Notifications and Flash Messages */
+.toast-container {
+    z-index: 11000 !important;
+}
+
+.toast-alert,
+.flash,
+.alert {
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+    border-radius: 10px !important;
+    padding: 12px 20px !important;
+}
+
+.toast-alert-text,
+.flash,
+.alert {
+    color: var(--t-text-primary) !important;
+}
+
+.alert-success {
+    border-left: 4px solid #10b981 !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.alert-danger, .flash.error {
+    border-left: 4px solid #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+
+.toast-close,
+.flash-close {
+    color: #94a3b8 !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.toast-close:hover {
+    color: var(--t-text-primary) !important;
+}
+
+/* Selection Bars */
+#selectionStatus {
+    background: var(--t-accent-alpha-15) !important;
+    color: var(--t-accent) !important;
+    border: 1px solid var(--t-accent-alpha-30) !important;
+}
+
+#globalSelectBar,
+#globalSelectActiveBar {
+    background: var(--t-bg-elevated) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+#globalSelectBar button,
+#globalSelectActiveBar button {
+    color: var(--t-accent) !important;
+}
+
+/* Upload Panel specific elements */
+body:has(.admin-header) .upload-tabs {
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) .upload-tab-btn {
+    color: #94a3b8 !important;
+}
+
+body:has(.admin-header) .upload-tab-btn:hover {
+    color: var(--t-accent) !important;
+    background: var(--t-accent-alpha-08) !important;
+}
+
+body:has(.admin-header) .upload-tab-btn.active {
+    color: var(--t-text-primary) !important;
+    background: var(--t-accent-alpha-15) !important;
+    box-shadow: inset 0 -2px 0 var(--t-accent) !important;
+}
+
+body:has(.admin-header) .premium-upload-zone {
+    border-color: var(--t-accent-alpha-30) !important;
+    background: var(--t-hover-bg) !important;
+}
+
+body:has(.admin-header) .premium-upload-zone:hover {
+    border-color: var(--t-accent) !important;
+    background: var(--t-accent-alpha-05) !important;
+}
+
+body:has(.admin-header) .premium-upload-zone h4 {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .premium-upload-zone p {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .info-card {
+    background: var(--t-bg-surface) !important;
+    border-left-color: var(--t-accent) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .info-card strong {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .sanskrit-toggle-premium {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+/* Feedback admin report controls */
+body:has(.admin-header) .feedback-toolbar input[type="text"] {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .btn-feedback-action {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .btn-feedback-action:hover {
+    background: var(--t-hover-bg) !important;
+}
+
+/* Pipeline controls and log colors */
+body:has(.admin-header) .status-idle {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .status-running {
+    background: rgba(46, 160, 67, 0.25) !important;
+    color: #58a6ff !important;
+}
+
+/* ==========================================================================
+   PREMIUM ADMIN PANEL GLASSMORPHIC FINETUNING & SECTION OVERRIDES
+   ========================================================================== */
+
+/* 1. Edit Book Screen Overrides */
+body:has(.admin-header) .metadata-section,
+body:has(.admin-header) .data-section {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .form-group label {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) textarea.meta-field,
+body:has(.admin-header) .file-editor,
+body:has(.admin-header) #scratchpadInput {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 8px !important;
+}
+
+body:has(.admin-header) textarea.meta-field:focus,
+body:has(.admin-header) .file-editor:focus,
+body:has(.admin-header) #scratchpadInput:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+    background: var(--t-bg-elevated) !important;
+}
+
+body:has(.admin-header) .accordion-header {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 8px !important;
+}
+
+body:has(.admin-header) .accordion-header:hover {
+    background: var(--t-hover-bg) !important;
+    border-color: var(--t-accent-alpha-30) !important;
+}
+
+body:has(.admin-header) .accordion-header h3 {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .scratchpad-container {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+}
+
+body:has(.admin-header) .scratchpad-container label {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .scratchpad-container div {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) #archiveUrlContainer {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+}
+
+body:has(.admin-header) #editUrlBtn {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) #editUrlBtn:hover {
+    background: var(--t-accent-alpha-20) !important;
+    border-color: var(--t-accent) !important;
+}
+
+/* 2. Additional Badge & Accent Overrides for Audit Logs */
+body:has(.admin-header) .action-badge {
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 4px 8px !important;
+    border-style: solid !important;
+    border-width: 1px !important;
+}
+
+body:has(.admin-header) .action-UPDATE {
+    background: rgba(245, 158, 11, 0.15) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+body:has(.admin-header) .action-DELETE {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+body:has(.admin-header) .action-CREATE {
+    background: rgba(16, 185, 129, 0.15) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+body:has(.admin-header) .action-RENAME {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+    border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+body:has(.admin-header) .details-btn {
+    background: var(--t-accent-alpha-15) !important;
+    color: var(--t-accent) !important;
+    border: 1px solid var(--t-accent-alpha-35) !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+body:has(.admin-header) .details-btn:hover {
+    background: var(--t-accent-alpha-30) !important;
+    border-color: var(--t-accent) !important;
+}
+
+body:has(.admin-header) .details-content {
+    border-left: 3px solid var(--t-accent) !important;
+}
+
+body:has(.admin-header) .data-box h4 {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .sortable:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) .sort-arrow {
+    color: var(--t-text-secondary) !important;
+}
+
+/* 3. Advanced Feedback Tools & Custom Glassmorphic Button Actions */
+body:has(.admin-header) .btn-feedback-export {
+    background: rgba(14, 165, 233, 0.15) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(14, 165, 233, 0.3) !important;
+}
+body:has(.admin-header) .btn-feedback-export:hover {
+    background: rgba(14, 165, 233, 0.3) !important;
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.2) !important;
+}
+
+body:has(.admin-header) .btn-feedback-clear {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+body:has(.admin-header) .btn-feedback-clear:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+body:has(.admin-header) .btn-feedback-import {
+    background: var(--t-accent-alpha-15) !important;
+    color: var(--t-text-secondary) !important;
+    border: 1px solid var(--t-accent-alpha-30) !important;
+}
+body:has(.admin-header) .btn-feedback-import:hover {
+    background: var(--t-accent-alpha-30) !important;
+    box-shadow: 0 0 12px var(--t-accent-alpha-20) !important;
+}
+
+/* 4. General Pagination, Empty State & Progress Bars */
+body:has(.admin-header) .pagination .page-info,
+body:has(.admin-header) .pagination span,
+body:has(.admin-header) #booksPagination span,
+body:has(.admin-header) #feedbackPagination span,
+body:has(.admin-header) .page-info {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .no-results {
+    text-align: center !important;
+    padding: 40px !important;
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .no-results h4 {
+    color: var(--t-text-primary) !important;
+    margin-bottom: 10px !important;
+}
+
+body:has(.admin-header) #cacheProgressContainer {
+    background: var(--t-bg-header) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) #cacheStatusText {
+    color: var(--t-text-secondary) !important;
+}
+
+/* 5. Basic Search Results Adjustments & Dropdowns */
+body .basic-results-header button.search-button[style*="color: #d63031"],
+body .basic-results-header button.search-button,
+#basicResults button.search-button {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+body .basic-results-header button.search-button:hover,
+#basicResults button.search-button:hover {
+    background: rgba(239, 68, 68, 0.3) !important;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.2) !important;
+}
+
+body:has(.admin-header) .premium-upload-zone h4 {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .premium-form-field label,
+body:has(.admin-header) .premium-form-field span {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .premium-textarea {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 8px !important;
+}
+
+body:has(.admin-header) .mobile-select-all {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) .mobile-select-all label {
+    color: var(--t-text-secondary) !important;
+}
+
+/* ==========================================================================
+   PUBLIC PAGES AND READER GLASSMORPHIC DARK HARMONIZATION
+   ========================================================================== */
+
+/* 1. Global Public Pages Base Theme */
+body:not(:has(.admin-header)):not(.reader-page-body) {
+    background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-start) 100%) !important;
+    min-height: 100vh !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .hero {
+    background: var(--t-bg-surface) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:not(:has(.admin-header)) .collections-section,
+body:not(:has(.admin-header)) .features-section,
+body:not(:has(.admin-header)) .basic-results {
+    background: transparent !important;
+}
+
+/* 2. Glassmorphic Containers and Cards */
+body:not(:has(.admin-header)) .ocr-container,
+body:not(:has(.admin-header)) .translit-container,
+body:not(:has(.admin-header)) .varga-container,
+body:not(:has(.admin-header)) .container,
+body:not(:has(.admin-header)) .collection-card,
+body:not(:has(.admin-header)) .preview-modal-content,
+body:not(:has(.admin-header)) .feedback-modal-content,
+body:not(:has(.admin-header)) .sidebar-section,
+body:not(:has(.admin-header)) .browse-header,
+body:not(:has(.admin-header)) .item-card,
+body:not(:has(.admin-header)) .pagination a,
+body:not(:has(.admin-header)) .pagination span,
+body:not(:has(.admin-header)) .io-panel,
+body:not(:has(.admin-header)) .input-section,
+body:not(:has(.admin-header)) .output-section {
+    background: var(--t-bg-surface) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3) !important;
+    color: var(--t-text-primary) !important;
+}
+body:not(:has(.admin-header)) .search-container,
+body:not(:has(.admin-header)) .feature-card,
+body:not(:has(.admin-header)) .result-card,
+body:not(:has(.admin-header)) .basic-result-card {
+    background: var(--t-glass-bg) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1.5px solid var(--t-border) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), var(--t-accent-glow) !important;
+    color: var(--t-text-primary) !important;
+    transition: all 0.3s ease !important;
+}
+body:not(:has(.admin-header)) .section-header h2,
+body:not(:has(.admin-header)) .section-header p,
+body:not(:has(.admin-header)) .collection-name,
+body:not(:has(.admin-header)) .feature-title,
+body:not(:has(.admin-header)) .feature-desc,
+body:not(:has(.admin-header)) .basic-result-title,
+body:not(:has(.admin-header)) .result-title,
+body:not(:has(.admin-header)) .result-meta,
+body:not(:has(.admin-header)) .result-text,
+body:not(:has(.admin-header)) .preview-modal-title,
+body:not(:has(.admin-header)) .preview-modal-body,
+body:not(:has(.admin-header)) .feedback-modal-content h3,
+body:not(:has(.admin-header)) .feedback-modal-content p,
+body:not(:has(.admin-header)) .filter-group label,
+body:not(:has(.admin-header)) .form-group label,
+body:not(:has(.admin-header)) #fileList,
+body:not(:has(.admin-header)) .app-subtitle,
+body:not(:has(.admin-header)) .mode-indicator,
+body:not(:has(.admin-header)) .select-group label,
+body:not(:has(.admin-header)) .panel-header label,
+body:not(:has(.admin-header)) label,
+body:not(:has(.admin-header)) .item-meta,
+body:not(:has(.admin-header)) .item-stats,
+body:not(:has(.admin-header)) .basic-suggestion-text {
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .section-header h2,
+body:not(:has(.admin-header)) .basic-result-title,
+body:not(:has(.admin-header)) .result-title,
+body:not(:has(.admin-header)) .preview-modal-title,
+body:not(:has(.admin-header)) .feedback-modal-content h3,
+body:not(:has(.admin-header)) h1,
+body:not(:has(.admin-header)) .app-title,
+body:not(:has(.admin-header)) .item-title {
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) h1,
+body:not(:has(.admin-header)) .app-title {
+    background: var(--t-accent-gradient);
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+body:not(:has(.admin-header)) .sidebar-section h3 {
+    color: var(--t-text-secondary) !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 4. Form Inputs, Buttons, & Suggestions Dropdowns */
+body:not(:has(.admin-header)) .search-input,
+body:not(:has(.admin-header)) .form-control,
+body:not(:has(.admin-header)) .tags-wrapper,
+body:not(:has(.admin-header)) .negative-tags-wrapper,
+body:not(:has(.admin-header)) .filter-group select,
+body:not(:has(.admin-header)) .feedback-modal-content textarea,
+body:not(:has(.admin-header)) .basic-search-form,
+body:not(:has(.admin-header)) .select-group select,
+body:not(:has(.admin-header)) .browse-header select,
+body:not(:has(.admin-header)) textarea.converter-box,
+body:not(:has(.admin-header)) textarea.trans-box,
+body:not(:has(.admin-header)) textarea.input-area,
+body:not(:has(.admin-header)) textarea.output-area,
+body:not(:has(.admin-header)) textarea {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 10px !important;
+}
+
+body:not(:has(.admin-header)) .search-input:focus,
+body:not(:has(.admin-header)) .form-control:focus,
+body:not(:has(.admin-header)) .tags-wrapper:focus-within,
+body:not(:has(.admin-header)) .negative-tags-wrapper:focus-within,
+body:not(:has(.admin-header)) .filter-group select:focus,
+body:not(:has(.admin-header)) .feedback-modal-content textarea:focus,
+body:not(:has(.admin-header)) .select-group select:focus,
+body:not(:has(.admin-header)) .browse-header select:focus,
+body:not(:has(.admin-header)) textarea:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+    background: var(--t-bg-elevated) !important;
+}
+
+body:not(:has(.admin-header)) .filter-group select option,
+body:not(:has(.admin-header)) .browse-header select option,
+body:not(:has(.admin-header)) .select-group select option {
+    background: var(--t-bg-elevated) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .file-btn {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .file-btn:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .file-drop-area {
+    background: var(--t-hover-bg) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.15) !important;
+}
+
+body:not(:has(.admin-header)) .file-drop-area:hover,
+body:not(:has(.admin-header)) .file-drop-area.dragover {
+    border-color: var(--t-accent) !important;
+    background: var(--t-accent-alpha-05) !important;
+}
+
+body:not(:has(.admin-header)) .file-drop-area p {
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) #tagsQuery,
+body:not(:has(.admin-header)) #textQuery,
+body:not(:has(.admin-header)) #negativeTagsQuery {
+    color: var(--t-text-primary) !important;
+}
+
+/* Autocomplete and Search Suggestions Dropdowns */
+body:not(:has(.admin-header)) .autocomplete-dropdown,
+body:not(:has(.admin-header)) .basic-suggestions {
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 0 0 12px 12px !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .autocomplete-item,
+body:not(:has(.admin-header)) .basic-suggestion-item {
+    color: var(--t-text-secondary) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: transparent !important;
+}
+
+body:not(:has(.admin-header)) .autocomplete-item:hover,
+body:not(:has(.admin-header)) .basic-suggestion-item:hover,
+body:not(:has(.admin-header)) .basic-suggestion-item.active {
+    background: var(--t-accent-alpha-15) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .basic-suggestion-item:hover .basic-suggestion-text,
+body:not(:has(.admin-header)) .basic-suggestion-item.active .basic-suggestion-text {
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .autocomplete-type,
+body:not(:has(.admin-header)) .basic-suggestion-type {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+/* Modals overlays & preview headers */
+body:not(:has(.admin-header)) .preview-modal-header,
+body:not(:has(.admin-header)) .preview-modal-footer {
+    border-color: var(--t-border-light) !important;
+    background: transparent !important;
+}
+
+/* Mode toggles and cards custom */
+body:not(:has(.admin-header)) .mode-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: var(--t-bg-surface) !important;
+}
+
+body:not(:has(.admin-header)) .mode-btn {
+    background: transparent !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .mode-btn.active {
+    background: var(--t-accent-gradient) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+body:not(:has(.admin-header)) .mode-btn:not(.active):hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .info-box {
+    background: var(--t-accent-alpha-08) !important;
+    border-left: 4px solid var(--t-accent) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .info-box h3 {
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .info-pill {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: none !important;
+}
+
+/* Browse navigation lists */
+body:not(:has(.admin-header)) .collection-list a {
+    color: var(--t-text-secondary) !important;
+    background: transparent !important;
+}
+
+body:not(:has(.admin-header)) .collection-list a:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .collection-list a.active {
+    background: var(--t-accent-gradient) !important;
+    color: var(--t-text-on-accent) !important;
+    box-shadow: 0 4px 15px var(--t-accent-alpha-35) !important;
+}
+
+body:not(:has(.admin-header)) .pagination .active {
+    background: var(--t-accent-gradient) !important;
+    border-color: var(--t-accent) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+/* 5. Reader Page Premium Theme */
+body.reader-page-body {
+    --ocr-bg: var(--t-bg-surface) !important;
+    --ocr-text: var(--t-text-primary) !important;
+    background: transparent !important;
+    color: var(--t-text-primary) !important;
+}
+
+body.reader-page-body .reader-header {
+    background: var(--t-bg-header, var(--t-bg-surface)) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--t-border) !important;
+}
+
+body.reader-page-body .ocr-header {
+    background: var(--t-bg-surface) !important;
+    border-bottom: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body.reader-page-body .ocr-scroll-page {
+    background: transparent !important;
+    border-bottom: 1px dashed var(--t-border) !important;
+}
+
+body.reader-page-body .ocr-text,
+body.reader-page-body .ocr-page-content {
+    color: var(--t-text-primary) !important;
+}
+
+body.reader-page-body .ocr-page-label {
+    color: var(--t-text-secondary) !important;
+}
+
+body.reader-page-body .zoom-btn {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+
+body.reader-page-body .zoom-btn:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-accent) !important;
+    border-color: var(--t-accent) !important;
+}
+
+body.reader-page-body .page-controls {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+}
+
+body.reader-page-body .page-input {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 6px !important;
+}
+
+body.reader-page-body .page-total {
+    color: var(--t-text-secondary) !important;
+}
+
+body.reader-page-body .nav-btn {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid var(--t-border) !important;
+}
+
+body.reader-page-body .nav-btn:hover:not(:disabled) {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-accent) !important;
+    border-color: var(--t-accent) !important;
+}
+
+body.reader-page-body .highlight {
+    background-color: #fef08a !important;
+    color: #0f172a !important;
+    box-shadow: 0 0 8px rgba(250, 204, 21, 0.6) !important;
+    border-radius: 4px !important;
+}
+
+/* ==========================================================================
+   PREMIUM GLASSMORPHIC DARK HARMONIZATION ADDITIONS & OVERRIDES
+   Ensures absolute visual consistency across all public tools & admin panels.
+   ========================================================================== */
+
+/* 1. Sanskrit Tools (Transliterator & Varga Panchama) Overrides */
+body:not(:has(.admin-header)) #inputText,
+body:not(:has(.admin-header)) #outputText,
+body:not(:has(.admin-header)) #scratchpadInput,
+#inputText,
+#outputText,
+#scratchpadInput {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 10px !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+}
+
+body:not(:has(.admin-header)) #inputText:focus,
+body:not(:has(.admin-header)) #outputText:focus,
+body:not(:has(.admin-header)) #scratchpadInput:focus,
+#inputText:focus,
+#outputText:focus,
+#scratchpadInput:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+    background: var(--t-bg-elevated) !important;
+}
+
+body:not(:has(.admin-header)) .script-group select,
+body:not(:has(.admin-header)) .select-group select,
+.script-group select,
+.select-group select {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+}
+
+body:not(:has(.admin-header)) .script-group select option,
+body:not(:has(.admin-header)) .select-group select option,
+.script-group select option,
+.select-group select option {
+    background: var(--t-bg-elevated) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .info-pill,
+.info-pill {
+    background: var(--t-bg-surface) !important;
+    color: var(--t-text-primary) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+body:not(:has(.admin-header)) .info-pill .lang,
+.info-pill .lang {
+    color: #94a3b8 !important;
+}
+
+body:not(:has(.admin-header)) .info-pill .arrow,
+.info-pill .arrow {
+    color: var(--t-text-secondary) !important;
+}
+
+/* 2. Admin User Details Card Layout & Accordions (users.html) */
+body:has(.admin-header) .glass-panel,
+body:has(.admin-header) .users-list-container,
+body:has(.admin-header) .user-detail-container {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+}
+
+body:has(.admin-header) .search-input {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .search-input:focus {
+    border-color: var(--t-accent) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+    background: var(--t-bg-surface) !important;
+}
+
+body:has(.admin-header) .user-item {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .user-item:hover {
+    background: var(--t-bg-surface) !important;
+    border-color: var(--t-accent-alpha-30) !important;
+    transform: translateY(-2px) !important;
+}
+
+body:has(.admin-header) .user-item.active {
+    background: var(--t-accent-alpha-12) !important;
+    border-color: var(--t-accent-alpha-45) !important;
+}
+
+body:has(.admin-header) .user-item-title {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .user-info-text h3 {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .user-avatar {
+    box-shadow: 0 4px 12px var(--t-accent-alpha-20) !important;
+}
+
+body:has(.admin-header) .meta-val {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .metadata-section {
+    background: var(--t-accent-alpha-05) !important;
+    border: 1px solid var(--t-accent-alpha-12) !important;
+}
+
+body:has(.admin-header) .tab-btn {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .tab-btn:hover,
+body:has(.admin-header) .tab-btn.active {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .book-card {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .book-card:hover {
+    background: var(--t-bg-surface) !important;
+    border-color: var(--t-accent) !important;
+}
+
+body:has(.admin-header) .book-title-text {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .list-accordion {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .list-accordion-header {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .list-accordion-header:hover {
+    background: var(--t-accent-alpha-08) !important;
+}
+
+body:has(.admin-header) .list-name {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .list-accordion-body {
+    background: var(--t-hover-bg) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+body:has(.admin-header) .toast-alert {
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+body:has(.admin-header) .toast-alert-text {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .toast-close {
+    color: var(--t-text-secondary) !important;
+}
+
+body:has(.admin-header) .modal-card {
+    background: var(--t-bg-overlay) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--t-border) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+body:has(.admin-header) .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body:has(.admin-header) .modal-header h3 {
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: var(--t-bg-surface) !important;
+}
+
+body:has(.admin-header) .form-control {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:has(.admin-header) .form-control:focus {
+    border-color: var(--t-accent) !important;
+    background: var(--t-bg-elevated) !important;
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-25) !important;
+}
+
+/* 3. Enhance Tools Dropdown Menu & Prevent Clipping */
+.tools-dropdown-menu {
+    top: 100% !important;
+    margin-top: 0 !important;
+}
+
+.tools-dropdown-menu::before {
+    display: none !important; /* No gap bridge needed as menu touches button */
+}
+
+/* Responsive fixes to prevent parent overflow-x: auto clipping dropdown menus */
+@media (max-width: 768px) {
+    .header,
+    .header-logo,
+    .header nav {
+        overflow: visible !important;
+    }
+}
+
+/* 4. Show Ungrouped Matches element overrides & search forms search-input-group details */
+body:not(:has(.admin-header)) .search-actions-container > div:has(#directPageView) {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+body:not(:has(.admin-header)) .search-actions-container > div:has(#directPageView) span {
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .search-actions-container > div:has(#directPageView) span[title],
+body:not(:has(.admin-header)) .search-actions-container > div:has(#directPageView) span:last-child {
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .search-actions-container .clear-btn {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+body:not(:has(.admin-header)) .search-actions-container .clear-btn:hover {
+    background: var(--t-hover-bg) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .search-input-group select {
+    background: var(--t-bg-surface) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-primary) !important;
+    border-radius: 6px !important;
+    padding: 3px 6px !important;
+}
+
+body:not(:has(.admin-header)) .search-input-group select option {
+    background: var(--t-bg-elevated) !important;
+    color: var(--t-text-primary) !important;
+}
+
+body:not(:has(.admin-header)) .search-input-group label {
+    color: var(--t-text-secondary) !important;
+}
+
+/* 5. Reduced-Size Sleek Gradient Buttons for Admin Panel */
+body:has(.admin-header) .btn,
+body:has(.admin-header) button.btn,
+body:has(.admin-header) a.btn {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    border: none !important;
+    height: auto !important;
+    width: auto !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-transform: none !important;
+    letter-spacing: 0.3px !important;
+    color: #ffffff !important;
+}
+
+body:has(.admin-header) .btn-primary,
+body:has(.admin-header) a.btn-primary,
+body:has(.admin-header) button.btn-primary {
+    background: var(--t-accent-gradient) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+body:has(.admin-header) .btn-primary:hover,
+body:has(.admin-header) a.btn-primary:hover,
+body:has(.admin-header) button.btn-primary:hover {
+    background: var(--t-accent-gradient) !important;
+    box-shadow: 0 6px 16px var(--t-accent-alpha-45) !important;
+    transform: translateY(-1.5px) !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+body:has(.admin-header) .btn-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+body:has(.admin-header) .btn-success:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45) !important;
+    transform: translateY(-1.5px) !important;
+}
+
+body:has(.admin-header) .btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+body:has(.admin-header) .btn-danger:hover {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45) !important;
+    transform: translateY(-1.5px) !important;
+}
+
+/* Specific button styles overriding inline dashboard rules */
+body:has(.admin-header) #refreshCacheBtn {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    border-color: transparent !important;
+}
+
+body:has(.admin-header) #refreshCacheBtn:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.45) !important;
+    transform: translateY(-1.5px) !important;
+}
+
+body:has(.admin-header) .btn[style*="background-color: #4CAF50"],
+body:has(.admin-header) .btn[style*="background: #4CAF50"] {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: transparent !important;
+}
+
+body:has(.admin-header) .pagination .btn-primary,
+body:has(.admin-header) .pagination button {
+    background: var(--t-accent-gradient) !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    color: var(--t-text-on-accent) !important;
+}
+
+/* Cache Progress Dark Glass overrides */
+body:has(.admin-header) #cacheProgressContainer {
+    background: rgba(245, 158, 11, 0.15) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+body:has(.admin-header) #cacheStatusText {
+    color: #fbbf24 !important;
+}
+
+/* Un-color/un-clip emojis inside headings so they render in their native system colors */
+.emoji,
+span.emoji,
+h1 .emoji,
+h2 .emoji,
+h3 .emoji,
+h4 .emoji,
+h5 .emoji,
+h6 .emoji,
+.navbar-title .emoji {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: initial !important;
+    color: initial !important;
+    display: inline-block !important;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif !important;
+}
+
+/* ==========================================================================
+   NAVBAR HOME BUTTON & GLOWING ADMIN DASHBOARD OVERRIDES
+   ========================================================================== */
+
+/* High-specificity, premium design overrides for navbar home button icon */
+.navbar-home-btn {
+    color: var(--t-text-primary) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    border-radius: 50% !important;
+    padding: 6px !important;
+    width: 32px !important;
+    height: 32px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    box-shadow: var(--t-shadow) !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.navbar-home-btn svg {
+    display: block !important;
+    stroke: var(--t-text-primary) !important;
+    fill: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.navbar-home-btn:hover {
+    background: var(--t-hover-bg) !important;
+    border-color: var(--t-border-hover) !important;
+    transform: scale(1.08) !important;
+    box-shadow: 0 0 14px var(--t-border-hover) !important;
+}
+
+/* Beautiful, premium purple glowing button for Admin Dashboard in header nav */
+.header nav a.admin-dashboard-btn {
+    color: var(--t-text-secondary) !important;
+    font-weight: 700 !important;
+    background: var(--t-accent-alpha-12) !important;
+    border: 1px solid var(--t-accent-alpha-35) !important;
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 0 14px var(--t-border) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+.header nav a.admin-dashboard-btn:hover {
+    color: var(--t-text-on-accent) !important;
+    background: var(--t-border-hover) !important;
+    border-color: var(--t-border-hover) !important;
+    box-shadow: 0 0 20px var(--t-accent-alpha-60) !important;
+    transform: translateY(-1.5px) !important;
+}
+
+/* ==========================================================================
+   STATS DASHBOARD GLASSMORPHIC GRID & CHARTS STYLES
+   ========================================================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    margin-top: 15px;
+}
+
+.stat-card {
+    background: var(--t-bg-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    color: inherit;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--t-accent-alpha-05) 0%, var(--t-accent-alpha-05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--t-border-hover);
+    box-shadow: 0 10px 30px var(--t-accent-alpha-15), 0 0 15px var(--t-accent-alpha-10);
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.stat-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-card-icon {
+    font-size: 24px;
+    background: var(--t-hover-bg) ;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-card-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 4px;
+}
+
+.stat-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 600px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: var(--t-bg-surface);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    height: 420px;
+}
+
+.chart-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+}
+
+.chart-container {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+/* ==========================================================================
+   ADMIN SETTINGS CARD, TITLE & PAGE STYLES (SHARED)
+   ========================================================================== */
+
+.page-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 800;
+    background: linear-gradient(135deg, #60a5fa 0%, var(--t-text-secondary) 50%, #14b8a6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    margin: 40px 0 10px;
+    font-size: 2.2rem;
+    letter-spacing: -0.025em;
+}
+
+.page-subtitle {
+    text-align: center;
+    color: var(--t-text-muted);
+    font-size: 1rem;
+    margin-bottom: 40px;
+}
+
+.settings-card {
+    background: var(--t-bg-surface);
+    border: 1px solid var(--t-border);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: var(--t-shadow);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* Form Elements for Settings Pages */
+body:has(.admin-header) .form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+body:has(.admin-header) .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--t-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+}
+
+body:has(.admin-header) select,
+body:has(.admin-header) textarea,
+body:has(.admin-header) input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--t-bg-surface);
+    border: 1px solid var(--t-border);
+    border-radius: 10px;
+    color: var(--t-text-primary);
+    font-size: 0.95rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+body:has(.admin-header) select:focus,
+body:has(.admin-header) textarea:focus,
+body:has(.admin-header) input[type="text"]:focus {
+    border-color: var(--t-accent);
+    box-shadow: 0 0 0 3px var(--t-accent-alpha-15);
+}
+
+.settings-card h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--t-text-primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Secondary Button styling */
+.btn-secondary {
+    background: var(--t-hover-bg) !important;
+    border: 1px solid var(--t-border) !important;
+    color: var(--t-text-secondary) !important;
+}
+
+.btn-secondary:hover {
+    background: var(--t-bg-surface-hover) !important;
+    border-color: var(--t-border-hover) !important;
+}
+
+/* generic button layout row */
+.btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+/* Toast Message Notifications */
+.toast-msg {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 24px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast-msg.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-msg.success {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.toast-msg.error {
+    background: rgba(248, 113, 113, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* Quick Links and Badges */
+.quick-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #60a5fa;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.quick-link:hover {
+    color: #93c5fd;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge.success {
+    background: rgba(52, 211, 153, 0.12);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.status-badge.warning {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+/* JSON Code Editor textareas */
+#nyaya-db-editor, #admin-preset-editor {
+    font-family: 'Consolas', 'Monaco', monospace !important;
+    font-size: 0.85rem !important;
+    line-height: 1.6 !important;
+}
+
+/* ==========================================================================
+   PRESET ITEM LIST STYLING (USED IN TARKA SHABDABODHA)
+   ========================================================================== */
+
+.preset-item {
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--t-bg-surface);
+    border: 1px solid var(--t-border);
+    transition: all 0.2s ease;
+    gap: 15px;
+}
+
+.preset-item:hover {
+    border-color: var(--t-text-muted);
+    background: var(--t-hover-bg);
+    transform: translateX(2px);
+}
+
+.preset-item.active {
+    background: var(--t-accent-alpha-15);
+    border-color: var(--t-accent);
+    box-shadow: 0 0 0 1px var(--t-accent);
+}
+
+.preset-item-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.preset-item-title {
+    font-weight: 600;
+    color: var(--t-text-primary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.preset-item-subtitle {
+    font-size: 0.8rem;
+    color: var(--t-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.preset-item-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.preset-item-badge {
+    background: var(--t-hover-bg);
+    border: 1px solid var(--t-border);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--t-text-secondary);
+}
+
+.preset-item.active .preset-item-badge {
+    background: var(--t-accent);
+    color: var(--t-text-on-accent);
+    border-color: var(--t-accent);
+}
+
+/* ==========================================================================
+   BOOK PROOFREAD & VECTOR BADGES/BUTTONS
+   ========================================================================== */
+
+.proofread-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin: 4px 0;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    width: fit-content;
+}
+
+.proofread-badge.started {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.12) 100%);
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.proofread-badge.ongoing {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(29, 78, 216, 0.12) 100%);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+.proofread-badge.almost-done {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(109, 40, 217, 0.12) 100%);
+    color: #a78bfa;
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+.proofread-badge.completed {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(4, 120, 87, 0.12) 100%);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.vector-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    text-decoration: none;
+    margin-top: 6px;
+    width: fit-content;
+}
+
+.vector-download-btn.none {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(79, 70, 229, 0.12) 100%);
+    color: color-mix(in srgb, #818cf8 80%, var(--t-text-primary) 20%);
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+.vector-download-btn.none:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.22) 0%, rgba(79, 70, 229, 0.22) 100%);
+    border-color: rgba(99, 102, 241, 0.45);
+    transform: translateY(-1px);
+}
+
+.vector-download-btn.pending {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(202, 138, 4, 0.08) 100%);
+    color: color-mix(in srgb, #d97706 80%, var(--t-text-primary) 20%);
+    border-color: rgba(234, 179, 8, 0.2);
+}
+
+.vector-download-btn.pending:hover {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.16) 0%, rgba(202, 138, 4, 0.16) 100%);
+    border-color: rgba(234, 179, 8, 0.4);
+    transform: translateY(-1px);
+}
+
+.vector-download-btn.approved {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(22, 163, 74, 0.12) 100%);
+    color: color-mix(in srgb, #16a34a 80%, var(--t-text-primary) 20%);
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+.vector-download-btn.approved:hover {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.22) 0%, rgba(22, 163, 74, 0.22) 100%);
+    border-color: rgba(34, 197, 94, 0.45);
+    transform: translateY(-1px);
+}
+
+.vector-download-btn.rejected {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+    color: color-mix(in srgb, #dc2626 80%, var(--t-text-primary) 20%);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.vector-download-btn.rejected:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18) 0%, rgba(220, 38, 38, 0.18) 100%);
+    border-color: rgba(239, 68, 68, 0.4);
+    transform: translateY(-1px);
+}
+
+.alert-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: #10b981;
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    display: none;
+    z-index: 2000;
+}

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chandas — Sanskrit Meter Analyzer</title>
+    <link rel="stylesheet" href="/static/css/theme.css?v=35">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            transform: translateX(-3px);
+        }
+        .app-title-block {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 100px;
+        }
+        .app-title-block h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #c084fc, #e879f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        .app-title-block p {
+            color: var(--t-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .glass-panel {
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--t-shadow);
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--t-text-secondary);
+        }
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--t-text-primary);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+        textarea:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #a855f7, #c084fc);
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+        }
+        .results-section {
+            margin-top: 35px;
+            border-top: 1px dashed var(--t-border);
+            padding-top: 30px;
+            display: none;
+        }
+        .line-analysis {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            animation: popIn 0.3s ease;
+        }
+        .line-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--t-text-primary);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 10px;
+        }
+        .syllable-map {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .syllable-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 44px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            padding: 6px 4px;
+        }
+        .syllable-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            width: 28px;
+            text-align: center;
+        }
+        .syllable-badge.guru {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        .syllable-badge.laghu {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .syllable-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .meter-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .meter-tag {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #c084fc;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .error-panel {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 15px;
+        }
+        .error-title {
+            color: #fca5a5;
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .fuzzy-option {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        .fuzzy-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--t-text-secondary);
+            margin-bottom: 6px;
+        }
+        .sug-edit {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+        .sug-edit.replace {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .sug-edit.delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .sug-edit.insert {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        /* Sanskrit Keyboard Switch Styling */
+        .sanskrit-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--t-border);
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--t-bg-surface);
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: var(--t-accent);
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--t-accent);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--t-text-on-accent, #0c1a2e);
+        }
+        .slider.round {
+            border-radius: 20px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        body.osk-active {
+            padding-bottom: 210px;
+        }
+        .btn-suggestion {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-primary);
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-suggestion:hover {
+            background: var(--t-hover-bg);
+            border-color: var(--t-accent);
+            color: var(--t-accent);
+            transform: translateY(-1px);
+        }
+        .btn-suggestion:active {
+            transform: translateY(0);
+        }
+        .btn-suggestion.fuzzy-test {
+            background: rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .btn-suggestion.fuzzy-test:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #f87171;
+        }
+
+        /* ── Mobile responsiveness overrides ── */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            .back-btn {
+                align-self: flex-start;
+            }
+            .app-title-block {
+                margin-right: 0;
+            }
+            .app-title-block h1 {
+                font-size: 1.7rem;
+            }
+            .app-title-block p {
+                font-size: 13px;
+            }
+            .glass-panel {
+                padding: 20px 14px;
+                border-radius: 16px;
+            }
+            .form-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .btn-submit {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/#apps" class="back-btn">
+                <span>←</span> Back
+            </a>
+            <div class="app-title-block">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--t-accent, #d4af37); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Sri Trayee Vidya Gurukulam</div>
+                <h1>Chandas Analyzer</h1>
+                <p>Meters, Prosody, Syllable Classifier &amp; Correction Engine</p>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="sanskrit-toggle-container" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; gap: 8px;">
+                <label class="switch">
+                    <input type="checkbox" id="chandasSanskrit">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-size: 14px; font-weight: 600; color: var(--t-text-secondary);">Type in Sanskrit (ITRANS)</span>
+            </div>
+
+            <div class="form-group">
+                <label for="verse-input">Paste shloka or verse layout (Devanagari):</label>
+                <textarea id="verse-input" class="sanskrit-enabled" data-sanskrit-id="chandasSanskrit" rows="6" placeholder="e.g., काश्चिद्विपत्सु प्रभवन्ति पुंसाम्..."></textarea>
+                <div class="quick-suggestions-container" style="margin-top: 15px;">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--t-text-secondary); display: inline-block; margin-bottom: 8px;">Quick suggestions for testing:</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="quick-buttons-container">
+                        <button type="button" class="btn-suggestion fuzzy-test" onclick="loadSample('typo')">Fuzzy Test (Error Correction)</button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-submit" onclick="runAnalyzer()">Analyze Verse</button>
+
+            <div id="results" class="results-section">
+                <!-- Line analyses will render here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let SAMPLES = {
+            typo: "येषां न विद्या न तपो न दनं\nज्ञानं न शीलं न गुणो न धर्मः।\nते मृत्युलोके भुवि भारभूता\nमनुष्यरूपेण मृगाश्चरन्ति॥"
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const btnContainer = document.getElementById('quick-buttons-container');
+            if (!btnContainer) return;
+
+            try {
+                // Fetch Samples
+                const resSamples = await fetch('/apps/api/chandas/admin/samples');
+                const dataSamples = await resSamples.json();
+                
+                // Fetch Lakshana
+                const resLakshana = await fetch('/apps/api/chandas/admin/lakshana');
+                const dataLakshana = await resLakshana.json();
+                
+                // Keep the fuzzy test button
+                const fuzzyBtn = btnContainer.querySelector('.fuzzy-test').cloneNode(true);
+                btnContainer.innerHTML = '';
+                
+                if (dataSamples.success && dataSamples.samples.length > 0) {
+                    dataSamples.samples.forEach(s => {
+                        SAMPLES[s.key] = s.verse;
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-suggestion';
+                        btn.type = 'button';
+                        btn.textContent = s.label;
+                        btn.onclick = () => loadSample(s.key);
+                        btnContainer.appendChild(btn);
+                    });
+                }
+                
+                if (dataLakshana.success && dataLakshana.lakshana.length > 0) {
+                    dataLakshana.lakshana.forEach(l => {
+                        SAMPLES[l.key] = l.verse;
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-suggestion';
+                        btn.type = 'button';
+                        btn.textContent = l.label;
+                        btn.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+                        btn.style.color = 'var(--t-accent)';
+                        btn.style.background = 'rgba(56, 189, 248, 0.05)';
+                        btn.onclick = () => loadSample(l.key);
+                        btnContainer.appendChild(btn);
+                    });
+                }
+
+                fuzzyBtn.onclick = () => loadSample('typo');
+                btnContainer.appendChild(fuzzyBtn);
+                
+            } catch (e) {
+                console.error("Failed to load presets from server", e);
+            }
+        });
+
+        function loadSample(key) {
+            const textarea = document.getElementById('verse-input');
+            if (SAMPLES[key]) {
+                textarea.value = SAMPLES[key];
+                runAnalyzer();
+            }
+        }
+
+        async function runAnalyzer() {
+            const verse = document.getElementById('verse-input').value.trim();
+            if (!verse) {
+                alert("Please enter some verse lines.");
+                return;
+            }
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p style="text-align: center; color: var(--t-text-secondary);">Analyzing syllables &amp; scanning meters...</p>';
+            document.querySelector('.results-section').style.display = 'block';
+
+            try {
+                const res = await fetch('/apps/api/chandas/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ verse })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    let html = '';
+                    if (data.verse_meters && data.verse_meters.length > 0) {
+                        html += `
+                            <div class="verse-meter-card" style="background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(232,121,249,0.12)); border: 1px solid rgba(168,85,247,0.25); border-radius: 16px; padding: 22px; margin-bottom: 25px; text-align: center; animation: popIn 0.3s ease;">
+                                <h3 style="font-family:'Outfit', sans-serif; font-size:14px; color:var(--t-text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Overall Shloka Meter</h3>
+                                <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px;">
+                                    ${data.verse_meters.map(v => `<span class="meter-tag" style="background:#a855f7; color:white; font-size:18px; font-weight:700; padding:6px 18px; border-radius:30px; border:none; box-shadow: 0 4px 10px rgba(168,85,247,0.3);">${v.name} ${v.info ? `(${v.info})` : ''}</span>`).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    html += data.lines.map(line => renderLine(line)).join('');
+                    resultsDiv.innerHTML = html;
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Connection failed.");
+            }
+        }
+
+        function renderLine(line) {
+            // Render syllables map
+            let syllablesHtml = '';
+            for (let i = 0; i < line.syllables.length; i++) {
+                const syl = line.syllables[i];
+                const marker = line.lg[i] || ''; // 'ल' or 'ग' or empty
+                if (!syl.trim()) continue;
+                
+                let badgeClass = '';
+                let markerLabel = '-';
+                if (marker === 'ग') {
+                    badgeClass = 'guru';
+                    markerLabel = 'ग (¯)';
+                } else if (marker === 'ल') {
+                    badgeClass = 'laghu';
+                    markerLabel = 'ल (˘)';
+                }
+                
+                syllablesHtml += `
+                    <div class="syllable-col">
+                        <span class="syllable-badge ${badgeClass}">${markerLabel}</span>
+                        <span class="syllable-text">${syl}</span>
+                    </div>
+                `;
+            }
+
+            // Meter info
+            let meterHtml = '';
+            if (line.chanda.length > 0) {
+                meterHtml = `
+                    <div class="meter-info">
+                        <span style="font-size:14px; font-weight:600; color:var(--t-text-secondary);">Meter Scanned:</span>
+                        ${line.chanda.map(c => `<span class="meter-tag">${c.name} ${c.info ? `(${c.info})` : ''}</span>`).join('')}
+                    </div>
+                `;
+            } else {
+                meterHtml = `
+                    <div class="meter-info">
+                        <span style="font-size:14px; font-weight:600; color:#ef4444;">Meter Scanned:</span>
+                        <span class="meter-tag" style="background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.3); color:#ef4444;">Muktaka / Unknown</span>
+                    </div>
+                `;
+            }
+
+            // Fuzzy suggestions panel
+            let fuzzyHtml = '';
+            if (line.chanda.length === 0 && line.fuzzy && line.fuzzy.length > 0) {
+                fuzzyHtml = `
+                    <div class="error-panel">
+                        <div class="error-title">
+                            ⚠️ Metrical Inconsistencies / Typos Detected
+                        </div>
+                        <p style="font-size:13px; color:var(--t-text-secondary); margin-bottom: 12px;">The scanned syllable counts or Laghu-Guru weights do not conform to standard meters. Did you mean one of these?</p>
+                        ${line.fuzzy.slice(0, 3).map(f => `
+                            <div class="fuzzy-option">
+                                <div class="fuzzy-header">
+                                    <span style="font-weight: 700; color:#c084fc;">Suggested Meter: ${f.chanda.join(', ') || 'Alternative'}</span>
+                                    <span>Similarity: ${(f.similarity * 100).toFixed(1)}%</span>
+                                </div>
+                                <div style="font-size:13px; color:var(--t-text-secondary); margin-bottom: 8px;">Ganas: ${f.gana || 'N/A'}</div>
+                                <div style="font-size:13px;">
+                                    <span style="font-weight:600; color:var(--t-text-primary);">Suggested Syllables:</span>
+                                    <div style="margin-top: 6px; font-size:15px; font-weight:500;">
+                                        ${formatSuggestion(f.suggestion)}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="line-analysis">
+                    <div class="line-text">${line.text}</div>
+                    <div class="syllable-map">
+                        ${syllablesHtml}
+                    </div>
+                    ${meterHtml}
+                    ${fuzzyHtml}
+                </div>
+            `;
+        }
+
+        function formatSuggestion(sug) {
+            if (!sug || sug.length === 0) return 'N/A';
+            let html = '';
+            
+            const syllables = sug.flat(Infinity);
+            
+            syllables.forEach(syllable => {
+                if (typeof syllable !== 'string') return;
+                
+                if (syllable.startsWith('r(')) {
+                        // replace format: r(word)[G]{poo}
+                        let inside = syllable.match(/r\((.*?)\)\[(.*?)\]/);
+                        if (inside) {
+                            html += `<span class="sug-edit replace" title="Replace syllable with ${inside[2] === 'L' ? 'Laghu' : 'Guru'}">${inside[1]} → ${inside[2] === 'L' ? 'ल (˘)' : 'ग (¯)'}</span> `;
+                        } else {
+                            html += `<span class="sug-edit replace">${syllable}</span> `;
+                        }
+                    } else if (syllable.startsWith('d(')) {
+                        // delete format: d(word)
+                        let inside = syllable.match(/d\((.*?)\)/);
+                        if (inside) {
+                            html += `<span class="sug-edit delete" title="Extra syllable, remove">${inside[1]} (Del)</span> `;
+                        } else {
+                            html += `<span class="sug-edit delete">${syllable}</span> `;
+                        }
+                    } else if (syllable.startsWith('i(')) {
+                        // insert format: i(G)
+                        let inside = syllable.match(/i\((.*?)\)/);
+                        if (inside) {
+                            html += `<span class="sug-edit insert" title="Missing syllable, insert">${inside[1] === 'L' ? 'Laghu' : 'Guru'} (Ins)</span> `;
+                        } else {
+                            html += `<span class="sug-edit insert">${syllable}</span> `;
+                        }
+                    } else {
+                        html += `<span>${syllable}</span> `;
+                    }
+                });
+            return html;
+        }
+    </script>
+    <script src="/static/js/theme.js?v=35"></script>
+    <script src="/static/js/keymanweb.js?v=100"></script>
+    <script src="/static/js/sanskrit_keyboard.js"></script>
+    <footer style="margin-top: 40px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; color: var(--t-text-secondary);">
+        Samshodhana Mandiram — Sri Trayee Vidya Gurukulam
+    </footer>
+</body>
+</html>

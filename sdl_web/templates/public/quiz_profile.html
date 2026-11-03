@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Dashboard — {{ user.display_name }} | Samshodhana Mandiram</title>
+    <meta name="description" content="Track your quiz performance, view statistics, and earn achievements on your personalized quiz dashboard.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0a0a1a;
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* === ANIMATED BACKGROUND === */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.35;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+
+        .bg-orb:nth-child(1) {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #f59e0b, #ef4444);
+            top: -10%; left: -10%;
+            animation-duration: 25s;
+        }
+
+        .bg-orb:nth-child(2) {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--t-accent), #3b82f6);
+            top: 50%; right: -8%;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .bg-orb:nth-child(3) {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, #06b6d4, #10b981);
+            bottom: -5%; left: 30%;
+            animation-duration: 22s;
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(40px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(30px, 40px) scale(1.02); }
+        }
+
+        /* Grid overlay */
+        .bg-canvas::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* === NAVBAR === */
+        .qp-navbar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 28px;
+            background: rgba(10, 10, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .qp-navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .qp-navbar-brand .home-btn {
+            color: var(--t-text-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px;
+            border-radius: 50%;
+            background: var(--t-hover-bg) ;
+            border: 1px solid var(--t-border);
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .qp-navbar-brand .home-btn:hover {
+            background: var(--t-border-hover);
+            transform: scale(1.05);
+        }
+
+        .qp-navbar-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--t-text-primary);
+        }
+
+        .qp-navbar-title span {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .qp-navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qp-navbar-links a {
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .qp-navbar-links a:hover {
+            background: var(--t-border);
+            color: var(--t-text-primary);
+        }
+
+        .qp-navbar-links a.active {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .qp-navbar-links a.logout-link {
+            color: #fca5a5;
+        }
+
+        /* ===  PROFILE TOGGLE SWITCH === */
+        .profile-switch {
+            --_switch-bg-clr: #70a9c5;
+            --_switch-padding: 4px;
+            --_slider-bg-clr: rgba(12, 74, 110, 0.65);
+            --_slider-bg-clr-on: rgba(12, 74, 110, 0.65);
+            color: white;
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            background-color: var(--_switch-bg-clr);
+            border-radius: 9999px;
+            cursor: pointer;
+            padding: var(--_switch-padding);
+            user-select: none;
+            isolation: isolate;
+            text-decoration: none;
+        }
+        .profile-switch input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        .switch-label {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: nowrap;
+        }
+        /* Active states */
+        .profile-switch:has(input:not(:checked)) .switch-label.left {
+            color: #ffffff;
+            opacity: 1;
+        }
+        .profile-switch:has(input:checked) .switch-label.right {
+            color: #ffffff;
+            opacity: 1;
+        }
+        /* The slider pill */
+        .profile-switch::before {
+            content: "";
+            position: absolute;
+            top: var(--_switch-padding);
+            bottom: var(--_switch-padding);
+            left: var(--_switch-padding);
+            width: calc(50% - var(--_switch-padding));
+            background-color: var(--_slider-bg-clr);
+            border-radius: 9999px;
+            transition: transform 0.35s cubic-bezier(0.47, 1.64, 0.41, 0.8), background-color 0.35s ease;
+            z-index: 1;
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.3), 0 1px rgba(255,255,255,.3);
+        }
+        /* When checked, slide the pill to the right */
+        .profile-switch:has(input:checked)::before {
+            transform: translateX(100%);
+            background-color: var(--_slider-bg-clr-on);
+        }
+        /* Subtle hover effect */
+        .profile-switch:hover::before {
+            filter: brightness(1.1);
+        }
+
+        /* === MAIN LAYOUT === */
+        .qp-main {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+        }
+
+        /* === HERO PROFILE BANNER === */
+        .qp-hero {
+            background: rgba(15, 15, 35, 0.6);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qp-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f59e0b, #ef4444, var(--t-accent), #3b82f6);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .qp-hero-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: 900;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.35);
+            animation: avatarPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.3); }
+            50% { box-shadow: 0 0 50px rgba(245, 158, 11, 0.5); }
+        }
+
+        .qp-hero-info {
+            flex: 1;
+        }
+
+        .qp-hero-name {
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .qp-hero-email {
+            font-size: 13px;
+            color: var(--t-text-muted);
+            margin-bottom: 12px;
+        }
+
+        .qp-hero-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .qp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid;
+        }
+
+        .qp-badge.quiz-lover {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .qp-badge.streak {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .qp-badge.scholar {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--t-text-secondary);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .qp-hero-action {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        .qp-btn-take-quiz {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .qp-btn-take-quiz:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .qp-lib-link {
+            font-size: 12px;
+            color: var(--t-text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .qp-lib-link:hover {
+            color: var(--t-text-secondary);
+        }
+
+        /* === STATS ROW === */
+        .qp-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .qp-stat-card {
+            background: rgba(15, 15, 35, 0.55);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 24px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .qp-stat-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--t-border);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+        }
+
+        .qp-stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+        }
+
+        .qp-stat-card:nth-child(1)::after { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .qp-stat-card:nth-child(2)::after { background: linear-gradient(90deg, #10b981, #34d399); }
+        .qp-stat-card:nth-child(3)::after { background: linear-gradient(90deg, var(--t-accent), var(--t-text-secondary)); }
+        .qp-stat-card:nth-child(4)::after { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+
+        .qp-stat-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .qp-stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .qp-stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--t-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Animated counter */
+        .qp-stat-value[data-target] {
+            transition: all 0.5s ease;
+        }
+
+        /* === SECTION PANELS === */
+        .qp-panel {
+            background: rgba(15, 15, 35, 0.55);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .qp-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .qp-panel-title {
+            font-size: 20px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fbbf24, #f97316);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .qp-panel-subtitle {
+            font-size: 12px;
+            color: var(--t-text-muted);
+        }
+
+        /* === ACHIEVEMENTS GRID === */
+        .qp-achievements {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 14px;
+        }
+
+        .qp-achievement {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px 14px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .qp-achievement:hover {
+            transform: translateY(-3px);
+            border-color: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .qp-achievement.locked {
+            opacity: 0.35;
+            filter: grayscale(1);
+        }
+
+        .qp-achievement-icon {
+            font-size: 34px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .qp-achievement-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--t-text-secondary);
+            margin-bottom: 3px;
+        }
+
+        .qp-achievement-desc {
+            font-size: 10px;
+            color: #475569;
+        }
+
+        /* === QUIZ HISTORY TABLE === */
+        .qp-history-wrap {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .qp-history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .qp-history-table thead {
+            background: var(--t-border-light);
+        }
+
+        .qp-history-table th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--t-text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .qp-history-table td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--t-border-light);
+            color: #e2e8f0;
+        }
+
+        .qp-history-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .qp-history-table tbody tr:hover {
+            background: rgba(245, 158, 11, 0.04);
+        }
+
+        .qp-history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .qp-score-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .qp-score-pill.excellent {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .qp-score-pill.good {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .qp-score-pill.needs-work {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .qp-subject-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--t-text-secondary);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* === EMPTY STATE === */
+        .qp-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #475569;
+        }
+
+        .qp-empty-icon {
+            font-size: 48px;
+            margin-bottom: 14px;
+            opacity: 0.6;
+        }
+
+        .qp-empty-text {
+            font-size: 14px;
+            margin-bottom: 18px;
+            color: var(--t-text-muted);
+        }
+
+        .qp-empty-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .qp-empty-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        /* === PERFORMANCE CHART (CSS-only bar chart) === */
+        .qp-chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 120px;
+            padding: 0 4px;
+        }
+
+        .qp-chart-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .qp-chart-bar {
+            width: 100%;
+            max-width: 40px;
+            border-radius: 6px 6px 0 0;
+            background: linear-gradient(180deg, #f59e0b, #ef4444);
+            transition: height 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-height: 4px;
+            position: relative;
+        }
+
+        .qp-chart-bar::after {
+            content: attr(data-pct);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--t-text-muted);
+            white-space: nowrap;
+        }
+
+        .qp-chart-label {
+            font-size: 10px;
+            color: #475569;
+            text-align: center;
+            max-width: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* === TOAST === */
+        .qp-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            background: #10b981;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+            animation: toastSlide 0.35s ease-out;
+        }
+
+        @keyframes toastSlide {
+            from { transform: translateY(80px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* === ANIMATIONS === */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .qp-hero { animation: fadeInUp 0.6s ease-out; }
+        .qp-stats-row { animation: fadeInUp 0.7s ease-out 0.1s both; }
+        .qp-panel:nth-of-type(1) { animation: fadeInUp 0.7s ease-out 0.2s both; }
+        .qp-panel:nth-of-type(2) { animation: fadeInUp 0.7s ease-out 0.3s both; }
+
+        /* === RESPONSIVE === */
+        @media (max-width: 900px) {
+            .qp-hero {
+                flex-direction: column;
+                text-align: center;
+                padding: 28px 20px;
+            }
+
+            .qp-hero-action {
+                align-items: center;
+            }
+
+            .qp-hero-badges {
+                justify-content: center;
+            }
+
+            .qp-stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .qp-navbar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 12px 16px;
+            }
+
+            .qp-navbar-links {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .qp-stats-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .qp-stat-card {
+                padding: 18px 14px;
+            }
+
+            .qp-stat-value {
+                font-size: 26px;
+            }
+
+            .qp-achievements {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            }
+
+            .qp-main {
+                padding: 16px 12px 40px;
+            }
+        }
+
+        /* Modal Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #1e293b;
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--t-text-primary) !important;
+            margin-bottom: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .modal-btn-cancel {
+            background: transparent;
+            border: 1px solid var(--t-border);
+            color: var(--t-text-secondary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-btn-cancel:hover {
+            background: var(--t-border-light);
+        }
+
+        /* Avatar Selection Grid */
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+            justify-items: center;
+        }
+
+        .avatar-option {
+            background: var(--t-border-light);
+            border: 3px solid transparent;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .avatar-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--t-accent-alpha-60);
+        }
+
+        .avatar-option.selected {
+            border-color: #fbbf24 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.8);
+        }
+        
+        .qp-btn-upload {
+            background: linear-gradient(135deg, #f59e0b, #ef4444) !important;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .qp-btn-upload:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Toast notifications */
+        .qp-toast-profile {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            background: #10b981;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="bg-canvas">
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+        <div class="bg-orb"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="qp-navbar">
+        <div class="qp-navbar-brand">
+            <a href="/" class="home-btn" title="Main Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+            <div class="qp-navbar-title">🧠 Quiz<span>Master</span></div>
+        </div>
+        <div class="qp-navbar-links">
+            <a href="/quiz/">Quiz Home</a>
+            <!-- Profile Toggle Switch: Library (left) ↔ Quiz (right/checked) -->
+            <label class="profile-switch" id="profileToggle" title="Switch between Library and Quiz Profile">
+                <input type="checkbox" id="profileToggleCheckbox" checked>
+                <span class="switch-label left">📚 Library</span>
+                <span class="switch-label right">🎯 Quiz</span>
+            </label>
+            {% if session.get('logged_in') %}
+            <a href="{{ url_for('admin_dashboard') }}">Admin</a>
+            {% endif %}
+            <a href="{{ url_for('user_logout') }}" class="logout-link">Logout</a>
+        </div>
+        <script>
+            // Toggle switch: Quiz (checked) -> Library Profile (unchecked = navigate)
+            (function() {
+                var cb = document.getElementById('profileToggleCheckbox');
+                var lbl = document.getElementById('profileToggle');
+                // Quiz profile = checked (current page)
+                lbl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Navigate to library profile
+                    window.location.href = "/user/sdl-profile";
+                });
+            })();
+        </script>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="qp-main">
+        <!-- Hero Profile Banner -->
+        <div class="qp-hero">
+            <div class="qp-hero-avatar-container" onclick="openAvatarModal()" style="position: relative; cursor: pointer; width: fit-content; flex-shrink: 0;" title="Click to Edit Avatar / Profile Photo">
+                <div class="qp-hero-avatar" style="{% if user_profile_pic_url %}background-image: url('{{ user_profile_pic_url }}') !important; background-size: cover !important; background-position: center !important;{% else %}background: {{ user_avatar.gradient }} !important;{% endif %}">
+                    {% if not user_profile_pic_url %}
+                        {{ user_avatar.emoji }}
+                    {% endif %}
+                </div>
+                <div class="avatar-edit-badge" style="position: absolute; bottom: 0; right: 0; background: var(--t-accent); border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; border: 2px solid var(--t-bg-surface, #0a0a1a); box-shadow: 0 0 10px var(--t-accent-alpha-45); z-index: 10;">
+                    ✏️
+                </div>
+            </div>
+            <div class="qp-hero-info">
+                <h1 class="qp-hero-name">{{ user.display_name }}</h1>
+                <div class="qp-hero-email">{{ user.email }}</div>
+                <div class="qp-hero-badges" id="heroBadges">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="qp-hero-action">
+                <a href="/quiz/" class="qp-btn-take-quiz">🚀 Take a Quiz</a>
+                <a href="/user/sdl-profile" class="qp-lib-link">📚 Switch to Library Profile →</a>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="qp-stats-row">
+            <div class="qp-stat-card">
+                <div class="qp-stat-icon">🎯</div>
+                <div class="qp-stat-value" id="statTotalQuizzes" data-target="0">...</div>
+                <div class="qp-stat-label">Quizzes Taken</div>
+            </div>
+            <div class="qp-stat-card">
+                <div class="qp-stat-icon">📊</div>
+                <div class="qp-stat-value" id="statAvgScore" data-target="0">...</div>
+                <div class="qp-stat-label">Avg Score</div>
+            </div>
+            <div class="qp-stat-card">
+                <div class="qp-stat-icon">🏆</div>
+                <div class="qp-stat-value" id="statBestScore" data-target="0">...</div>
+                <div class="qp-stat-label">Best Score</div>
+            </div>
+            <div class="qp-stat-card">
+                <div class="qp-stat-icon">📚</div>
+                <div class="qp-stat-value" id="statSubjects" data-target="0">...</div>
+                <div class="qp-stat-label">Subjects</div>
+            </div>
+        </div>
+
+        <!-- Achievements Panel -->
+        <div class="qp-panel">
+            <div class="qp-panel-header">
+                <div>
+                    <div class="qp-panel-title">🏅 Achievements</div>
+                    <div class="qp-panel-subtitle">Unlock badges by taking quizzes and scoring high</div>
+                </div>
+            </div>
+            <div class="qp-achievements" id="achievementsGrid">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Recent Performance (CSS bar chart) -->
+        <div class="qp-panel" id="perfPanel" style="display: none;">
+            <div class="qp-panel-header">
+                <div>
+                    <div class="qp-panel-title">📈 Recent Performance</div>
+                    <div class="qp-panel-subtitle">Your scores from the last 8 quizzes</div>
+                </div>
+            </div>
+            <div class="qp-chart-bars" id="perfChart">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Quiz History Table -->
+        <div class="qp-panel">
+            <div class="qp-panel-header">
+                <div>
+                    <div class="qp-panel-title">📋 Quiz History</div>
+                    <div class="qp-panel-subtitle">All your quiz attempts</div>
+                </div>
+            </div>
+            <div id="quizHistoryContainer">
+                <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <div class="loading-spinner" style="display: inline-block; margin-bottom: 0.5rem; width: 30px; height: 30px; border: 3px solid rgba(255, 255, 255, 0.1); border-radius: 50%; border-top-color: var(--accent, var(--t-accent)); animation: spin 1s ease-in-out infinite;"></div>
+                    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+                    <div>Loading history...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="qp-toast"></div>
+
+    <script>
+        const ACHIEVEMENTS = [
+            { id: 'first_quiz', icon: '🎯', name: 'First Step', desc: 'Take your first quiz', check: (s) => s.total >= 1 },
+            { id: 'five_quizzes', icon: '🔥', name: 'On Fire', desc: 'Complete 5 quizzes', check: (s) => s.total >= 5 },
+            { id: 'ten_quizzes', icon: '⚡', name: 'Quiz Warrior', desc: 'Complete 10 quizzes', check: (s) => s.total >= 10 },
+            { id: 'twenty_quizzes', icon: '💎', name: 'Quiz Master', desc: 'Complete 20 quizzes', check: (s) => s.total >= 20 },
+            { id: 'perfect_score', icon: '🏆', name: 'Perfect!', desc: 'Score 100% on any quiz', check: (s) => s.hasPerfect },
+            { id: 'above_90', icon: '🌟', name: 'Star Scholar', desc: 'Average score above 90%', check: (s) => s.avg >= 90 },
+            { id: 'above_70', icon: '👏', name: 'Well Done', desc: 'Average score above 70%', check: (s) => s.avg >= 70 },
+            { id: 'multi_subject', icon: '📚', name: 'Explorer', desc: 'Quiz in 3+ subjects', check: (s) => s.subjects >= 3 },
+            { id: 'polyglot', icon: '🌐', name: 'Polyglot', desc: 'Quiz in 2+ languages', check: (s) => s.languages >= 2 },
+            { id: 'fifty_quizzes', icon: '🎓', name: 'Quiz Legend', desc: 'Complete 50 quizzes', check: (s) => s.total >= 50 },
+        ];
+
+        const langNames = { en: 'English', sa: 'Sanskrit', hi: 'Hindi', kn: 'Kannada', te: 'Telugu' };
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.background = isError ? '#ef4444' : '#10b981';
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+
+        function animateCounter(el, target, suffix = '') {
+            let current = 0;
+            const duration = 1200;
+            const step = Math.ceil(target / (duration / 16));
+            const timer = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                el.textContent = current + suffix;
+            }, 16);
+        }
+
+        function loadQuizDashboard() {
+            fetch('/api/user/quiz/history')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success || !data.quiz_history) {
+                        renderEmpty();
+                        return;
+                    }
+
+                    const history = data.quiz_history;
+
+                    if (history.length === 0) {
+                        renderEmpty();
+                        renderAchievements({ total: 0, avg: 0, best: 0, subjects: 0, languages: 0, hasPerfect: false });
+                        return;
+                    }
+
+                    // Calculate stats
+                    const totalQuizzes = history.length;
+                    const avgScore = Math.round(history.reduce((sum, h) => sum + h.percentage, 0) / totalQuizzes);
+                    const bestScore = Math.max(...history.map(h => h.percentage));
+                    const uniqueSubjects = new Set(history.map(h => h.subject)).size;
+                    const uniqueLanguages = new Set(history.map(h => h.lang)).size;
+                    const hasPerfect = history.some(h => h.percentage === 100);
+
+                    // Animate stat counters
+                    animateCounter(document.getElementById('statTotalQuizzes'), totalQuizzes);
+                    animateCounter(document.getElementById('statAvgScore'), avgScore, '%');
+                    animateCounter(document.getElementById('statBestScore'), bestScore, '%');
+                    animateCounter(document.getElementById('statSubjects'), uniqueSubjects);
+
+                    // Render achievements
+                    const stats = {
+                        total: totalQuizzes,
+                        avg: avgScore,
+                        best: bestScore,
+                        subjects: uniqueSubjects,
+                        languages: uniqueLanguages,
+                        hasPerfect
+                    };
+                    renderAchievements(stats);
+                    renderHeroBadges(stats);
+
+                    // Render performance chart (last 8)
+                    renderPerfChart(history.slice(0, 8));
+
+                    // Render history table
+                    renderHistoryTable(history);
+                })
+                .catch(err => {
+                    console.error('Error loading quiz dashboard:', err);
+                    renderEmpty();
+                });
+        }
+
+        function renderHeroBadges(stats) {
+            const container = document.getElementById('heroBadges');
+            const badges = [];
+
+            if (stats.total >= 10) {
+                badges.push('<span class="qp-badge quiz-lover">🔥 Quiz Warrior</span>');
+            } else if (stats.total >= 1) {
+                badges.push('<span class="qp-badge quiz-lover">🎯 Quizzer</span>');
+            }
+
+            if (stats.avg >= 85) {
+                badges.push('<span class="qp-badge scholar">🌟 Scholar</span>');
+            }
+
+            if (stats.hasPerfect) {
+                badges.push('<span class="qp-badge streak">🏆 Perfectionist</span>');
+            }
+
+            if (stats.subjects >= 3) {
+                badges.push('<span class="qp-badge scholar">📚 Explorer</span>');
+            }
+
+            container.innerHTML = badges.join('') || '<span class="qp-badge quiz-lover">🌱 Beginner</span>';
+        }
+
+        function renderAchievements(stats) {
+            const grid = document.getElementById('achievementsGrid');
+            grid.innerHTML = ACHIEVEMENTS.map(a => {
+                const unlocked = a.check(stats);
+                return `
+                    <div class="qp-achievement ${unlocked ? '' : 'locked'}" title="${a.desc}">
+                        <span class="qp-achievement-icon">${a.icon}</span>
+                        <div class="qp-achievement-name">${a.name}</div>
+                        <div class="qp-achievement-desc">${unlocked ? '✓ Unlocked' : a.desc}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPerfChart(recentHistory) {
+            if (recentHistory.length < 2) return;
+
+            document.getElementById('perfPanel').style.display = 'block';
+            const chart = document.getElementById('perfChart');
+
+            // Reverse so oldest is on left
+            const items = [...recentHistory].reverse();
+
+            chart.innerHTML = items.map(h => {
+                const pct = h.percentage;
+                const label = h.subject.length > 8 ? h.subject.substring(0, 7) + '…' : h.subject;
+                let color = 'linear-gradient(180deg, #ef4444, #dc2626)';
+                if (pct >= 85) color = 'linear-gradient(180deg, #10b981, #059669)';
+                else if (pct >= 50) color = 'linear-gradient(180deg, #f59e0b, #d97706)';
+
+                return `
+                    <div class="qp-chart-bar-wrapper">
+                        <div class="qp-chart-bar" style="height: ${Math.max(pct, 5)}%; background: ${color};" data-pct="${pct}%"></div>
+                        <div class="qp-chart-label">${label}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Animate bars in
+            setTimeout(() => {
+                chart.querySelectorAll('.qp-chart-bar').forEach(bar => {
+                    bar.style.height = bar.style.height; // triggers reflow
+                });
+            }, 200);
+        }
+
+        function renderHistoryTable(history) {
+            const container = document.getElementById('quizHistoryContainer');
+
+            if (history.length === 0) {
+                renderEmpty();
+                return;
+            }
+
+            let html = `
+                <div class="qp-history-wrap">
+                    <table class="qp-history-table">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Subject</th>
+                                <th>Level / Grantha</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Language</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            history.forEach(item => {
+                const date = new Date(item.taken_at).toLocaleString();
+                const pct = item.percentage;
+                let pillClass = 'needs-work';
+                if (pct >= 85) pillClass = 'excellent';
+                else if (pct >= 50) pillClass = 'good';
+
+                html += `
+                    <tr>
+                        <td>${date}</td>
+                        <td><span class="qp-subject-chip">${item.subject}</span></td>
+                        <td>${item.level}</td>
+                        <td style="font-weight: 700;">${item.score}/${item.total}</td>
+                        <td><span class="qp-score-pill ${pillClass}">${pct}%</span></td>
+                        <td>${langNames[item.lang] || item.lang}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function renderEmpty() {
+            const container = document.getElementById('quizHistoryContainer');
+            container.innerHTML = `
+                <div class="qp-empty">
+                    <div class="qp-empty-icon">🧠</div>
+                    <div class="qp-empty-text">You haven't taken any quizzes yet. Start one now!</div>
+                    <a href="/quiz/" class="qp-empty-cta">🚀 Take Your First Quiz</a>
+                </div>
+            `;
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', loadQuizDashboard);
+    </script>
+    <!-- Avatar Selection Modal -->
+    <div id="avatarModal" class="overlay">
+        <div class="modal" style="max-width: 500px;">
+            <h3 class="modal-title">Select Avatar</h3>
+            <div class="avatar-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; justify-items: center;">
+                {% for avatar in AVATARS %}
+                <div class="avatar-option {% if user_avatar and user_avatar.emoji == avatar.emoji and not user_profile_pic_url %}selected{% endif %}" 
+                     onclick="selectAvatar({{ loop.index0 }})"
+                     style="background: {{ avatar.gradient }} !important; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 3px solid transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"
+                     data-index="{{ loop.index0 }}"
+                     title="Select Avatar">
+                    {{ avatar.emoji }}
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+                <div style="font-size: 13px; color: #94a3b8; margin-bottom: 12px; font-weight: 500;">Or upload your own profile photo:</div>
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;" onchange="uploadProfilePic()">
+                <button class="qp-btn-upload" onclick="document.getElementById('profilePicInput').click()">
+                    📷 Upload Photo
+                </button>
+            </div>
+            
+            <div class="modal-buttons" style="margin-top: 20px;">
+                <button class="modal-btn-cancel" onclick="closeAvatarModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="qpToast" class="qp-toast-profile">Operation Successful</div>
+
+    <script>
+        function showQpToast(message, isError = false) {
+            const toast = document.getElementById('qpToast');
+            toast.innerText = message;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function openAvatarModal() {
+            document.getElementById('avatarModal').style.display = 'flex';
+        }
+        function closeAvatarModal() {
+            document.getElementById('avatarModal').style.display = 'none';
+        }
+        function selectAvatar(index) {
+            fetch('/api/user/profile/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ avatar_idx: index })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showQpToast("Avatar updated successfully!");
+                    closeAvatarModal();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    showQpToast(data.message || "Failed to update avatar", true);
+                }
+            })
+            .catch(() => {
+                showQpToast("Failed to update avatar", true);
+            });
+        }
+        function uploadProfilePic() {
+            const fileInput = document.getElementById('profilePicInput');
+            if (fileInput.files.length === 0) return;
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('profile_pic', file);
+            
+            showQpToast("Uploading profile picture...");
+            
+            fetch('/api/user/profile/upload-pic', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showQpToast("Profile picture uploaded successfully!");
+                    closeAvatarModal();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                } else {
+                    showQpToast(data.message || "Upload failed", true);
+                }
+            })
+            .catch(() => {
+                showQpToast("Failed to upload profile picture", true);
+            });
+        }
+
+        // Close modal on outside click
+        window.addEventListener('click', (e) => {
+            const avatarModal = document.getElementById('avatarModal');
+            if (e.target === avatarModal) {
+                closeAvatarModal();
+            }
+        });
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+</html>

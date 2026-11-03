@@ -1,0 +1,18 @@
+[Unit]
+Description=Samshodhana Sanskrit STT Telegram Bot Service
+After=network.target samshodhana-stt.service
+
+[Service]
+Type=simple
+User={{USER_NAME}}
+WorkingDirectory={{APP_DIR}}/apps/sanskrit_stt/backend
+ExecStart={{VENV_DIR}}/bin/python3 telegram_bot.py
+EnvironmentFile=-{{APP_DIR}}/apps/sanskrit_stt/backend/.env
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=samshodhana-telegram-bot
+
+[Install]
+WantedBy=multi-user.target

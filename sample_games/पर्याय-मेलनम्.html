@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+<meta charset="UTF-8">
+<title>Sanskrit Synonym Match</title>
+<style>
+    body { font-family: sans-serif; text-align: center; background: #fff0f5; color: #4a148c; }
+    .container { display: flex; justify-content: center; gap: 50px; margin-top: 30px; }
+    .column { display: flex; flex-direction: column; gap: 15px; }
+    .word-btn { padding: 15px 30px; font-size: 20px; cursor: pointer; border: 2px solid #ab47bc; background: white; border-radius: 8px; transition: 0.3s; width: 150px; }
+    .word-btn.selected { background: #ce93d8; color: white; border-color: #8e24aa; }
+    .word-btn.matched { background: #81c784; color: white; border-color: #388e3c; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+    <h2>पर्याय-मेलनम् (Synonym Match)</h2>
+    <p>Match the word on the left with its synonym on the right.</p>
+
+    <div class="container">
+        <div class="column" id="col1"></div>
+        <div class="column" id="col2"></div>
+    </div>
+
+    <script>
+        // Data format: [Word, Synonym]
+        const pairs = [
+            ["विष्णुः", "नारायणः"],
+            ["जलम्", "नीरम्"],
+            ["गरुडः", "वैनतेयः"],
+            ["कमलम्", "पङ्कजम्"],
+            ["अश्वः", "हयः"]
+        ];
+
+        let selectedLeft = null;
+        let selectedRight = null;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function init() {
+            let leftWords = pairs.map(p => ({text: p[0], match: p[1]}));
+            let rightWords = pairs.map(p => ({text: p[1], match: p[0]}));
+            
+            rightWords = shuffle(rightWords);
+
+            const col1 = document.getElementById('col1');
+            const col2 = document.getElementById('col2');
+
+            leftWords.forEach((item, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'word-btn';
+                btn.innerText = item.text;
+                btn.onclick = () => selectWord(btn, 'left', item.text, item.match);
+                col1.appendChild(btn);
+            });
+
+            rightWords.forEach((item, index) => {
+                let btn = document.createElement('button');
+                btn.className = 'word-btn';
+                btn.innerText = item.text;
+                btn.onclick = () => selectWord(btn, 'right', item.text, item.match);
+                col2.appendChild(btn);
+            });
+        }
+
+        function selectWord(btn, side, text, matchTarget) {
+            if (btn.classList.contains('matched')) return;
+
+            if (side === 'left') {
+                if (selectedLeft) selectedLeft.btn.classList.remove('selected');
+                selectedLeft = { btn, text, matchTarget };
+                btn.classList.add('selected');
+            } else {
+                if (selectedRight) selectedRight.btn.classList.remove('selected');
+                selectedRight = { btn, text, matchTarget };
+                btn.classList.add('selected');
+            }
+
+            checkMatch();
+        }
+
+        function checkMatch() {
+            if (selectedLeft && selectedRight) {
+                if (selectedLeft.matchTarget === selectedRight.text) {
+                    selectedLeft.btn.classList.remove('selected');
+                    selectedRight.btn.classList.remove('selected');
+                    selectedLeft.btn.classList.add('matched');
+                    selectedRight.btn.classList.add('matched');
+                    selectedLeft = null;
+                    selectedRight = null;
+                } else {
+                    setTimeout(() => {
+                        selectedLeft.btn.classList.remove('selected');
+                        selectedRight.btn.classList.remove('selected');
+                        selectedLeft = null;
+                        selectedRight = null;
+                    }, 500);
+                }
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

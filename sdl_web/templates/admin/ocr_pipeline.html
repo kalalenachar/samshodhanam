@@ -1,0 +1,1130 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}OCR Pipeline - Sanskrit Digital Library Admin{% endblock %}
+{% block header_title %}Pipeline{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+<style>
+    .pipeline-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: -10px;
+        height: auto;
+    }
+
+    .flash-messages:empty { display: none; }
+
+    .config-panel {
+        background: var(--t-bg-surface);
+        border-radius: 12px;
+        padding: 10px 15px;
+        box-shadow: var(--t-shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border: 1px solid var(--t-border);
+    }
+
+    .console-panel {
+        background: #0d1117;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        border: 1px solid #30363d;
+        height: 600px;
+    }
+
+    .panel-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--t-text-primary);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .styled-textarea {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid var(--t-input-border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        resize: none;
+        transition: all 0.3s;
+        outline: none;
+        background: var(--t-input-bg);
+        color: var(--t-input-text);
+        box-sizing: border-box;
+    }
+
+    .styled-textarea:focus {
+        border-color: var(--t-input-focus-border);
+        background: var(--t-input-focus-bg);
+    }
+
+    .styled-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid var(--t-input-border);
+        border-radius: 8px;
+        font-size: 13px;
+        outline: none;
+        transition: all 0.3s;
+        background: var(--t-input-bg);
+        color: var(--t-input-text);
+        box-sizing: border-box;
+    }
+
+    .styled-input:focus {
+        border-color: var(--t-input-focus-border);
+        background: var(--t-input-focus-bg);
+    }
+
+    .styled-input:focus { border-color: var(--primary-color); }
+
+    .workers-config-col { width: 180px; }
+
+    .pipeline-btn {
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: none;
+        font-size: 14px;
+    }
+
+    .btn-start {
+        background: var(--primary-color);
+        color: var(--t-text-on-accent);
+        box-shadow: 0 4px 12px var(--t-accent-alpha-30);
+    }
+
+    .btn-start:hover { background: var(--primary-dark); transform: translateY(-2px); }
+    .btn-stop { background: var(--danger-color); color: white; }
+
+    /* ── Output mode toggle ────────────────────────────────────── */
+    .mode-toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0 2px;
+        border-top: 1px solid var(--border-color);
+        flex-wrap: wrap;
+    }
+
+    .mode-toggle-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .mode-options {
+        display: flex;
+        background: var(--t-hover-bg);
+        border: 1px solid var(--t-border-light);
+        border-radius: 8px;
+        padding: 3px;
+        gap: 2px;
+    }
+
+    .mode-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--t-text-muted);
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .mode-option.active {
+        background: var(--t-bg-surface);
+        color: var(--primary-color);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+
+    .mode-option input[type="radio"] { display: none; }
+
+    .mode-hint {
+        font-size: 11px;
+        color: #aaa;
+        font-style: italic;
+    }
+
+    /* ── Console ───────────────────────────────────────────────── */
+    .console-header {
+        padding: 12px 20px;
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .console-title {
+        color: #c9d1d9;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .console-header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .console-body {
+        flex: 1;
+        padding: 20px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #ffffff !important;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        background: #0d1117;
+    }
+
+    .console-body::-webkit-scrollbar { width: 10px; }
+    .console-body::-webkit-scrollbar-track { background: #0d1117; }
+    .console-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 5px; }
+
+    .console-action-btn {
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid #30363d;
+        background: transparent;
+        color: #8b949e;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .console-action-btn:hover { background: #30363d; color: #c9d1d9; }
+
+    .btn-dl-zip {
+        background: #1a7f37 !important;
+        color: white !important;
+        border-color: #1a7f37 !important;
+    }
+
+    .btn-dl-zip:hover {
+        background: #22a64a !important;
+        transform: translateY(-1px);
+    }
+
+    .status-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-idle  { background: #e0e0e0; color: var(--t-text-primary); }
+    .status-running { background: #2ea043; color: white; }
+
+    .log-err     { color: #ffffff !important; font-weight: bold; display: block; }
+    .log-info    { color: #ffffff !important; display: block; }
+    .log-success { color: #ffffff !important; font-weight: bold; display: block; }
+    .log-warn    { color: #ffffff !important; display: block; }
+    #consoleOutput span { display: block; min-height: 1.2em; color: #ffffff !important; }
+
+    /* ── ZIP tasks history panel ───────────────────────────────── */
+    .zip-tasks-panel {
+        background: var(--t-bg-surface);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: var(--t-shadow);
+        border: 1px solid var(--border-color);
+    }
+
+    .zip-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .zip-panel-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--t-text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .zip-tasks-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .zip-task-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--t-bg-surface);
+        border-radius: 8px;
+        border: 1px solid var(--t-border-light);
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .zip-task-info { display: flex; flex-direction: column; gap: 3px; }
+
+    .zip-task-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t-text-primary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .zip-task-meta { font-size: 11px; color: var(--text-muted); }
+
+    .zip-task-actions { display: flex; gap: 6px; align-items: center; }
+
+    .btn-zip-dl {
+        padding: 6px 14px;
+        background: #1a7f37;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-zip-dl:hover { background: #22a64a; transform: translateY(-1px); }
+    .btn-zip-dl:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+
+    .btn-zip-clear {
+        padding: 6px 12px;
+        background: transparent;
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-zip-clear:hover { background: var(--danger-color); color: white; }
+    .btn-zip-clear:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .zip-running-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        background: rgba(13,110,253,0.12);
+        color: #0d6efd;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    /* ── Download / rename modal ───────────────────────────────── */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal-box {
+        background: var(--t-bg-surface);
+        border-radius: 16px;
+        padding: 28px;
+        width: 440px;
+        max-width: 92vw;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+        animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--dark-bg);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+    }
+
+    .modal-input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 13px;
+        font-family: 'Consolas', monospace;
+        outline: none;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+        margin-bottom: 18px;
+    }
+
+    .modal-input:focus { border-color: #1a7f37; }
+
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .modal-btn-primary {
+        padding: 9px 22px;
+        background: #1a7f37;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .modal-btn-primary:hover { background: #22a64a; }
+
+    .modal-btn-cancel {
+        padding: 9px 18px;
+        background: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .modal-btn-cancel:hover { background: #f0f2f5; }
+
+    @media (max-width: 900px) {
+        .console-panel { height: 500px; }
+        .workers-config-col { width: 100% !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pipeline-container">
+
+    <!-- ── Config Panel ──────────────────────────────────────────── -->
+    <div class="config-panel">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <h3 class="panel-title" style="margin-bottom: 0;">
+                <i class="fas fa-sliders-h text-primary"></i> Pipeline Config
+            </h3>
+            <span style="font-size: 10px; color: #999;">
+                <i class="fas fa-info-circle me-1"></i>
+                Each link is fully processed before the next begins.
+            </span>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px;">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                    Archive.org Link(s)
+                </label>
+                <textarea id="linksInput" class="styled-textarea" rows="3"
+                    placeholder="https://archive.org/details/identifier&#10;One link per line..."></textarea>
+            </div>
+
+            <div class="workers-config-col">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                    Parallel Workers
+                </label>
+                <input type="number" id="workersInput" class="styled-input" value="5" min="1" max="20">
+
+                <button id="startPipelineBtn" class="pipeline-btn btn-start" style="margin-top: 10px; width: 100%;">
+                    <i class="fas fa-play"></i> Start Pipeline
+                </button>
+                <button id="stopPipelineBtn" class="pipeline-btn btn-stop" style="display: none; margin-top: 10px; width: 100%;">
+                    <i class="fas fa-stop"></i> Abort
+                </button>
+            </div>
+        </div>
+
+        <!-- Output Mode Toggle -->
+        <div class="mode-toggle-row">
+            <span class="mode-toggle-label"><i class="fas fa-box-open me-1"></i> Output:</span>
+            <div class="mode-options">
+                <label class="mode-option active" id="modeZipLabel">
+                    <input type="radio" name="outputMode" value="zip" checked>
+                    <i class="fas fa-file-archive"></i> Download as ZIP
+                </label>
+                <label class="mode-option" id="modeUploadLabel">
+                    <input type="radio" name="outputMode" value="upload">
+                    <i class="fas fa-cloud-upload-alt"></i> Auto Upload to Library
+                </label>
+            </div>
+            <span class="mode-hint" id="modeHint">Processed books will be staged for ZIP download — not auto-uploaded.</span>
+        </div>
+
+        <!-- Publish Status Toggle (visible only if auto upload is active) -->
+        <div class="mode-toggle-row" id="pipelineStatusRow" style="display: none; margin-top: 15px;">
+            <span class="mode-toggle-label"><i class="fas fa-eye me-1"></i> Publish Status:</span>
+            <div class="mode-options">
+                <label class="mode-option active" id="statusPublishedLabel">
+                    <input type="radio" name="pipelineStatus" value="published" checked>
+                    <i class="fas fa-check-circle"></i> Published
+                </label>
+                <label class="mode-option" id="statusDraftLabel">
+                    <input type="radio" name="pipelineStatus" value="draft">
+                    <i class="fas fa-edit"></i> Draft
+                </label>
+            </div>
+            <span class="mode-hint">Specify whether auto-uploaded books should be public immediately or saved as drafts.</span>
+        </div>
+    </div>
+
+    <!-- ── Console Panel ─────────────────────────────────────────── -->
+    <div class="console-panel">
+        <div class="console-header">
+            <div class="console-title">
+                <i class="fas fa-terminal"></i> PROCESS_OUTPUT.LOG
+                <div id="pipelineProgressContainer" style="display: none; align-items: center; gap: 10px; margin-left: 15px;">
+                    <div style="width: 150px; height: 8px; background: #30363d; border-radius: 4px; overflow: hidden;">
+                        <div id="pipelineProgressBar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                    <span id="pipelineProgressText" style="font-size: 12px; color: #8b949e; font-weight: normal;"></span>
+                </div>
+            </div>
+            <div class="console-header-right">
+                <button id="showFullLogsBtn" class="console-action-btn" style="display: none;">
+                    <i class="fas fa-list"></i> Show Full Logs
+                </button>
+                <button id="downloadZipBtn" class="console-action-btn btn-dl-zip" style="display: none;">
+                    <i class="fas fa-download"></i> Download ZIP
+                </button>
+                <button id="clearConsoleBtn" class="console-action-btn">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <div id="statusBadge" class="status-badge status-idle">IDLE</div>
+            </div>
+        </div>
+        <div id="consoleOutput" class="console-body">
+<span style="opacity: 0.4;">// Waiting for input...</span>
+        </div>
+    </div>
+
+    <!-- ── ZIP Tasks History Panel ───────────────────────────────── -->
+    <div class="zip-tasks-panel" id="zipTasksPanel" style="display: none;">
+        <div class="zip-panel-header">
+            <div class="zip-panel-title">
+                <i class="fas fa-archive text-primary"></i>
+                ZIP Download Queue
+                <span style="font-size: 11px; font-weight: 400; color: var(--text-muted);">
+                    — persists until manually cleared
+                </span>
+            </div>
+        </div>
+        <div class="zip-tasks-list" id="zipTasksList"></div>
+    </div>
+
+</div>
+
+<!-- ── Download / Rename Modal ───────────────────────────────────── -->
+<div class="modal-overlay" id="downloadModal" style="display: none;">
+    <div class="modal-box">
+        <div class="modal-title">
+            <i class="fas fa-file-archive" style="color: #1a7f37;"></i> Download ZIP Archive
+        </div>
+        <div class="modal-subtitle">Rename the file if needed, then click Download.</div>
+        <input type="text" class="modal-input" id="zipFilenameInput" placeholder="sdl_archive.zip">
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" id="modalCancelBtn">Cancel</button>
+            <button class="modal-btn-primary" id="modalDownloadBtn">
+                <i class="fas fa-download"></i> Download
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // ── Element references ──────────────────────────────────────
+    const linksInput       = document.getElementById('linksInput');
+    const workersInput     = document.getElementById('workersInput');
+    const startPipelineBtn = document.getElementById('startPipelineBtn');
+    const stopPipelineBtn  = document.getElementById('stopPipelineBtn');
+    const consoleOutput    = document.getElementById('consoleOutput');
+    const clearConsoleBtn  = document.getElementById('clearConsoleBtn');
+    const statusBadge      = document.getElementById('statusBadge');
+    const downloadZipBtn   = document.getElementById('downloadZipBtn');
+    const showFullLogsBtn  = document.getElementById('showFullLogsBtn');
+    const zipTasksPanel    = document.getElementById('zipTasksPanel');
+    const zipTasksList     = document.getElementById('zipTasksList');
+    const downloadModal    = document.getElementById('downloadModal');
+    const zipFilenameInput = document.getElementById('zipFilenameInput');
+    const modalDownloadBtn = document.getElementById('modalDownloadBtn');
+    const modalCancelBtn   = document.getElementById('modalCancelBtn');
+    const modeHint         = document.getElementById('modeHint');
+    
+    const pipelineProgressContainer = document.getElementById('pipelineProgressContainer');
+    const pipelineProgressBar       = document.getElementById('pipelineProgressBar');
+    const pipelineProgressText      = document.getElementById('pipelineProgressText');
+
+    // ── State ───────────────────────────────────────────────────
+    let currentTaskId       = null;
+    let currentOutputMode   = 'upload';
+    let currentTaskCreatedAt = '';
+    let logInterval         = null;
+    let lastLogIndex        = 0;
+    let pendingDownloadTaskId = null;
+    let lastWasCR           = false;
+    let showFullLogs        = false;
+
+    // ── Output mode toggle ──────────────────────────────────────
+    document.querySelectorAll('input[name="outputMode"]').forEach(radio => {
+        radio.addEventListener('change', e => {
+            document.querySelectorAll('.mode-option').forEach(l => l.classList.remove('active'));
+            e.target.closest('.mode-option').classList.add('active');
+            const statusRow = document.getElementById('pipelineStatusRow');
+            if (e.target.value === 'zip') {
+                modeHint.innerHTML = 'Processed books will be staged for ZIP download — not auto-uploaded.';
+                modeHint.style.color = '#aaa';
+                statusRow.style.display = 'none';
+            } else {
+                modeHint.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <strong>Warning:</strong> Books will be auto-uploaded to the library with the selected publish status.';
+                modeHint.style.color = 'var(--danger-color)';
+                statusRow.style.display = 'flex';
+            }
+        });
+    });
+
+    document.querySelectorAll('input[name="pipelineStatus"]').forEach(radio => {
+        radio.addEventListener('change', e => {
+            document.querySelectorAll('#pipelineStatusRow .mode-option').forEach(l => l.classList.remove('active'));
+            e.target.closest('.mode-option').classList.add('active');
+        });
+    });
+
+    function getOutputMode() {
+        return document.querySelector('input[name="outputMode"]:checked').value;
+    }
+
+    // ── Console append ──────────────────────────────────────────
+    function appendToConsole(text) {
+        if (!text) return;
+
+        const isCR    = text.startsWith('\r');
+        const cleanText = isCR ? text.substring(1) : text;
+
+        if (isCR && lastWasCR && consoleOutput.lastElementChild) {
+            consoleOutput.removeChild(consoleOutput.lastElementChild);
+        }
+
+        const span = document.createElement('span');
+        const low  = cleanText.toLowerCase();
+        const hasFailedCount = /([1-9][0-9]*)\s+failed/.test(low);
+
+        if (cleanText.includes('[ERR]') || cleanText.includes('ERROR') || hasFailedCount) {
+            span.className = 'log-err';
+        } else if (cleanText.includes('[OK]') || cleanText.includes('✓') ||
+                   cleanText.includes('Success') ||
+                   (low.includes('total') && low.includes('0 failed'))) {
+            span.className = 'log-success';
+        } else if (cleanText.includes('[INFO]') || cleanText.includes('Starting')) {
+            span.className = 'log-info';
+        } else if (cleanText.includes('⚠') || cleanText.includes('[WARN]') ||
+                   cleanText.includes('WARN')) {
+            span.className = 'log-warn';
+        }
+
+        span.textContent = cleanText;
+        consoleOutput.appendChild(span);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        lastWasCR = isCR;
+
+        // Limit the number of console lines to prevent DOM bloat (e.g. max 1000 lines)
+        const maxLines = 1000;
+        while (consoleOutput.childElementCount > maxLines) {
+            consoleOutput.removeChild(consoleOutput.firstElementChild);
+        }
+    }
+
+    // ── Console batch append ─────────────────────────────────────
+    function appendBatchToConsole(logs) {
+        if (!logs || logs.length === 0) return;
+
+        const fragment = document.createDocumentFragment();
+
+        logs.forEach(text => {
+            if (!text) return;
+
+            const isCR    = text.startsWith('\r');
+            const cleanText = isCR ? text.substring(1) : text;
+
+            if (isCR && lastWasCR) {
+                if (fragment.lastElementChild) {
+                    fragment.removeChild(fragment.lastElementChild);
+                } else if (consoleOutput.lastElementChild) {
+                    consoleOutput.removeChild(consoleOutput.lastElementChild);
+                }
+            }
+
+            const span = document.createElement('span');
+            const low  = cleanText.toLowerCase();
+            const hasFailedCount = /([1-9][0-9]*)\s+failed/.test(low);
+
+            if (cleanText.includes('[ERR]') || cleanText.includes('ERROR') || hasFailedCount) {
+                span.className = 'log-err';
+            } else if (cleanText.includes('[OK]') || cleanText.includes('✓') ||
+                       cleanText.includes('Success') ||
+                       (low.includes('total') && low.includes('0 failed'))) {
+                span.className = 'log-success';
+            } else if (cleanText.includes('[INFO]') || cleanText.includes('Starting')) {
+                span.className = 'log-info';
+            } else if (cleanText.includes('⚠') || cleanText.includes('[WARN]') ||
+                       cleanText.includes('WARN')) {
+                span.className = 'log-warn';
+            }
+
+            span.textContent = cleanText;
+            fragment.appendChild(span);
+            lastWasCR = isCR;
+        });
+
+        consoleOutput.appendChild(fragment);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+
+        // Limit the number of console lines to prevent DOM bloat (e.g. max 1000 lines)
+        const maxLines = 1000;
+        while (consoleOutput.childElementCount > maxLines) {
+            consoleOutput.removeChild(consoleOutput.firstElementChild);
+        }
+    }
+
+    // ── Progress bar update ─────────────────────────────────────
+    function updateProgressBar(step) {
+        if (!step) return;
+        const match = step.match(/\[(\d+)\/(\d+)\]/);
+        if (match) {
+            const current = parseInt(match[1], 10);
+            const total = parseInt(match[2], 10);
+            if (total > 0) {
+                const visualPercent = Math.round((current / total) * 100);
+                pipelineProgressBar.style.width = `${visualPercent}%`;
+                pipelineProgressBar.style.background = 'var(--primary-color)';
+                pipelineProgressText.textContent = `${current} / ${total} Processing`;
+                pipelineProgressContainer.style.display = 'flex';
+            }
+        } else if (step === 'Checking for duplicates' || step === 'Idle') {
+            pipelineProgressBar.style.width = '0%';
+            pipelineProgressBar.style.background = 'var(--primary-color)';
+            pipelineProgressText.textContent = 'Initializing...';
+            pipelineProgressContainer.style.display = 'flex';
+        }
+    }
+
+    // ── Log polling ─────────────────────────────────────────────
+    async function pollLogs() {
+        if (!currentTaskId) return;
+        try {
+            let url = `/admin/api/pipeline/logs/${currentTaskId}?last=${lastLogIndex}&_t=${Date.now()}`;
+            if (!showFullLogs && lastLogIndex === 0) {
+                url += '&limit=100';
+            }
+            const res  = await fetch(url);
+            const data = await res.json();
+
+            if (data.current_step) {
+                updateProgressBar(data.current_step);
+            }
+
+            if (data.logs && data.logs.length > 0) {
+                if (lastLogIndex === 0 && !showFullLogs) {
+                    consoleOutput.innerHTML = '';
+                    appendToConsole(`[INFO] Showing latest 100 log lines. Click 'Show Full Logs' to view all.\n`);
+                } else if (lastLogIndex === 0 && showFullLogs) {
+                    consoleOutput.innerHTML = '';
+                }
+                appendBatchToConsole(data.logs);
+            }
+
+            if (data.total_count !== undefined && !showFullLogs && lastLogIndex === 0) {
+                lastLogIndex = data.total_count;
+            } else if (data.logs) {
+                lastLogIndex += data.logs.length;
+            }
+
+            if (currentTaskId && !showFullLogs) {
+                showFullLogsBtn.style.display = 'flex';
+            } else {
+                showFullLogsBtn.style.display = 'none';
+            }
+
+            if (data.done) {
+                stopPolling();
+                finishExecution(data.success, data.output_mode, data.staged_count || 0);
+                return; // Stop the polling cycle
+            }
+        } catch (err) {
+            console.error('Poll error:', err);
+        }
+
+        // Schedule next poll only if we haven't been stopped
+        if (logInterval !== null) {
+            logInterval = setTimeout(pollLogs, 500);
+        }
+    }
+
+    function startPolling() {
+        statusBadge.textContent = 'RUNNING';
+        statusBadge.className   = 'status-badge status-running';
+        if (logInterval) clearTimeout(logInterval);
+        logInterval = setTimeout(pollLogs, 500);
+    }
+
+    function stopPolling() {
+        statusBadge.textContent = 'IDLE';
+        statusBadge.className   = 'status-badge status-idle';
+        if (logInterval !== null) { 
+            clearTimeout(logInterval); 
+            logInterval = null; 
+        }
+    }
+
+    // ── Finish execution UI ─────────────────────────────────────
+    function finishExecution(success, outputMode, stagedCount) {
+        startPipelineBtn.style.display = 'flex';
+        stopPipelineBtn.style.display  = 'none';
+
+        if (success && outputMode === 'zip' && stagedCount > 0) {
+            appendToConsole(`\n\n📦 ${stagedCount} BOOK(S) STAGED — Click 'Download ZIP' above!\n`);
+            downloadZipBtn.style.display = 'flex';
+            pipelineProgressBar.style.width = '100%';
+            pipelineProgressText.textContent = 'Completed';
+        } else if (success) {
+            appendToConsole('\n\n✨ PIPELINE COMPLETED SUCCESSFULLY! ✨\n');
+            downloadZipBtn.style.display = 'none';
+            pipelineProgressBar.style.width = '100%';
+            pipelineProgressText.textContent = 'Completed';
+        } else {
+            appendToConsole('\n\n❌ PIPELINE STOPPED WITH ERRORS. ❌\n');
+            downloadZipBtn.style.display = 'none';
+            pipelineProgressBar.style.background = '#ff7b72'; // error color
+            pipelineProgressText.textContent = 'Failed';
+        }
+
+        // Refresh the persistent ZIP queue
+        loadZipTasks();
+    }
+
+    // ── Reconnect on page load ──────────────────────────────────
+    async function checkActiveTask() {
+        try {
+            const res  = await fetch(`/admin/api/pipeline/active?_t=${Date.now()}`);
+            const data = await res.json();
+            if (data.success && data.task_id) {
+                currentTaskId        = data.task_id;
+                currentOutputMode    = data.output_mode   || 'upload';
+                currentTaskCreatedAt = data.created_at    || '';
+
+                if (data.current_step) {
+                    updateProgressBar(data.current_step);
+                }
+
+                if (data.done) {
+                    appendToConsole(`[INFO] Loading results for last task: ${currentTaskId}\n`);
+                    await pollLogs();
+                } else {
+                    startPipelineBtn.style.display = 'none';
+                    stopPipelineBtn.style.display  = 'flex';
+                    appendToConsole(`[INFO] Reconnected to active task: ${currentTaskId}\n`);
+                    startPolling();
+                }
+            }
+        } catch (err) {
+            console.error('checkActiveTask error:', err);
+        }
+    }
+
+    // ── ZIP tasks history panel ─────────────────────────────────
+    async function loadZipTasks() {
+        try {
+            const res  = await fetch(`/admin/api/pipeline/zip_tasks?_t=${Date.now()}`);
+            const data = await res.json();
+
+            if (data.tasks && data.tasks.length > 0) {
+                zipTasksPanel.style.display = 'block';
+                zipTasksList.innerHTML = '';
+
+                data.tasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = 'zip-task-card';
+                    card.id = `zip-card-${task.task_id}`;
+
+                    let statusHtml;
+                    if (!task.done) {
+                        statusHtml = `<span class="zip-running-badge">
+                            <i class="fas fa-spinner fa-spin"></i> Running…</span>`;
+                    } else if (task.success && task.staged_count > 0) {
+                        statusHtml = `<span style="color:#1a7f37;font-size:11px;">
+                            <i class="fas fa-check-circle"></i> ${task.staged_count} book(s) ready</span>`;
+                    } else {
+                        statusHtml = `<span style="color:var(--danger-color);font-size:11px;">
+                            <i class="fas fa-times-circle"></i> No books available</span>`;
+                    }
+
+                    // Display books list inside the task card
+                    let booksListHtml = '';
+                    if (task.books && task.books.length > 0) {
+                        booksListHtml = `<div class="zip-task-books" style="margin-top: 5px; font-size: 11px; color: var(--text-muted);">
+                            <strong>Books:</strong> ${task.books.join(', ')}
+                        </div>`;
+                    }
+
+                    const canDl = task.done && task.success && task.staged_count > 0;
+
+                    card.innerHTML = `
+                        <div class="zip-task-info">
+                            <div class="zip-task-name">
+                                <i class="fas fa-archive" style="color:#1a7f37;"></i>
+                                Task <code style="font-size:12px;">${task.task_id}</code>
+                            </div>
+                            <div class="zip-task-meta">
+                                Started: ${task.created_at} &nbsp;|&nbsp; ${statusHtml}
+                            </div>
+                            ${booksListHtml}
+                        </div>
+                        <div class="zip-task-actions">
+                            <button class="btn-zip-dl"
+                                onclick="openDownloadModal('${task.task_id}','${task.default_filename}')"
+                                ${canDl ? '' : 'disabled'}>
+                                <i class="fas fa-download"></i> Download ZIP
+                            </button>
+                            <button class="btn-zip-clear"
+                                onclick="clearZipTask('${task.task_id}', this)"
+                                ${task.done ? '' : 'disabled'}>
+                                <i class="fas fa-trash-alt"></i> Clear
+                            </button>
+                        </div>`;
+                    zipTasksList.appendChild(card);
+                });
+            } else {
+                zipTasksPanel.style.display = 'none';
+            }
+        } catch (err) {
+            console.error('loadZipTasks error:', err);
+        }
+    }
+
+    // ── Modal helpers (global so onclick= handlers can call them) ─
+    window.openDownloadModal = function(taskId, defaultName) {
+        pendingDownloadTaskId   = taskId;
+        zipFilenameInput.value  = (defaultName || 'sdl_archive') +
+                                   (defaultName && defaultName.endsWith('.zip') ? '' : '.zip');
+        downloadModal.style.display = 'flex';
+        setTimeout(() => {
+            // Select the name part only (not .zip extension)
+            const val = zipFilenameInput.value;
+            const dot = val.lastIndexOf('.');
+            zipFilenameInput.setSelectionRange(0, dot > 0 ? dot : val.length);
+            zipFilenameInput.focus();
+        }, 60);
+    };
+
+    window.clearZipTask = async function(taskId, btn) {
+        if (!confirm('Clear this ZIP task and permanently delete all staged files?\nThis cannot be undone.')) return;
+        btn.disabled = true;
+        try {
+            const res  = await fetch(`/admin/api/pipeline/clear/${taskId}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                // Hide console download button if this was the current task
+                if (taskId === currentTaskId) downloadZipBtn.style.display = 'none';
+                loadZipTasks();
+            } else {
+                alert('Error: ' + data.error);
+                btn.disabled = false;
+            }
+        } catch (err) {
+            alert('Network error: ' + err.message);
+            btn.disabled = false;
+        }
+    };
+
+    function closeModal() {
+        downloadModal.style.display  = 'none';
+        pendingDownloadTaskId        = null;
+    }
+
+    function doDownload() {
+        if (!pendingDownloadTaskId) return;
+        let fn = zipFilenameInput.value.trim() || 'sdl_archive';
+        if (!fn.toLowerCase().endsWith('.zip')) fn += '.zip';
+        window.location.href =
+            `/admin/api/pipeline/download/${pendingDownloadTaskId}?filename=${encodeURIComponent(fn)}`;
+        closeModal();
+    }
+
+    modalCancelBtn.addEventListener('click', closeModal);
+    modalDownloadBtn.addEventListener('click', doDownload);
+    downloadModal.addEventListener('click', e => { if (e.target === downloadModal) closeModal(); });
+    zipFilenameInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter')  doDownload();
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ── Console "Download ZIP" button (current task) ────────────
+    downloadZipBtn.addEventListener('click', () => {
+        if (!currentTaskId) return;
+        const defName = currentTaskCreatedAt
+            ? `sdl_${currentTaskCreatedAt}`
+            : ('sdl_' + new Date().toISOString().slice(0, 19).replace(/[-T:]/g, ''));
+        openDownloadModal(currentTaskId, defName);
+    });
+
+    // ── Start pipeline ──────────────────────────────────────────
+    startPipelineBtn.addEventListener('click', async () => {
+        stopPolling(); // Ensure any existing rogue timer is killed before starting
+        
+        const links = linksInput.value.trim();
+        if (!links) { alert('Please enter at least one Archive.org link.'); return; }
+
+        const outputMode = getOutputMode();
+        currentOutputMode = outputMode;
+
+        startPipelineBtn.style.display = 'none';
+        stopPipelineBtn.style.display  = 'flex';
+        downloadZipBtn.style.display   = 'none';
+        showFullLogsBtn.style.display  = 'none';
+        consoleOutput.innerHTML        = '';
+        lastLogIndex                   = 0;
+        lastWasCR                      = false;
+        showFullLogs                   = false;
+        
+        pipelineProgressBar.style.width = '0%';
+        pipelineProgressBar.style.background = 'var(--primary-color)';
+        pipelineProgressText.textContent = 'Starting...';
+        pipelineProgressContainer.style.display = 'flex';
+
+        const linkCount = links.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length;
+        appendToConsole(
+            `[INFO] Initializing Pipeline — ${linkCount} link(s) | ` +
+            `Mode: ${outputMode === 'zip' ? 'ZIP Download' : 'Auto Upload'}\n`
+        );
+
+        try {
+            const status = document.querySelector('input[name="pipelineStatus"]:checked').value;
+            const res = await fetch('/admin/api/pipeline/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    links,
+                    lang: 'sa',
+                    workers: parseInt(workersInput.value) || 5,
+                    output_mode: outputMode,
+                    status: status
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                currentTaskId        = data.task_id;
+                currentTaskCreatedAt = data.created_at || '';
+                startPolling();
+            } else {
+                appendToConsole(`[ERR] Failed to start: ${data.error}\n`);
+                finishExecution(false, outputMode, 0);
+            }
+        } catch (err) {
+            appendToConsole(`[ERR] Network error: ${err.message}\n`);
+            finishExecution(false, outputMode, 0);
+        }
+    });
+
+    // ── Stop pipeline ───────────────────────────────────────────
+    stopPipelineBtn.addEventListener('click', async () => {
+        if (!currentTaskId) return;
+        if (!confirm('Abort the current process?')) return;
+        try {
+            await fetch(`/admin/api/pipeline/stop/${currentTaskId}`, { method: 'POST' });
+            appendToConsole('\n[INFO] Termination signal sent.\n');
+        } catch (err) {
+            console.error('Stop error:', err);
+        }
+    });
+
+    // ── Show full logs ──────────────────────────────────────────
+    showFullLogsBtn.addEventListener('click', () => {
+        if (!currentTaskId) return;
+        showFullLogs = true;
+        showFullLogsBtn.style.display = 'none';
+        consoleOutput.innerHTML = '<span style="opacity:0.4;">// Loading full logs...</span>\n';
+        lastLogIndex = 0;
+        lastWasCR = false;
+        pollLogs();
+    });
+
+    // ── Clear console ───────────────────────────────────────────
+    clearConsoleBtn.addEventListener('click', () => {
+        consoleOutput.innerHTML = '<span style="opacity:0.4;">// Console cleared.</span>\n';
+        lastWasCR = false;
+    });
+
+    // ── Initialize ──────────────────────────────────────────────
+    checkActiveTask();
+    loadZipTasks();
+});
+</script>
+{% endblock %}

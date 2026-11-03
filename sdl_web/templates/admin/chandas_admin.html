@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function () {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chandas Admin — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            padding-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--t-text-secondary, #a1a1aa);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 18px;
+            border-radius: 8px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Outfit', sans-serif;
+            position: relative;
+        }
+        .tab-btn:hover {
+            color: var(--t-text-primary, #ffffff);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .tab-btn.active {
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.08);
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #38bdf8;
+            border-radius: 3px 3px 0 0;
+        }
+        .settings-card {
+            background: var(--t-bg-surface, #181825);
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 25px;
+        }
+        .settings-card:hover {
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+        }
+        .form-group label {
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            color: var(--t-text-secondary);
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+        .form-group input, .form-group textarea {
+            background: rgba(0, 0, 0, 0.12);
+            border: 1px solid var(--t-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: var(--t-text-primary);
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+            outline: none;
+        }
+        .btn {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--t-text-primary);
+            border: 1px solid var(--t-border);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header admin-header">
+        <h1><span class="emoji">⚙️</span> <span>Admin</span> Chandas</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub">🏠 Hub</a>
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_USERS' in session.get('admin_permissions', []) %}
+            <a href="/admin/users">Users</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/manage-admins">Admins</a>
+            {% endif %}
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container" style="max-width: 900px; padding-bottom: 80px;">
+        <h1 class="page-title">🎵 Chandas</h1>
+        <div class="page-subtitle">Sanskrit Meter Analyzer — Admin Configuration</div>
+
+        <!-- Section 1: About & Quick Access -->
+        <div class="settings-card">
+            <h3>ℹ️ About This App</h3>
+            <p style="color: var(--t-text-muted); font-size: 0.9rem; line-height: 1.7;">
+                <strong>Chandas</strong> is a Sanskrit prosody (meter/छन्दस्) analyzer that scans verses,
+                classifies each syllable as Laghu (˘) or Guru (¯), identifies the meter (छन्दस्),
+                and provides fuzzy correction suggestions for metrical inconsistencies.
+            </p>
+            <p style="color: var(--t-text-muted); font-size: 0.9rem; line-height: 1.7; margin-top: 10px;">
+                <strong>Key Features:</strong> Syllable-level Laghu-Guru analysis, verse-level meter detection
+                (Anushtubh, Vasantatilaka, Shardulavikridita, etc.), fuzzy edit-distance correction engine,
+                and sample verse presets for quick testing.
+            </p>
+            <div style="margin-top: 15px;">
+                <a href="/apps/chandas/" target="_blank" class="quick-link">🚀 Open Chandas App →</a>
+            </div>
+        </div>
+        <!-- Tabs Navigation -->
+        <div class="admin-tabs">
+            <button class="tab-btn active" id="tab-btn-samples" onclick="switchTab('samples')">📝 Sample Verses</button>
+            <button class="tab-btn" id="tab-btn-lakshana" onclick="switchTab('lakshana')">📖 Lakshana Presets</button>
+            <button class="tab-btn" id="tab-btn-meters" onclick="switchTab('meters')">📐 Meter Structures</button>
+        </div>
+
+        <!-- Tab Content: Samples -->
+        <div id="tab-content-samples" class="tab-section">
+            <div class="settings-card">
+                <h3>📝 Sample Verses Manager</h3>
+                <p style="color: var(--t-text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                    These sample verses are shown as "Quick Suggestions" in the Chandas app for users to test with.
+                    Edit them below to customize the presets. Changes will reflect on the frontend after a page refresh.
+                </p>
+
+                <div id="samples-container">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="btn-row" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="saveSamples()">
+                        💾 Save Sample Verses
+                    </button>
+                    <button class="btn btn-secondary" onclick="addSample()">
+                        ➕ Add New Sample
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Lakshana -->
+        <div id="tab-content-lakshana" class="tab-section" style="display: none;">
+            <div class="settings-card">
+                <h3>📖 Chandas Lakshana Manager</h3>
+                <p style="color: var(--t-text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                    Configure the definitional verses (Lakshana) for various meters. These will be available in the Chandas app as reference presets.
+                </p>
+
+                <div id="lakshana-container">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="btn-row" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="saveLakshana()">
+                        💾 Save Lakshana Presets
+                    </button>
+                    <button class="btn btn-secondary" onclick="addLakshana()">
+                        ➕ Add New Lakshana
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Meters -->
+        <div id="tab-content-meters" class="tab-section" style="display: none;">
+            <div class="settings-card">
+                <h3>📐 Meter Structure (Laghu-Guru) Manager</h3>
+                <p style="color: var(--t-text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                    Define or modify the underlying Laghu (ल / ˘) and Guru (ग / ¯) syllable sequences for meters. You can override built-in meters or create entirely new ones.
+                </p>
+
+                <div id="meters-container">
+                    <!-- Dynamically populated -->
+                </div>
+
+                <div class="btn-row" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="saveMeters()">
+                        💾 Save Meter Structures
+                    </button>
+                    <button class="btn btn-secondary" onclick="addMeter()">
+                        ➕ Add Custom Meter Structure
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h3>📖 Supported Meters</h3>
+            <p style="color: var(--t-text-muted); font-size: 0.9rem; margin-bottom: 15px;">
+                The Chandas engine recognizes all classical Sanskrit meters from the <em>Pingala Chhandas-Shastra</em>.
+                Meter detection works on individual lines (pāda) as well as complete verses (shloka).
+            </p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                <span class="status-badge success">Anushtubh (अनुष्टुप्)</span>
+                <span class="status-badge success">Indravajra (इन्द्रवज्रा)</span>
+                <span class="status-badge success">Upendravajra (उपेन्द्रवज्रा)</span>
+                <span class="status-badge success">Upajati (उपजाति)</span>
+                <span class="status-badge success">Vasantatilaka (वसन्ततिलका)</span>
+                <span class="status-badge success">Mandakranta (मन्दाक्रान्ता)</span>
+                <span class="status-badge success">Shardulavikridita (शार्दूलविक्रीडितम्)</span>
+                <span class="status-badge success">Sragdhara (स्रग्धरा)</span>
+                <span class="status-badge success">Malini (मालिनी)</span>
+                <span class="status-badge success">Shikharini (शिखरिणी)</span>
+                <span class="status-badge success">Rathoddhata (रथोद्धता)</span>
+                <span class="status-badge success">Arya (आर्या)</span>
+            </div>
+            <p style="color: var(--t-text-muted); font-size: 0.85rem; margin-top: 12px;">
+                + many more samavritta and ardhasamavritta meters supported by the underlying <code>chanda</code> engine.
+            </p>
+        </div>
+
+        <!-- Section 4: Engine Info -->
+        <div class="settings-card">
+            <h3>⚙️ Engine Details</h3>
+            <p style="color: var(--t-text-muted); font-size: 0.9rem; line-height: 1.7;">
+                The Chandas analyzer runs server-side using the <code>chanda</code> Python library with <code>verse_mode=True</code>
+                and <code>fuzzy=True</code> enabled. This mode preserves verse-level context for collective meter detection.
+            </p>
+            <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <span class="status-badge success">Engine: chanda (Python)</span>
+                <span class="status-badge warning">Fuzzy: Enabled</span>
+                <span class="status-badge info" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.25);">API: /apps/api/chandas/analyze</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast-msg"></div>
+
+    <script>
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.style.padding = '12px 24px';
+            toast.style.borderRadius = '10px';
+            toast.style.color = '#ffffff';
+            toast.style.fontWeight = '600';
+            toast.style.fontFamily = "'Outfit', sans-serif";
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.3)';
+            toast.style.zIndex = '9999';
+            toast.style.display = 'block';
+            toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            
+            if (type === 'error') {
+                toast.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+            } else if (type === 'info') {
+                toast.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+            } else {
+                toast.style.background = 'linear-gradient(135deg, #10b981, #047857)';
+            }
+            
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            
+            setTimeout(() => {
+                toast.style.transform = 'translateY(100px)';
+                toast.style.opacity = '0';
+            }, 3500);
+        }
+
+        // Default sample verses (mirrors what's hardcoded in the Chandas frontend)
+        const DEFAULT_SAMPLES = [
+            {
+                key: "anushtubh",
+                label: "Anushtubh (अनुष्टुप्)",
+                verse: "न कश्चित्कस्यचिन्मित्रं न कश्चित्कस्यचिद्रिपुः।\nव्यवहारेण मित्राणि जायन्ते रिपवस्तथा॥"
+            },
+            {
+                key: "upajati",
+                label: "Upajati (उपजाति)",
+                verse: "येषां न विद्या न तपो न दानं\nज्ञानं न शीलं न गुणो न धर्मः।\nते मृत्युलोके भुवि भारभूता\nमनुष्यरूपेण मृगाश्चरन्ति॥"
+            },
+            {
+                key: "vasantatilaka",
+                label: "Vasantatilaka (वसन्ततिलका)",
+                verse: "पुण्येषु कर्मसु रुचिं कुरुते मनुष्यः\nबुद्धिर्विपन्नमतिरप्यथ साधुवादी।\nमार्गं च गच्छति सुनिर्मलमेव लोके\nधर्मः सदा विजयते न च पापबुद्धिः॥"
+            },
+            {
+                key: "mandakranta",
+                label: "Mandakranta (मन्दाक्रान्ता)",
+                verse: "कश्चित्कान्ताविरहगुरुणा स्वाधिकारात्प्रमत्तः\nशापेनास्तङ्गमहिमा वर्षभोग्येण भर्तुः।\nयक्षश्चक्रे जनकतनयास्नानपुण्योदकेषु\nस्निग्धच्छायातरुषु वसतिं रामगिर्याश्रमेषु॥"
+            },
+            {
+                key: "shardula",
+                label: "Shardulavikridita (शार्दूलविक्रीडितम्)",
+                verse: "या सृष्टिः स्रष्टुराद्या वहति विधिहुतं या हविर्या च होत्री\nये द्वे कालं विधत्तः श्रुतिविषयगुणा या स्थिता व्याप्य विश्वम्।\nयामाहुः सर्वबीजप्रकृतिरिति यया प्राणिनः प्राणवन्तः\nप्रत्यक्षाभिः प्रपन्नस्तनुभिरवतु वस्ताभिरष्टाभिरीशः॥"
+            }
+        ];
+        let currentSamples = [];
+        let currentLakshana = [];
+        let currentMeters = [];
+
+        window.onload = () => {
+            loadSamples();
+            loadLakshana();
+            loadMeters();
+        };
+
+        async function loadSamples() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/samples');
+                const data = await res.json();
+                if (data.success && data.samples && data.samples.length > 0) {
+                    currentSamples = data.samples;
+                } else {
+                    currentSamples = JSON.parse(JSON.stringify(DEFAULT_SAMPLES));
+                }
+            } catch (e) {
+                currentSamples = JSON.parse(JSON.stringify(DEFAULT_SAMPLES));
+            }
+            renderSamples();
+        }
+
+        function renderSamples() {
+            const container = document.getElementById('samples-container');
+            container.innerHTML = '';
+
+            currentSamples.forEach((sample, idx) => {
+                const card = document.createElement('div');
+                card.style.cssText = 'border: 1px solid var(--t-border); border-radius: 12px; padding: 18px; margin-bottom: 15px; background: var(--t-bg-surface-hover);';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1; margin-right: 15px;">
+                            <label style="font-size: 0.8rem;">Sample Label</label>
+                            <input type="text" value="${sample.label}" onchange="currentSamples[${idx}].label = this.value" style="width: 100%;" placeholder="e.g., Anushtubh (अनुष्टुप्)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; width: 150px; margin-right: 10px;">
+                            <label style="font-size: 0.8rem;">Key</label>
+                            <input type="text" value="${sample.key}" onchange="currentSamples[${idx}].key = this.value" style="width: 100%;" placeholder="e.g., anushtubh">
+                        </div>
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; margin-top: 14px;" onclick="removeSample(${idx})">🗑️</button>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.8rem;">Verse (Devanagari)</label>
+                        <textarea rows="3" onchange="currentSamples[${idx}].verse = this.value" style="font-size: 0.95rem;">${sample.verse}</textarea>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addSample() {
+            currentSamples.push({
+                key: 'new_' + Date.now(),
+                label: 'New Sample',
+                verse: ''
+            });
+            renderSamples();
+            showToast('New sample added. Fill in the details and save.', 'info');
+        }
+
+        function removeSample(idx) {
+            if (confirm(`Delete sample "${currentSamples[idx].label}"?`)) {
+                currentSamples.splice(idx, 1);
+                renderSamples();
+                showToast('Sample removed. Click Save to persist.', 'info');
+            }
+        }
+
+        async function saveSamples() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/samples', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ samples: currentSamples })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Sample verses saved successfully!');
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to save'), 'error');
+                }
+            } catch (e) {
+                showToast('❌ Network error: ' + e.message, 'error');
+            }
+        }
+
+        async function loadLakshana() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/lakshana');
+                const data = await res.json();
+                if (data.success && data.lakshana && data.lakshana.length > 0) {
+                    currentLakshana = data.lakshana;
+                } else {
+                    currentLakshana = [];
+                }
+            } catch (e) {
+                currentLakshana = [];
+            }
+            renderLakshana();
+        }
+
+        function renderLakshana() {
+            const container = document.getElementById('lakshana-container');
+            container.innerHTML = '';
+
+            if (currentLakshana.length === 0) {
+                container.innerHTML = '<p style="color: var(--t-text-muted); font-size: 0.9rem;">No Lakshana presets configured yet. Add one below.</p>';
+            }
+
+            currentLakshana.forEach((lakshana, idx) => {
+                const card = document.createElement('div');
+                card.style.cssText = 'border: 1px solid var(--t-border); border-radius: 12px; padding: 18px; margin-bottom: 15px; background: var(--t-bg-surface-hover);';
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1; margin-right: 15px;">
+                            <label style="font-size: 0.8rem;">Lakshana Label</label>
+                            <input type="text" value="${lakshana.label || ''}" onchange="currentLakshana[${idx}].label = this.value" style="width: 100%;" placeholder="e.g., Anushtubh Lakshana">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0; width: 150px; margin-right: 10px;">
+                            <label style="font-size: 0.8rem;">Key</label>
+                            <input type="text" value="${lakshana.key || ''}" onchange="currentLakshana[${idx}].key = this.value" style="width: 100%;" placeholder="e.g., anushtubh_lakshana">
+                        </div>
+                        <button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem; margin-top: 14px;" onclick="removeLakshana(${idx})">🗑️</button>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 0.8rem;">Verse (Devanagari)</label>
+                        <textarea rows="3" onchange="currentLakshana[${idx}].verse = this.value" style="font-size: 0.95rem;">${lakshana.verse || ''}</textarea>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addLakshana() {
+            currentLakshana.push({
+                key: 'new_lakshana_' + Date.now(),
+                label: 'New Lakshana',
+                verse: ''
+            });
+            renderLakshana();
+            showToast('New Lakshana added. Fill in the details and save.', 'info');
+        }
+
+        function removeLakshana(idx) {
+            if (confirm(`Delete Lakshana "${currentLakshana[idx].label}"?`)) {
+                currentLakshana.splice(idx, 1);
+                renderLakshana();
+                showToast('Lakshana removed. Click Save to persist.', 'info');
+            }
+        }
+
+        async function saveLakshana() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/lakshana', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lakshana: currentLakshana })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Lakshana presets saved successfully!');
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to save'), 'error');
+                }
+            } catch (e) {
+                showToast('❌ Network error: ' + e.message, 'error');
+            }
+        }
+
+        async function loadMeters() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/meters');
+                const data = await res.json();
+                if (data.success && data.meters) {
+                    currentMeters = data.meters;
+                } else {
+                    currentMeters = [];
+                }
+            } catch (e) {
+                currentMeters = [];
+            }
+            renderMeters();
+        }
+
+        function renderMeters() {
+            const container = document.getElementById('meters-container');
+            container.innerHTML = '';
+
+            if (currentMeters.length === 0) {
+                container.innerHTML = '<p style="color: var(--t-text-muted); font-size: 0.9rem;">No meter structures loaded.</p>';
+                return;
+            }
+
+            currentMeters.forEach((meter, idx) => {
+                const card = document.createElement('div');
+                card.style.cssText = 'border: 1px solid var(--t-border); border-radius: 12px; padding: 18px; margin-bottom: 15px; background: var(--t-bg-surface-hover);';
+                
+                let patternHtml = '';
+                const pattern = meter.pattern || [];
+                
+                pattern.forEach((syl, sIdx) => {
+                    const isGuru = syl === 'ग';
+                    const activeBg = isGuru ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+                    const activeColor = isGuru ? '#ef4444' : '#10b981';
+                    const activeBorder = isGuru ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)';
+                    const symbol = isGuru ? 'ग (¯)' : 'ल (˘)';
+                    
+                    patternHtml += `
+                        <button type="button" 
+                                style="cursor: pointer; padding: 6px 12px; font-weight: 700; border: 1px solid ${activeBorder}; background: ${activeBg}; color: ${activeColor}; margin: 2px; border-radius: 6px;"
+                                onclick="toggleSyllable(${idx}, ${sIdx})">
+                            ${symbol}
+                        </button>
+                    `;
+                });
+
+                const isBuiltin = !!meter.builtin;
+                const badgeText = isBuiltin ? '<span class="status-badge info" style="font-size:0.75rem;">Built-in</span>' : '<span class="status-badge success" style="font-size:0.75rem;">Custom</span>';
+                
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h4 style="margin: 0; font-family:'Outfit', sans-serif; font-size:1.05rem; font-weight:600; color: var(--t-text-primary);">${meter.name || 'Unnamed Meter'}</h4>
+                            ${badgeText}
+                        </div>
+                        <div>
+                            ${!isBuiltin ? `<button class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;" onclick="removeMeter(${idx})">🗑️ Delete</button>` : `<span style="font-size: 0.85rem; color: var(--t-text-muted); font-style: italic;">Standard Meter</span>`}
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem; font-weight:600;">Meter Name</label>
+                            <input type="text" value="${meter.name || ''}" onchange="currentMeters[${idx}].name = this.value" style="width: 100%;" placeholder="e.g., Anushtubh (अनुष्टुभ्)">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem; font-weight:600;">Key (Identifier)</label>
+                            <input type="text" value="${meter.key || ''}" ${isBuiltin ? 'disabled' : ''} onchange="currentMeters[${idx}].key = this.value" style="width: 100%;" placeholder="e.g., custom_anushtubh">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem; font-weight:600;">Syllables count</label>
+                            <input type="number" value="${meter.syllables_per_pada || pattern.length}" onchange="updateSyllableCount(${idx}, this.value)" style="width: 100%;" min="1" max="100">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 0.8rem; font-weight:600;">Description</label>
+                            <input type="text" value="${meter.description || ''}" onchange="currentMeters[${idx}].description = this.value" style="width: 100%;" placeholder="e.g., 8 syllables per pada">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0; margin-top: 12px;">
+                        <label style="font-size: 0.85rem; font-weight:600; display: block; margin-bottom: 8px; color: var(--t-text-secondary);">Laghu-Guru Pattern (Click individual syllables to toggle ल / ग):</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 8px; border: 1px solid var(--t-border);">
+                            ${patternHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleSyllable(mIdx, sIdx) {
+            const meter = currentMeters[mIdx];
+            meter.pattern[sIdx] = meter.pattern[sIdx] === 'ग' ? 'ल' : 'ग';
+            renderMeters();
+        }
+
+        function updateSyllableCount(mIdx, newCountStr) {
+            const count = parseInt(newCountStr) || 0;
+            if (count < 1) return;
+            const meter = currentMeters[mIdx];
+            meter.syllables_per_pada = count;
+            
+            const currentPattern = meter.pattern || [];
+            if (currentPattern.length < count) {
+                while (meter.pattern.length < count) {
+                    meter.pattern.push('ल');
+                }
+            } else if (currentPattern.length > count) {
+                meter.pattern = meter.pattern.slice(0, count);
+            }
+            renderMeters();
+        }
+
+        function addMeter() {
+            currentMeters.push({
+                key: 'custom_' + Date.now(),
+                name: 'New Custom Meter',
+                padas: 4,
+                syllables_per_pada: 8,
+                pattern: ['ल', 'ल', 'ल', 'ल', 'ल', 'ल', 'ल', 'ल'],
+                description: 'Custom Laghu-Guru structure',
+                builtin: false
+            });
+            renderMeters();
+            showToast('New custom meter structure added. Modify its pattern and save.', 'info');
+        }
+
+        function removeMeter(idx) {
+            if (currentMeters[idx].builtin) return;
+            if (confirm(`Delete custom meter "${currentMeters[idx].name}"?`)) {
+                currentMeters.splice(idx, 1);
+                renderMeters();
+                showToast('Meter removed. Click Save to persist.', 'info');
+            }
+        }
+
+        async function saveMeters() {
+            try {
+                const res = await fetch('/apps/api/chandas/admin/meters', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ meters: currentMeters })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Meter structures saved successfully!');
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to save'), 'error');
+                }
+            } catch (e) {
+                showToast('❌ Network error: ' + e.message, 'error');
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-section').forEach(sec => {
+                sec.style.display = 'none';
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const targetSec = document.getElementById('tab-content-' + tabId);
+            if (targetSec) targetSec.style.display = 'block';
+            const targetBtn = document.getElementById('tab-btn-' + tabId);
+            if (targetBtn) targetBtn.classList.add('active');
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script>
+</body>
+
+</html>

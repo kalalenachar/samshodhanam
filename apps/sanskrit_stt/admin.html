@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="sa" data-theme="light">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <script>
+        window.location.href = '/admin/sanskrit-stt';
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Admin — Samshodhana Sanskrit STT</title>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=36">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --stt-accent: #818cf8;
+            --stt-accent-glow: rgba(129, 140, 248, 0.35);
+            --stt-card-border: rgba(129, 140, 248, 0.2);
+            --stt-success: #10b981;
+            --stt-danger: #ef4444;
+            --stt-warning: #f59e0b;
+        }
+
+        [data-theme="dark"] {
+            --stt-card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start, #0f172a) 0%, var(--t-bg-body-mid, #1e1b4b) 50%, var(--t-bg-body-end, #0f172a) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary, #f8fafc);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        header {
+            padding: 16px 32px;
+            background: var(--t-bg-header, rgba(15, 23, 42, 0.75));
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--stt-card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--t-text-primary, #fff);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px var(--stt-accent-glow);
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--stt-card-border);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--t-text-primary, #fff);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--stt-accent);
+            border-color: var(--stt-accent);
+            color: white;
+        }
+
+        /* Main Admin Layout */
+        main {
+            flex: 1;
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .hero-sub {
+            font-size: 1.05rem;
+            color: var(--t-text-secondary, #94a3b8);
+            font-weight: 500;
+        }
+
+        /* Metric Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.7));
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--stt-card-border);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.25s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .metric-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            background: rgba(129, 140, 248, 0.12);
+            color: var(--stt-accent);
+        }
+
+        .metric-data {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--t-text-secondary, #94a3b8);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-top: 2px;
+            color: var(--t-text-primary, #fff);
+        }
+
+        /* Navigation Tabs */
+        .admin-nav-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px;
+            border-radius: 14px;
+            gap: 6px;
+            border: 1px solid var(--stt-card-border);
+            overflow-x: auto;
+        }
+
+        .nav-tab-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--t-text-secondary, #94a3b8);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+            transition: all 0.25s ease;
+        }
+
+        .nav-tab-btn.active {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--stt-accent-glow);
+        }
+
+        /* Card Section */
+        .section-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.7));
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--stt-card-border);
+            border-radius: 20px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--stt-card-border);
+            padding-bottom: 14px;
+        }
+
+        /* Inputs & Form Controls */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--t-text-secondary, #cbd5e1);
+        }
+
+        .form-control {
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--stt-card-border);
+            color: var(--t-text-primary, #fff);
+            font-family: inherit;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--stt-accent);
+            box-shadow: 0 0 0 3px var(--stt-accent-glow);
+        }
+
+        .btn-primary {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 4px 14px var(--stt-accent-glow);
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Data Tables */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 14px;
+            border: 1px solid var(--stt-card-border);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 14px 18px;
+            font-weight: 700;
+            color: var(--t-text-secondary, #cbd5e1);
+            border-bottom: 1px solid var(--stt-card-border);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--stt-card-border);
+            color: var(--t-text-primary, #f8fafc);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .status-badge.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.revoked {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-sm-danger {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-sm-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <a href="/" class="brand-link">
+            <div class="brand-icon">🎙️</div>
+            <span>Samshodhana Mandiram</span>
+        </a>
+        <a href="/apps/sanskrit_stt/" class="back-btn">
+            <span>←</span> Back to Sanskrit STT App
+        </a>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Title -->
+        <div class="hero-banner">
+            <h1 class="hero-title">Telegram Bot &amp; STT Control Center</h1>
+            <p class="hero-sub">संस्कृत-वाक्-प्रतिलेखक प्रबन्धनम् — Admin Controls &amp; Access Management</p>
+        </div>
+
+        <!-- Metric Overview Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">🤖</div>
+                <div class="metric-data" style="width: 100%;">
+                    <span class="metric-label">Telegram Bot Status</span>
+                    <span class="metric-value" id="valBotToken" style="font-size: 1.1rem;">Checking...</span>
+                    <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+                        <button class="btn-primary" id="appCardBtnStart" onclick="controlAppBot('start')" style="padding: 3px 8px; font-size: 0.75rem;">▶️ Start</button>
+                        <button class="btn-sm-danger" id="appCardBtnStop" onclick="controlAppBot('stop')" style="padding: 3px 8px; font-size: 0.75rem; display: none;">🛑 Stop</button>
+                        <button class="btn-primary" id="appCardBtnRestart" onclick="controlAppBot('restart')" style="padding: 3px 8px; font-size: 0.75rem; display: none; background: #6366f1;">🔄 Restart</button>
+                    </div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🔑</div>
+                <div class="metric-data">
+                    <span class="metric-label">Active Access Codes</span>
+                    <span class="metric-value" id="valActiveCodes" style="color: #34d399;">0</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">👥</div>
+                <div class="metric-data">
+                    <span class="metric-label">Registered Telegram Users</span>
+                    <span class="metric-value" id="valTotalUsers" style="color: #f59e0b;">0</span>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🎙️</div>
+                <div class="metric-data">
+                    <span class="metric-label">Total Audio Transcribed</span>
+                    <span class="metric-value" id="valTotalAudio" style="color: #c084fc;">0 mins</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="admin-nav-tabs">
+            <button class="nav-tab-btn active" id="tabUsers" onclick="switchAdminTab('users')">
+                <span>👥</span> User &amp; Access Code Management
+            </button>
+            <button class="nav-tab-btn" id="tabLogs" onclick="switchAdminTab('logs')">
+                <span>📜</span> Transcription Audit Logs
+            </button>
+            <button class="nav-tab-btn" id="tabLangs" onclick="switchAdminTab('langs')">
+                <span>🌐</span> Language Controls &amp; Defaults
+            </button>
+            <button class="nav-tab-btn" id="tabConfig" onclick="switchAdminTab('config')">
+                <span>⚙️</span> Bot Credentials &amp; Settings
+            </button>
+        </div>
+
+        <!-- MERGED TAB: USER & ACCESS CODES -->
+        <div id="secUsers" class="section-card">
+            <div class="section-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <span>👥 User &amp; Access Code Control Center</span>
+                <button class="btn-primary" onclick="openAppSendMessageModal('broadcast', 'All Telegram Users')" style="padding: 8px 16px; font-size: 0.85rem; background: linear-gradient(135deg, #6366f1, #a855f7);">
+                    📢 Broadcast Message / File to All Users
+                </button>
+            </div>
+
+            <!-- Generator Bar -->
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; background: rgba(0,0,0,0.15); padding: 20px; border-radius: 14px; border: 1px solid var(--stt-card-border);">
+                <div class="input-group" style="flex: 2; min-width: 240px;">
+                    <label class="input-label">New Access Code String</label>
+                    <input type="text" id="inputNewCode" class="form-control" placeholder="e.g. GURUKUL2026, VedaScholars" style="text-transform: uppercase;">
+                </div>
+                <div class="input-group" style="flex: 1; min-width: 180px;">
+                    <label class="input-label">Daily Limit (Minutes)</label>
+                    <input type="number" id="inputMaxMins" class="form-control" value="100">
+                </div>
+                <button class="btn-primary" onclick="generateAccessCode()">
+                    <span>➕</span> Create Access Code
+                </button>
+            </div>
+
+            <!-- Merged Table -->
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Access Code &amp; User Info</th>
+                            <th>Status</th>
+                            <th>Daily Usage</th>
+                            <th>Total Audio Transcribed</th>
+                            <th>Total Requests</th>
+                            <th style="text-align: center; min-width: 220px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appUnifiedUsersTable">
+                        <tr><td colspan="6" style="padding: 24px; text-align: center; color: #888;">Loading users and access codes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: AUDIT LOGS -->
+        <div id="secLogs" class="section-card" style="display: none;">
+            <div class="section-title">
+                <span>📜</span> Live Audio Transcription Audit Logs
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User / Access Code</th>
+                            <th>Duration</th>
+                            <th>Chars</th>
+                            <th>Privacy Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="auditLogsTable">
+                        <tr><td colspan="5" style="padding: 24px; text-align: center; color: #888;">Loading transcription audit logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 4: LANGUAGE CONTROLS -->
+        <div id="secLangs" class="section-card" style="display: none;">
+            <div class="section-title">
+                <span>🌐</span> Language Controls &amp; System Defaults
+            </div>
+
+            <!-- Default Language Selector -->
+            <div style="background: rgba(0,0,0,0.15); padding: 20px; border-radius: 14px; border: 1px solid var(--stt-card-border);">
+                <h4 style="margin-bottom: 8px; color: #818cf8;">⭐ System Default Language</h4>
+                <p style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8); margin-bottom: 14px;">Select the default language pre-selected in the web panel and assigned to new Telegram users:</p>
+                <div style="display: flex; gap: 16px; align-items: center; max-width: 450px;">
+                    <select id="adminDefaultLangSelect" class="form-control" style="flex: 1;">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Enabled Languages Checkboxes Grid -->
+            <div style="background: rgba(0,0,0,0.15); padding: 20px; border-radius: 14px; border: 1px solid var(--stt-card-border);">
+                <h4 style="margin-bottom: 8px; color: #818cf8;">✅ Enabled Languages Grid</h4>
+                <p style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8); margin-bottom: 16px;">Check the languages you want to enable. Unchecked languages will be hidden and disabled from the web panel and Telegram bot:</p>
+                <div id="languageCheckboxesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <button class="btn-primary" onclick="saveLanguageConfig()">
+                    <span>💾</span> Save Language Controls
+                </button>
+            </div>
+
+            <!-- Output Script Controls & System Defaults -->
+            <div style="background: rgba(0,0,0,0.15); padding: 20px; border-radius: 14px; margin-top: 24px; border: 1px solid var(--stt-card-border);">
+                <h4 style="margin-bottom: 8px; color: #a855f7;">📜 Output Script Controls &amp; Defaults</h4>
+                <p style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8); margin-bottom: 14px;">Control which text output scripts (Devanagari, IAST, Tamil, Telugu, Kannada, Malayalam, ISO, SLP1) are enabled in Telegram bot and Web panel:</p>
+
+                <div style="margin-bottom: 16px; max-width: 450px;">
+                    <label class="input-label" style="margin-bottom: 6px; display: block; font-size: 0.85rem; color: #cbd5e1;">Default Output Script</label>
+                    <select id="adminDefaultScriptSelect" class="form-control">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <p style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8); margin-bottom: 12px;">Check the output scripts you want to enable. Unchecked scripts will be hidden and disabled:</p>
+                <div id="scriptCheckboxesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <button class="btn-primary" onclick="saveScriptConfig()" style="background: #a855f7;">
+                    <span>💾</span> Save Script Controls
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 5: CONFIGURATION -->
+        <div id="secConfig" class="section-card" style="display: none;">
+            <div class="section-title">
+                <span>⚙️</span> Telegram Bot Configuration &amp; Credentials
+            </div>
+            
+            <!-- Process Controller Control Box -->
+            <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 12px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.08); max-width: 800px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 1.05rem; color: #818cf8;">🤖 Telegram Bot Process Control</h4>
+                        <span style="font-size: 0.8rem; color: #94a3b8;">Manage real-time execution of python process <code>telegram_bot.py</code></span>
+                    </div>
+                    <span id="appCfgBotStatusBadge" style="padding: 5px 12px; border-radius: 16px; font-weight: bold; font-size: 0.85rem; background: #374151; color: #9ca3af;">Checking...</span>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px;">
+                    <button class="btn-primary" id="appBtnStartBot" onclick="controlAppBot('start')">▶️ Start Bot</button>
+                    <button class="btn-sm-danger" id="appBtnStopBot" onclick="controlAppBot('stop')">🛑 Stop Bot</button>
+                    <button class="btn-primary" id="appBtnRestartBot" onclick="controlAppBot('restart')" style="background: #6366f1;">🔄 Restart Bot</button>
+                    <button class="btn-primary" onclick="loadAppBotLogs()" style="background: #4b5563;">📜 View Logs</button>
+                </div>
+                <div id="appBotLogBox" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #aaa;">Bot Process Console Output (telegram_bot.log):</span>
+                        <button class="btn-primary" onclick="loadAppBotLogs()" style="padding: 2px 8px; font-size: 0.75rem; background: #374151;">🔄 Refresh Logs</button>
+                    </div>
+                    <pre id="appBotLogConsole" style="background: #0d1117; color: #38bdf8; padding: 12px; border-radius: 8px; font-size: 0.8rem; max-height: 220px; overflow-y: auto; white-space: pre-wrap; margin: 0; border: 1px solid #30363d; font-family: monospace;"></pre>
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px;">
+                <div class="input-group">
+                    <label class="input-label">Central Cloud STT API URL (SAMSHO_STT_API_URL)</label>
+                    <input type="text" id="inputSttApiUrl" class="form-control" placeholder="http://localhost:5001/api/v1/stt" value="http://localhost:5001/api/v1/stt">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Central Cloud STT API Key (SAMSHO_STT_API_KEY)</label>
+                    <input type="password" id="inputSttApiKey" class="form-control" placeholder="Optional Bearer API Key">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Telegram Bot Token (TELEGRAM_BOT_TOKEN)</label>
+                    <input type="text" id="inputBotToken" class="form-control" placeholder="Paste bot token from @BotFather (e.g. 123456789:ABCDefGh...)">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Admin Setup Secret (ADMIN_SETUP_SECRET)</label>
+                    <input type="text" id="inputSetupSecret" class="form-control" placeholder="Key for claiming admin via Telegram command /setup <secret>">
+                </div>
+                <div>
+                    <button class="btn-primary" onclick="saveCredentials()">
+                        <span>💾</span> Save Credentials &amp; Update Bot
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gemini AI Clean Configuration Box -->
+            <div style="background: rgba(0,0,0,0.25); padding: 18px; border-radius: 12px; margin-top: 24px; border: 1px solid rgba(255,255,255,0.08); max-width: 800px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 1.05rem; color: #a855f7;">✨ STT AI Clean (Gemini Proofreader) Settings</h4>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 16px;">Configure the system prompt and Gemini model used to proofread and clean raw Speech-to-Text outputs.</p>
+
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label class="input-label">Gemini Model</label>
+                    <input type="text" id="inputAiCleanModel" class="form-control" value="models/gemini-3.5-flash" placeholder="models/gemini-3.5-flash">
+                </div>
+
+                <div class="input-group" style="margin-bottom: 16px;">
+                    <label class="input-label">Strict STT Proofreading System Prompt</label>
+                    <textarea id="inputAiCleanPrompt" class="form-control" rows="8" style="font-family: monospace; font-size: 0.85rem; line-height: 1.5; background: rgba(0,0,0,0.3); border: 1px solid var(--t-card-border, rgba(255,255,255,0.1)); color: #fff; border-radius: 8px; padding: 10px; width: 100%; box-sizing: border-box;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" onclick="saveAiCleanConfig()" style="background: #a855f7;">
+                        <span>💾</span> Save AI Clean Settings
+                    </button>
+                    <button class="btn-primary" onclick="resetAiCleanPromptDefault()" style="background: #4b5563;">
+                        <span>🔄</span> Reset to Default
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Admin Logic -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+        });
+
+        function switchAdminTab(tab) {
+            document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('secCodes').style.display = 'none';
+            document.getElementById('secUsers').style.display = 'none';
+            document.getElementById('secLogs').style.display = 'none';
+            document.getElementById('secLangs').style.display = 'none';
+            document.getElementById('secConfig').style.display = 'none';
+
+            if (tab === 'codes') {
+                document.getElementById('tabCodes').classList.add('active');
+                document.getElementById('secCodes').style.display = 'flex';
+                fetchAccessCodes();
+            } else if (tab === 'users') {
+                document.getElementById('tabUsers').classList.add('active');
+                document.getElementById('secUsers').style.display = 'flex';
+                fetchTelegramUsers();
+            } else if (tab === 'logs') {
+                document.getElementById('tabLogs').classList.add('active');
+                document.getElementById('secLogs').style.display = 'flex';
+                fetchAuditLogs();
+            } else if (tab === 'langs') {
+                document.getElementById('tabLangs').classList.add('active');
+                document.getElementById('secLangs').style.display = 'flex';
+                fetchLanguageSettings();
+                fetchScriptSettings();
+            } else if (tab === 'config') {
+                document.getElementById('tabConfig').classList.add('active');
+                document.getElementById('secConfig').style.display = 'flex';
+                loadAiCleanConfig();
+            }
+        }
+
+        function updateAppBotStatusUI(bs) {
+            if (!bs) return;
+            const statusEl = document.getElementById('valBotToken');
+            const cfgBadge = document.getElementById('appCfgBotStatusBadge');
+            const btnStart = document.getElementById('appCardBtnStart');
+            const btnStop = document.getElementById('appCardBtnStop');
+            const btnRestart = document.getElementById('appCardBtnRestart');
+
+            if (statusEl) {
+                statusEl.innerText = bs.status_label || 'Checking...';
+                statusEl.style.color = bs.status_color || '#fff';
+            }
+            if (cfgBadge) {
+                cfgBadge.innerText = bs.status_label || 'Checking...';
+                cfgBadge.style.background = (bs.status_color || '#374151') + '33';
+                cfgBadge.style.color = bs.status_color || '#fff';
+                cfgBadge.style.border = '1px solid ' + (bs.status_color || '#fff');
+            }
+
+            if (bs.is_running) {
+                if (btnStart) btnStart.style.display = 'none';
+                if (btnStop) btnStop.style.display = 'inline-block';
+                if (btnRestart) btnRestart.style.display = 'inline-block';
+            } else {
+                if (btnStart) btnStart.style.display = 'inline-block';
+                if (btnStop) btnStop.style.display = 'none';
+                if (btnRestart) btnRestart.style.display = 'none';
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const res = await fetch('/apps/api/stt/bot/overview');
+                const data = await res.json();
+                if (data.success) {
+                    if (data.bot_status) {
+                        updateAppBotStatusUI(data.bot_status);
+                    } else {
+                        const tokenElem = document.getElementById('valBotToken');
+                        tokenElem.textContent = data.has_token ? `✅ ${data.masked_token}` : '❌ Not Set';
+                        tokenElem.style.color = data.has_token ? '#34d399' : '#ef4444';
+                    }
+
+                    document.getElementById('valActiveCodes').textContent = data.active_codes;
+                    document.getElementById('valTotalUsers').textContent = data.total_users;
+                    document.getElementById('valTotalAudio').textContent = `${data.total_audio_min} mins`;
+
+                    if (data.setup_secret) {
+                        document.getElementById('inputSetupSecret').value = data.setup_secret;
+                    }
+                    if (data.stt_api_url) {
+                        document.getElementById('inputSttApiUrl').value = data.stt_api_url;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
+            fetchAccessCodes();
+        }
+
+        async function controlAppBot(action) {
+            try {
+                const res = await fetch('/apps/api/stt/bot/action', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ action: action })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.bot_status) updateAppBotStatusUI(data.bot_status);
+                    alert(data.message || "Bot action executed.");
+                } else {
+                    alert("Bot Action Failed: " + (data.error || data.message || "Unknown error"));
+                }
+            } catch (e) {
+                alert("Error sending bot action: " + e.message);
+            }
+        }
+
+        async function loadAppBotLogs() {
+            try {
+                const box = document.getElementById('appBotLogBox');
+                const consoleEl = document.getElementById('appBotLogConsole');
+                box.style.display = 'block';
+                consoleEl.innerText = "Loading logs...";
+                const res = await fetch('/apps/api/stt/bot/logs?lines=60');
+                const data = await res.json();
+                if (data.success) {
+                    consoleEl.innerText = data.logs || "No logs recorded yet.";
+                    consoleEl.scrollTop = consoleEl.scrollHeight;
+                } else {
+                    consoleEl.innerText = "Error loading logs: " + (data.error || 'Unknown error');
+                }
+            } catch (e) {
+                console.error("Failed to load bot logs", e);
+            }
+        }
+
+        async function fetchAccessCodes() {
+            const tbody = document.getElementById('accessCodesTable');
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes');
+                const data = await res.json();
+                if (data.success && data.codes && data.codes.length > 0) {
+                    tbody.innerHTML = data.codes.map(c => {
+                        const badge = c.status === 'active' 
+                            ? `<span class="status-badge active">Active</span>`
+                            : `<span class="status-badge revoked">Revoked</span>`;
+                        const usedMins = Math.ceil((c.daily_used_seconds || 0) / 60);
+                        const maxMins = Math.ceil((c.daily_max_seconds || 6000) / 60);
+                        const totalMins = Math.ceil((c.total_used_seconds || 0) / 60);
+
+                        const actionBtn = c.status === 'active'
+                            ? `<button class="btn-sm-danger" onclick="revokeCode('${c.code}')">⛔ Revoke</button>`
+                            : `<span style="color: #888;">Disabled</span>`;
+
+                        return `
+                            <tr>
+                                <td style="font-family: monospace; font-weight: 700; color: #818cf8; font-size: 1rem;">${c.code}</td>
+                                <td>${badge}</td>
+                                <td>${usedMins} / ${maxMins} mins</td>
+                                <td>${totalMins} mins</td>
+                                <td>${c.request_count || 0}</td>
+                                <td>${actionBtn}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #888;">No access codes generated yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function generateAccessCode() {
+            const code = document.getElementById('inputNewCode').value.trim().toUpperCase();
+            const max_minutes = parseFloat(document.getElementById('inputMaxMins').value || 100);
+
+            if (!code) {
+                alert("Please enter an Access Code string (e.g. GURUKUL2026)");
+                return;
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, max_minutes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('inputNewCode').value = "";
+                    loadDashboardData();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error generating access code.");
+            }
+        }
+
+        async function revokeCode(code) {
+            if (!confirm(`Are you sure you want to revoke Access Code '${code}'?`)) return;
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes/revoke', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadDashboardData();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchTelegramUsers() {
+            const tbody = document.getElementById('telegramUsersTable');
+            try {
+                const res = await fetch('/apps/api/stt/bot/users');
+                const data = await res.json();
+                if (data.success && data.users && data.users.length > 0) {
+                    tbody.innerHTML = data.users.map(u => `
+                        <tr>
+                            <td style="font-weight: 600;">${u.first_name || 'User'} <span style="color:#888; font-weight:normal;">(@${u.username || u.telegram_id})</span></td>
+                            <td style="color: #888;">${u.telegram_id}</td>
+                            <td style="font-family: monospace; color: #818cf8; font-weight: 700;">${u.access_code}</td>
+                            <td>${u.preferred_language || 'sa-IN'}</td>
+                            <td>${Math.ceil((u.total_used_seconds || 0) / 60)} mins</td>
+                            <td>${u.request_count || 0}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #888;">No registered Telegram users yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchAuditLogs() {
+            const tbody = document.getElementById('auditLogsTable');
+            try {
+                const res = await fetch('/apps/api/stt/bot/logs');
+                const data = await res.json();
+                if (data.success && data.logs && data.logs.length > 0) {
+                    tbody.innerHTML = data.logs.map(l => {
+                        const dateStr = new Date(l.timestamp).toLocaleString();
+                        return `
+                            <tr>
+                                <td style="color: #888;">${dateStr}</td>
+                                <td>User #${l.telegram_id} <span style="font-family: monospace; color: #818cf8;">(${l.access_code})</span></td>
+                                <td style="font-weight: 700; color: #34d399;">${(l.duration_sec || 0).toFixed(1)}s</td>
+                                <td>${l.char_count || 0}</td>
+                                <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Noto Sans Devanagari', sans-serif;"><span style='color: #94a3b8;'>🔒 Redacted for privacy</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #888;">No transcription audit logs recorded yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function saveCredentials() {
+            const token = document.getElementById('inputBotToken').value.trim();
+            const secret = document.getElementById('inputSetupSecret').value.trim();
+            const stt_api_url = document.getElementById('inputSttApiUrl').value.trim();
+            const stt_api_key = document.getElementById('inputSttApiKey').value.trim();
+            try {
+                const res = await fetch('/apps/api/stt/bot/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, secret, stt_api_url, stt_api_key })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("STT & Bot Credentials Saved Successfully!");
+                    document.getElementById('inputBotToken').value = "";
+                    loadDashboardData();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection error saving credentials.");
+            }
+        }
+
+        let cachedAllLangs = {};
+
+        function updateDefaultLangDropdown(currentSelectedCode) {
+            const defSelect = document.getElementById('adminDefaultLangSelect');
+            const checkedBoxes = document.querySelectorAll('.lang-checkbox:checked');
+            const enabledCodes = Array.from(checkedBoxes).map(cb => cb.value);
+            
+            const prevValue = currentSelectedCode || defSelect.value;
+            
+            defSelect.innerHTML = enabledCodes.map(code => {
+                const name = cachedAllLangs[code] || code;
+                const sel = code === prevValue ? 'selected' : '';
+                return `<option value="${code}" ${sel}>${name}</option>`;
+            }).join('');
+        }
+
+        async function fetchLanguageSettings() {
+            try {
+                const res = await fetch('/apps/api/stt/languages');
+                const data = await res.json();
+                if (data.success) {
+                    cachedAllLangs = data.all_languages || {};
+                    const enabledLangs = data.enabled || [];
+                    const defaultLang = data.default || 'sa';
+
+                    // Populate Checkboxes Grid
+                    const grid = document.getElementById('languageCheckboxesGrid');
+                    grid.innerHTML = Object.entries(cachedAllLangs).map(([code, name]) => {
+                        const checked = enabledLangs.includes(code) ? 'checked' : '';
+                        return `
+                            <label style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px solid var(--stt-card-border); cursor: pointer;">
+                                <input type="checkbox" class="lang-checkbox" value="${code}" ${checked} onchange="updateDefaultLangDropdown()" style="width: 18px; height: 18px; accent-color: var(--stt-accent);">
+                                <span style="font-weight: 600; font-size: 0.9rem;">${name}</span>
+                            </label>
+                        `;
+                    }).join('');
+
+                    updateDefaultLangDropdown(defaultLang);
+                }
+            } catch (err) {
+                console.error("Error fetching language settings:", err);
+            }
+        }
+
+        async function saveLanguageConfig() {
+            const default_code = document.getElementById('adminDefaultLangSelect').value;
+            const checkboxes = document.querySelectorAll('.lang-checkbox:checked');
+            const enabled_codes = Array.from(checkboxes).map(cb => cb.value);
+
+            if (enabled_codes.length === 0) {
+                alert("At least one language must be enabled.");
+                return;
+            }
+
+            if (!default_code || !enabled_codes.includes(default_code)) {
+                alert("The default language must be selected from the enabled languages.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/languages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ default: default_code, enabled: enabled_codes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Language settings saved successfully!");
+                    fetchLanguageSettings();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error saving language settings.");
+            }
+        }
+
+        async function loadAiCleanConfig() {
+            try {
+                const res = await fetch('/apps/api/stt/admin/ai_clean_config');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('inputAiCleanPrompt').value = data.prompt || data.default_prompt || '';
+                    document.getElementById('inputAiCleanModel').value = data.model || 'models/gemini-3.5-flash';
+                    window.defaultAiCleanPrompt = data.default_prompt;
+                }
+            } catch (err) {
+                console.error("Error loading AI clean config:", err);
+            }
+        }
+
+        async function saveAiCleanConfig() {
+            const prompt = document.getElementById('inputAiCleanPrompt').value;
+            const model = document.getElementById('inputAiCleanModel').value;
+            try {
+                const res = await fetch('/apps/api/stt/admin/ai_clean_config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, model })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ STT AI Clean configuration saved successfully!");
+                } else {
+                    alert("❌ Failed to save: " + (data.error || "Unknown error"));
+                }
+            } catch (err) {
+                alert("Connection error while saving AI Clean configuration.");
+            }
+        }
+
+        function resetAiCleanPromptDefault() {
+            if (window.defaultAiCleanPrompt) {
+                document.getElementById('inputAiCleanPrompt').value = window.defaultAiCleanPrompt;
+            }
+        }
+
+        async function fetchScriptSettings() {
+            try {
+                const res = await fetch('/apps/api/stt/scripts');
+                const data = await res.json();
+                if (data.success) {
+                    const allScripts = data.all_scripts || {};
+                    const enabledScripts = data.enabled || [];
+                    const defaultScript = data.default || 'devanagari';
+
+                    const defaultSelect = document.getElementById('adminDefaultScriptSelect');
+                    defaultSelect.innerHTML = Object.keys(allScripts).map(code => {
+                        const name = allScripts[code];
+                        const sel = code.toLowerCase() === defaultScript.toLowerCase() ? 'selected' : '';
+                        return `<option value="${code}" ${sel}>${name}</option>`;
+                    }).join('');
+
+                    const grid = document.getElementById('scriptCheckboxesGrid');
+                    grid.innerHTML = Object.keys(allScripts).map(code => {
+                        const name = allScripts[code];
+                        const checked = enabledScripts.includes(code) ? 'checked' : '';
+                        return `
+                            <label style="display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--stt-card-border, rgba(255,255,255,0.08)); cursor: pointer;">
+                                <input type="checkbox" class="script-checkbox" value="${code}" ${checked} style="width: 18px; height: 18px; accent-color: #a855f7;">
+                                <span style="font-weight: 600; font-size: 0.9rem;">${name}</span>
+                            </label>
+                        `;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error("Error fetching script settings:", err);
+            }
+        }
+
+        async function saveScriptConfig() {
+            const default_code = document.getElementById('adminDefaultScriptSelect').value;
+            const checkboxes = document.querySelectorAll('.script-checkbox:checked');
+            const enabled_codes = Array.from(checkboxes).map(cb => cb.value);
+
+            if (enabled_codes.length === 0) {
+                alert("At least one output script must be enabled.");
+                return;
+            }
+
+            if (!default_code || !enabled_codes.includes(default_code)) {
+                alert("The default output script must be selected from the enabled scripts.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/scripts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ default: default_code, enabled: enabled_codes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("✅ Output script settings saved successfully!");
+                    fetchScriptSettings();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error saving script settings.");
+            }
+        }
+    </script>
+</body>
+</html>

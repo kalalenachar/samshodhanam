@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>About Us — Samshodhana Mandiram</title>
+  <meta name="description" content="Learn about Samshodhana Mandiram, its Sanskrit Digital Library, and AI processing pipeline.">
+  <meta name="keywords" content="Samshodhana Mandiram, Sanskrit Digital Library, Sanskrit AI">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🕉️</text></svg>">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Global Theme System -->
+  <link rel="stylesheet" href="/sdl/static/css/theme.css?v=36">
+  <link rel="stylesheet" href="/static/css/github-launch.css">
+  <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+  <script src="/static/js/mobile-android.js" defer></script>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('smsdl-theme');
+        if (!t) {
+          var match = document.cookie.match(new RegExp('(^| )smsdl-theme=([^;]+)'));
+          if (match) t = match[2];
+        }
+        t = t || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  
+  <style>
+    :root {
+      --gold-primary: #d4af37;
+      --gold-light: #f3e5ab;
+      --saffron-accent: #e65100;
+      --saffron-glow: rgba(230, 81, 0, 0.2);
+      --card-radius: 16px;
+      --transition-fast: all 0.25s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, var(--t-bg-body-start, #080a14) 0%, var(--t-bg-body-mid, #0c0f20) 50%, var(--t-bg-body-end, #060710) 100%);
+      color: var(--t-text-secondary, #b8c8d8);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ── Header ───────────────────────────────────────── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 12px 16px;
+      background: var(--t-bg-header, rgba(8, 10, 20, 0.85));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--t-border, rgba(212, 175, 55, 0.15));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--gold-primary);
+      transition: var(--transition-fast);
+    }
+    .nav-home-btn:hover {
+      background: var(--gold-primary);
+      color: #080a14;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .brand-logo {
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-sanskrit {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--gold-primary);
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+    .brand-english {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--t-text-primary, #e8edf4);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .brand-gurukulam {
+      font-size: 0.68rem;
+      color: var(--gold-light, #f3e5ab);
+      letter-spacing: 0.5px;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      list-style: none;
+    }
+    .nav-link {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--t-text-secondary, #b8c8d8);
+      transition: var(--transition-fast);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold-primary);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-gurukulam {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 16px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(230, 81, 0, 0.22) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.45);
+      color: var(--gold-light, #f3e5ab);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      transition: var(--transition-fast);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+      white-space: nowrap;
+    }
+    .btn-gurukulam:hover {
+      background: linear-gradient(135deg, #d4af37 0%, #e65100 100%);
+      color: #080a14;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45), 0 0 10px rgba(230, 81, 0, 0.35);
+    }
+    .btn-gurukulam:active {
+      transform: translateY(0);
+    }
+    .btn-gurukulam .btn-icon-left {
+      font-size: 0.92rem;
+      color: var(--gold-primary);
+      transition: color 0.25s ease;
+    }
+    .btn-gurukulam:hover .btn-icon-left {
+      color: #080a14;
+    }
+    .btn-gurukulam .btn-icon-ext {
+      font-size: 0.72rem;
+      opacity: 0.75;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .btn-gurukulam:hover .btn-icon-ext {
+      opacity: 1;
+      transform: translate(2px, -2px);
+    }
+
+    /* ── Be a Volunteer Header Button (Radiant Gradient) ─ */
+    .btn-volunteer {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #d4af37 0%, #e65100 50%, #b43403 100%);
+      border: 1px solid rgba(255, 235, 170, 0.45);
+      color: #ffffff;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 3px 14px rgba(230, 81, 0, 0.35), 0 0 8px rgba(212, 175, 55, 0.2);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .btn-volunteer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -80%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transform: skewX(-25deg);
+      transition: left 0.75s ease;
+    }
+    .btn-volunteer:hover::before {
+      left: 140%;
+    }
+    .btn-volunteer:hover {
+      background: linear-gradient(135deg, #f3e5ab 0%, #ff6b08 50%, #c23300 100%);
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(230, 81, 0, 0.55), 0 0 14px rgba(212, 175, 55, 0.45);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .btn-volunteer:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(230, 81, 0, 0.4);
+    }
+    .btn-volunteer .btn-vol-icon {
+      font-size: 0.95rem;
+      color: #ffffff;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+      transition: transform 0.25s ease;
+    }
+    .btn-volunteer:hover .btn-vol-icon {
+      transform: scale(1.15);
+    }
+
+    /* ── Volunteer Pop-up Modal ───────────────────────── */
+    .volunteer-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(3, 5, 14, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 200000 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+    .volunteer-modal-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .volunteer-modal {
+      background: var(--t-bg-surface, #0c1024);
+      border: 1px solid var(--t-border, rgba(212, 175, 55, 0.25));
+      border-radius: 20px;
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 28px rgba(212, 175, 55, 0.15);
+      position: relative;
+      z-index: 200001 !important;
+      transform: scale(0.94) translateY(14px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+    .volunteer-modal-backdrop.active .volunteer-modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .volunteer-modal-header {
+      padding: 22px 24px 14px;
+      border-bottom: 1px solid var(--t-border, rgba(212, 175, 55, 0.15));
+      position: relative;
+      background: linear-gradient(180deg, rgba(212, 175, 55, 0.08) 0%, transparent 100%);
+    }
+    .volunteer-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--gold-primary, #d4af37);
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      padding: 3px 12px;
+      border-radius: 20px;
+      margin-bottom: 6px;
+    }
+    .volunteer-modal-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--t-text-primary, #ffffff);
+      margin: 0;
+      line-height: 1.25;
+    }
+    .volunteer-modal-subtitle {
+      font-size: 0.86rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .volunteer-modal-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.15));
+      color: var(--t-text-muted, #7a9ab8);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .volunteer-modal-close:hover {
+      background: rgba(230, 81, 0, 0.2);
+      color: #ff6b08;
+      border-color: rgba(230, 81, 0, 0.4);
+      transform: rotate(90deg);
+    }
+
+    .volunteer-modal-body {
+      padding: 20px 24px 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .volunteer-modal-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    .volunteer-modal-body::-webkit-scrollbar-thumb {
+      background: rgba(212, 175, 55, 0.25);
+      border-radius: 6px;
+    }
+
+    /* ── 'More' Hover Tooltip / Popover ───────────────── */
+    .more-skills-trigger {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: var(--gold-primary, #d4af37);
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .more-skills-trigger:hover {
+      color: #ffffff;
+    }
+    .more-skills-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: -8px;
+      width: 290px;
+      max-width: min(300px, calc(100vw - 60px));
+      background: #0c1024;
+      border: 1px solid var(--gold-primary, rgba(212, 175, 55, 0.45));
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.95), 0 0 16px rgba(212, 175, 55, 0.25);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s ease;
+      transform: translateY(6px);
+      z-index: 1000;
+      text-decoration: none;
+      font-weight: normal;
+      text-align: left;
+    }
+    .more-skills-popover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 6px solid transparent;
+      border-bottom-color: var(--gold-primary, rgba(212, 175, 55, 0.6));
+    }
+    .more-skills-trigger:hover .more-skills-popover {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .more-skills-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--gold-primary, #d4af37);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 5px;
+    }
+    .more-skills-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .more-skills-list li {
+      font-size: 0.78rem;
+      color: var(--t-text-primary, #e8edf4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      line-height: 1.35;
+    }
+    .more-skills-list li i {
+      font-size: 0.72rem;
+      color: #34d399;
+      width: 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+      .more-skills-popover {
+        left: -12px;
+        right: auto;
+        transform: translateY(4px);
+        width: 260px;
+        max-width: calc(100vw - 48px);
+      }
+      .more-skills-popover::before {
+        left: 20px;
+        right: auto;
+        transform: none;
+      }
+      .more-skills-trigger:hover .more-skills-popover {
+        transform: translateY(0);
+      }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--t-text-primary, #ffffff);
+      margin-bottom: 6px;
+    }
+    .form-label .req {
+      color: #ff6b6b;
+      margin-left: 2px;
+    }
+    .form-label-hint {
+      font-size: 0.74rem;
+      font-weight: 400;
+      color: var(--t-text-muted, #7a9ab8);
+      margin-left: 4px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.15));
+      border-radius: 10px;
+      color: var(--t-text-primary, #ffffff);
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+      box-sizing: border-box;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--gold-primary, #d4af37);
+      background: rgba(212, 175, 55, 0.04);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    }
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: var(--t-text-muted, #64748b);
+      opacity: 0.7;
+    }
+    .form-select option {
+      background: #0f142a;
+      color: #e8edf4;
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    /* Area selection chips */
+    .chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 13px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.14));
+      color: var(--t-text-secondary, #b8c8d8);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .chip-item:hover {
+      background: rgba(212, 175, 55, 0.08);
+      border-color: rgba(212, 175, 55, 0.35);
+      color: var(--t-text-primary, #ffffff);
+      transform: translateY(-1px);
+    }
+    .chip-item.selected {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.22) 0%, rgba(230, 81, 0, 0.28) 100%);
+      border-color: var(--gold-primary, #d4af37);
+      color: #ffffff;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(230, 81, 0, 0.25);
+    }
+    .chip-item i.chip-check {
+      font-size: 0.75rem;
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    .chip-item.selected i.chip-check {
+      opacity: 1;
+      width: auto;
+      margin-left: 2px;
+      color: var(--gold-primary, #d4af37);
+    }
+
+    .form-actions {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .btn-volunteer-submit {
+      width: 100%;
+      padding: 12px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #d4af37 0%, #e65100 50%, #b43403 100%);
+      border: 1px solid rgba(255, 235, 170, 0.45);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(230, 81, 0, 0.4);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-volunteer-submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, #f3e5ab 0%, #ff6b08 50%, #c23300 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(230, 81, 0, 0.55);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .btn-volunteer-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .form-direct-contact {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--t-text-muted, #7a9ab8);
+    }
+    .form-direct-contact a {
+      color: var(--gold-primary, #d4af37);
+      text-decoration: underline;
+    }
+
+    /* Success confirmation view */
+    .volunteer-success-view {
+      display: none;
+      text-align: center;
+      padding: 24px 10px;
+    }
+    .volunteer-success-icon {
+      font-size: 3.4rem;
+      color: #22c55e;
+      margin-bottom: 12px;
+      animation: popSuccess 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popSuccess {
+      0% { transform: scale(0.3); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .volunteer-success-title {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.5rem;
+      color: var(--gold-primary, #d4af37);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .volunteer-success-desc {
+      font-size: 0.92rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      max-width: 440px;
+      margin: 0 auto 20px;
+      line-height: 1.5;
+    }
+
+    /* ── Hero Elements directly on body ──────────────── */
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 30px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--gold-primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 32px auto 16px;
+      align-self: center;
+      text-align: center;
+    }
+    .hero-badge i {
+      font-size: 0.9rem;
+    }
+
+    .hero-title {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--t-text-primary, #ffffff);
+      line-height: 1.25;
+      margin: 32px auto 10px;
+      text-align: center;
+      max-width: 1450px;
+      width: 98%;
+      padding: 0 12px;
+      align-self: center;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #d4af37 0%, #f3e5ab 50%, #e65100 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      font-weight: 400;
+      text-align: center;
+      width: 98%;
+      padding: 0 12px;
+      align-self: center;
+    }
+
+    .hero-stats-wrapper {
+      max-width: 1450px;
+      width: 98%;
+      margin: 0 auto 32px;
+      padding: 0 12px;
+      align-self: center;
+    }
+
+    /* Stats Grid */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      max-width: 100%;
+      margin: 0 auto;
+    }
+    .stat-card {
+      background: var(--t-bg-surface, rgba(16, 20, 38, 0.6));
+      border: 1px solid var(--t-border, rgba(212, 175, 55, 0.15));
+      border-radius: 12px;
+      padding: 18px 12px;
+      backdrop-filter: blur(8px);
+      transition: var(--transition-fast);
+    }
+    .stat-card:hover {
+      border-color: rgba(212, 175, 55, 0.4);
+      transform: translateY(-2px);
+    }
+    .stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+      font-family: 'Cinzel', serif;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--t-text-muted, #7a9ab8);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    /* ── Main Container ──────────────────────────────── */
+    .content-container {
+      max-width: 1450px;
+      width: 98%;
+      margin: 0 auto;
+      padding: 0 12px 40px;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--t-text-primary, #ffffff);
+      text-align: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .section-subtitle {
+      text-align: center;
+      color: var(--t-text-muted, #7a9ab8);
+      font-size: 0.95rem;
+      margin-bottom: 40px;
+    }
+
+
+
+    /* ── Project Features Section ────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .feature-card {
+      background: var(--t-bg-surface, rgba(16, 20, 38, 0.5));
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.1));
+      border-radius: 14px;
+      padding: 20px;
+      transition: var(--transition-fast);
+    }
+    .feature-card:hover {
+      border-color: rgba(212, 175, 55, 0.3);
+      background: var(--t-bg-surface-hover, rgba(20, 26, 50, 0.7));
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      color: var(--gold-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+    }
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--t-text-primary, #ffffff);
+      margin-bottom: 6px;
+    }
+    .feature-desc {
+      font-size: 0.88rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      line-height: 1.5;
+    }
+
+    /* ── Core Philosophy Pillars Section ─────────────── */
+    .pillars-section {
+      background: var(--t-bg-surface, rgba(16, 20, 38, 0.4));
+      border: 1px solid var(--t-border, rgba(212, 175, 55, 0.15));
+      border-radius: 16px;
+      padding: 28px 20px;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .pillar-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.1));
+      border-radius: 12px;
+      padding: 20px 16px;
+      transition: var(--transition-fast);
+      text-align: center;
+    }
+    .pillar-card:hover {
+      border-color: rgba(212, 175, 55, 0.35);
+      background: rgba(212, 175, 55, 0.05);
+      transform: translateY(-3px);
+    }
+    .pillar-sanskrit {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+      margin-bottom: 4px;
+    }
+    .pillar-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--t-text-primary, #ffffff);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .pillar-desc {
+      font-size: 0.88rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      line-height: 1.5;
+    }
+
+    /* ── Open Source & Open Data Section ─────────────── */
+    .open-source-section {
+      background: var(--t-bg-surface, rgba(16, 20, 38, 0.4));
+      border: 1px solid var(--t-border, rgba(212, 175, 55, 0.2));
+      border-radius: 18px;
+      padding: 34px 26px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+    .open-source-section::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .open-source-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .open-badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      color: var(--gold-primary);
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .open-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+    .open-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--t-border, rgba(200, 220, 240, 0.12));
+      border-radius: 14px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition-fast);
+      position: relative;
+    }
+    .open-card:hover {
+      border-color: rgba(212, 175, 55, 0.35);
+      background: rgba(212, 175, 55, 0.045);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .open-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .open-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      color: var(--gold-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+    }
+    .open-card-title-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .open-card-sanskrit {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+    }
+    .open-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--t-text-primary, #ffffff);
+    }
+    .open-card-desc {
+      font-size: 0.9rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .open-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 22px;
+      font-size: 0.86rem;
+      color: var(--t-text-secondary, #b8c8d8);
+    }
+    .open-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      line-height: 1.45;
+    }
+    .open-list li i {
+      color: var(--gold-primary);
+      margin-top: 3px;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .open-card-footer {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .open-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(230, 81, 0, 0.15) 100%);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      color: var(--gold-light, #f3e5ab);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      text-decoration: none;
+    }
+    .open-action-btn:hover {
+      background: var(--gold-primary);
+      color: #080a14;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+    }
+    .open-pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #34d399;
+    }
+    .open-philosophy-banner {
+      background: rgba(212, 175, 55, 0.05);
+      border: 1px dashed rgba(212, 175, 55, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .open-quote-sanskrit {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+      letter-spacing: 0.5px;
+    }
+    .open-quote-meaning {
+      font-size: 0.85rem;
+      color: var(--t-text-muted, #7a9ab8);
+      font-style: italic;
+      max-width: 800px;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer {
+      margin-top: auto;
+      background: var(--t-bg-header, rgba(6, 8, 18, 0.9));
+      border-top: 1px solid var(--t-border, rgba(212, 175, 55, 0.15));
+      padding: 24px 16px;
+      text-align: center;
+    }
+    .footer-content {
+      max-width: 1450px;
+      width: 98%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-sanskrit {
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.1rem;
+      color: var(--gold-primary);
+      font-weight: 600;
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      list-style: none;
+    }
+    .footer-link {
+      font-size: 0.85rem;
+      color: var(--t-text-secondary, #b8c8d8);
+      transition: var(--transition-fast);
+    }
+    .footer-link:hover {
+      color: var(--gold-primary);
+    }
+    .footer-copy {
+      font-size: 0.8rem;
+      color: var(--t-text-muted, #7a9ab8);
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 14px;
+        gap: 12px;
+      }
+      .nav-menu {
+        gap: 12px;
+      }
+      .nav-actions {
+        gap: 8px;
+      }
+      .btn-volunteer {
+        padding: 6px 14px;
+        font-size: 0.82rem;
+      }
+      .hero-title {
+        font-size: 2rem;
+      }
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .brand-gurukulam {
+        display: none;
+      }
+      .btn-gurukulam {
+        padding: 5px 10px;
+        font-size: 0.78rem;
+        gap: 5px;
+      }
+      .btn-gurukulam .btn-icon-ext {
+        display: none;
+      }
+      .btn-volunteer {
+        padding: 5px 10px;
+        font-size: 0.76rem;
+        gap: 5px;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .volunteer-modal {
+        max-height: 94vh;
+        border-radius: 16px;
+      }
+      .volunteer-modal-header {
+        padding: 16px 18px 12px;
+      }
+      .volunteer-modal-body {
+        padding: 16px 18px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <div class="brand-group">
+      <a href="/" class="nav-home-btn" title="Back to Home">
+        <i class="fa-solid fa-house"></i>
+      </a>
+      <a href="/" class="brand-logo">
+        <span class="brand-sanskrit">संशोधन मन्दिरम्</span>
+        <span class="brand-english">Samshodhana Mandiram</span>
+        <span class="brand-gurukulam">An Initiative of Sri Trayee Vidya Gurukulam</span>
+      </a>
+    </div>
+
+    <ul class="nav-menu">
+      <li><a href="/" class="nav-link">Home</a></li>
+      <li>
+        <a href="http://trayeevidya.org/" target="_blank" rel="noopener noreferrer" class="btn-gurukulam" title="Visit Sri Trayee Vidya Gurukulam">
+          <i class="fa-solid fa-graduation-cap btn-icon-left"></i>
+          <span>Visit Gurukulam</span>
+          <i class="fa-solid fa-arrow-up-right-from-square btn-icon-ext"></i>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-actions">
+      <button type="button" class="btn-volunteer" id="openVolunteerModalBtn" onclick="openVolunteerModal()" title="Be a Volunteer — Human Resources & Skills Contribution (No Money Donation)">
+        <i class="fa-solid fa-users btn-vol-icon"></i>
+        <span>Be a Volunteer</span>
+      </button>
+      <a href="/login" class="nav-link" style="color: var(--gold-primary); font-weight: 600;">Login</a>
+    </div>
+  </header>
+
+  <!-- Hero Banner Header -->
+  <div style="text-align: center; margin: 24px auto 6px; align-self: center;">
+    <span style="font-family: 'Noto Sans Devanagari', serif; font-size: 1.05rem; color: var(--gold-primary); font-weight: 700; letter-spacing: 1px; background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); padding: 5px 20px; border-radius: 20px; display: inline-block;">
+      संशोधन मन्दिरम् — संस्कृत-अनुसन्धान-केन्द्रम्
+    </span>
+  </div>
+  <h1 class="hero-title" style="margin-top: 12px;">
+    Preserving Classical Heritage,<br>
+    <span>Empowering Sanskrit AI Research</span>
+  </h1>
+  <p class="hero-subtitle">
+    Building authentic Sanskrit text corpora, manuscript OCR pipelines, and high-dimensional vector datasets for scholars, researchers, and AI models worldwide.
+  </p>
+
+  <!-- Main Content Area -->
+  <main class="content-container">
+
+
+
+    <!-- Dynamic Stats & Progress Dashboard (comes after Developers) -->
+    <div class="hero-stats-wrapper">
+      <div style="margin-bottom: 30px;">
+        <div style="font-size: 0.95rem; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-weight: 600; text-align: center;">Published Digital Library & Datasets</div>
+        <div class="stats-row" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-published-books">--</div>
+            <div class="stat-label">Published Books</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-proofread-pct">--</div>
+            <div class="stat-label">Proofreading Complete</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-pages">--</div>
+            <div class="stat-label">Indexed Pages</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-chunks">--</div>
+            <div class="stat-label">AI Training Vectors</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-quizzes">--</div>
+            <div class="stat-label">Quiz & Games</div>
+          </div>
+        </div>
+        
+        <!-- 3-Line Responsive Progress Metrics -->
+        <div style="background: var(--t-bg-surface, rgba(16, 20, 38, 0.4)); border: 1px solid var(--t-border, rgba(212, 175, 55, 0.15)); border-radius: 14px; padding: 22px 24px; margin-top: 20px; display: flex; flex-direction: column; gap: 16px;">
+          <h4 style="font-family: 'Cinzel', serif; font-size: 0.95rem; color: var(--gold-primary); letter-spacing: 0.5px; margin-bottom: 2px; text-transform: uppercase;">
+            <i class="fa-solid fa-chart-line" style="margin-right: 8px;"></i> Library Progress Ratios
+          </h4>
+
+          <!-- Line 1: Published vs In-Progress (Dual / Invert Ratio Bar) -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+              <span style="color: var(--t-text-primary, #fff); font-weight: 500;">
+                <i class="fa-solid fa-book-open" style="color: var(--gold-primary); margin-right: 6px;"></i> Published vs In-Progress Ratio
+              </span>
+              <span style="font-weight: 700; font-size: 0.82rem;" id="stat-ratio-published-text">
+                <span style="color: #d4af37;" id="stat-pub-pct-val">--% Published</span> &nbsp;|&nbsp; 
+                <span style="color: #00b4d8;" id="stat-inprog-pct-val">--% In-Progress</span>
+              </span>
+            </div>
+            <div style="width: 100%; height: 10px; background: rgba(255, 255, 255, 0.06); border-radius: 6px; overflow: hidden; display: flex; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);">
+              <div id="stat-ratio-published-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #d4af37, #f3e5ab); transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);" title="Published Books"></div>
+              <div id="stat-ratio-inprog-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #00b4d8, #90e0ef); transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);" title="In-Progress Books"></div>
+            </div>
+          </div>
+
+          <!-- Line 2: Published vs Proofread -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+              <span style="color: var(--t-text-primary, #fff); font-weight: 500;">
+                <i class="fa-solid fa-check-double" style="color: var(--gold-primary); margin-right: 6px;"></i> Published vs Proofread Completeness
+              </span>
+              <span style="font-weight: 700; color: var(--gold-primary);" id="stat-ratio-proofread-text">--%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);">
+              <div id="stat-ratio-proofread-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #f3e5ab, #e65100); border-radius: 6px; transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);"></div>
+            </div>
+          </div>
+
+          <!-- Line 3: Proofread vs Vector Dataset -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem;">
+              <span style="color: var(--t-text-primary, #fff); font-weight: 500;">
+                <i class="fa-solid fa-brain" style="color: var(--gold-primary); margin-right: 6px;"></i> Proofread Text vs AI Vector Dataset
+              </span>
+              <span style="font-weight: 700; color: var(--gold-primary);" id="stat-ratio-vectors-text">--%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 6px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);">
+              <div id="stat-ratio-vectors-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #e65100, #d4af37); border-radius: 6px; transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 30px;">
+        <div style="font-size: 0.95rem; color: var(--gold-light); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-weight: 600; text-align: center;">Work In Progress</div>
+        <div class="stats-row" style="margin-bottom: 24px;">
+          <div class="stat-card">
+            <div class="stat-number" id="stat-inprogress-books">--</div>
+            <div class="stat-label">Books In Progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-inprogress-proofread-pct">--</div>
+            <div class="stat-label">Proofreading Progress</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="stat-inprogress-pages">--</div>
+            <div class="stat-label">Pages In Progress</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Gurukulam Banner Card -->
+    <section style="margin-bottom: 40px;">
+      <div style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(230, 81, 0, 0.08) 100%); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 16px; padding: 32px 28px; text-align: center;">
+        <div style="font-family: 'Noto Sans Devanagari', serif; font-size: 1.5rem; font-weight: 700; color: var(--gold-primary); margin-bottom: 6px;">
+          श्रीत्रयीविद्यागुरुकुलम्
+        </div>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 1.35rem; color: var(--t-text-primary, #ffffff); margin-bottom: 12px;">
+          Sri Trayee Vidya Gurukulam
+        </h2>
+        <p style="max-width: 800px; margin: 0 auto; font-size: 0.95rem; color: var(--t-text-secondary, #b8c8d8); line-height: 1.6;">
+          Samshodhana Mandiram is the research, manuscript digitization, and AI training data wing of <strong>Sri Trayee Vidya Gurukulam</strong>. The Gurukulam is dedicated to preserving authentic Vedic learning, manuscript conservation, and modern digital technology to safeguard Indian Knowledge Systems.
+        </p>
+      </div>
+    </section>
+
+    <!-- Key Project Capabilities -->
+    <section>
+      <h2 class="section-title">Ecosystem Features</h2>
+      <p class="section-subtitle">What Samshodhana Mandiram delivers to scholars, researchers, and AI builders</p>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+          <h3 class="feature-title">Sanskrit Digital Library</h3>
+          <p class="feature-desc">
+            Complete manuscript cataloging with page-level text extraction, OCR proofreading, and fast search.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-database"></i></div>
+          <h3 class="feature-title">AI Training Data & Datasets</h3>
+          <p class="feature-desc">
+            High-precision OCR correction, Sandhi splitting, and structured linguistic corpora for training AI models.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+          <h3 class="feature-title">Semantic Vector Search</h3>
+          <p class="feature-desc">
+            Contextual search powered by vector embeddings and AI to locate deep philosophical concepts.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-gamepad"></i></div>
+          <h3 class="feature-title">Play & Vocabulary Suite</h3>
+          <p class="feature-desc">
+            Interactive vocabulary games including Word Builder, Synonym Match, and Word Search puzzle.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-scroll"></i></div>
+          <h3 class="feature-title">Katha & Scholarly Articles</h3>
+          <p class="feature-desc">
+            Illustrated stories with audio narration, interactive word breakdowns, and curated academic research.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+          <h3 class="feature-title">Quiz & Analytics</h3>
+          <p class="feature-desc">
+            Real-time quizzes, scoring, detailed explanations, and progress tracking for Sanskrit learners.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Core Philosophy Section -->
+    <section class="pillars-section">
+      <h2 class="section-title" style="font-size: 1.6rem; margin-bottom: 6px;">Our Core Philosophy</h2>
+      <p class="section-subtitle" style="margin-bottom: 16px;">Guided by three foundational pillars of digital Sanskrit preservation</p>
+      
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <div class="pillar-sanskrit">संरक्षणम्</div>
+          <h3 class="pillar-title">Preservation</h3>
+          <p class="pillar-desc">
+            Digitizing ancient manuscripts, palm-leaf folios, and out-of-print classical texts to safeguard timeless wisdom for future generations.
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-sanskrit">अनुसन्धानम्</div>
+          <h3 class="pillar-title">Research & Innovation</h3>
+          <p class="pillar-desc">
+            Fusing traditional Paninian grammar with computational NLP, AI proofreading, and semantic search across authentic Shastras.
+          </p>
+        </div>
+
+        <div class="pillar-card">
+          <div class="pillar-sanskrit">संवर्धनम्</div>
+          <h3 class="pillar-title">Open Access & Growth</h3>
+          <p class="pillar-desc">
+            Championing open source software, open academic data, and unrestricted digital access, ensuring timeless Sanskrit wisdom is preserved and shared universally without commercial gatekeeping.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Open Source & Open Data Commitment Section -->
+    <section class="open-source-section">
+      <div class="open-source-header">
+        <div class="open-badge-tag">
+          <i class="fa-solid fa-code-branch"></i> मुक्तस्रोतः मुक्तांशश्च &bull; Open Source &amp; Open Data
+        </div>
+        <h2 class="section-title" style="font-size: 1.75rem; margin-bottom: 8px;">
+          Committed to Open Source Software &amp; Open Sanskrit Data
+        </h2>
+        <p class="section-subtitle" style="max-width: 840px; margin: 0 auto; margin-bottom: 24px;">
+          We believe authentic Sanskrit heritage belongs to all humanity. Samshodhana Mandiram builds transparent, community-accessible tools and provides open academic data to power next-generation Indic computing and research.
+        </p>
+      </div>
+
+      <div class="open-grid">
+        <!-- Card 1: Open Source Software -->
+        <div class="open-card">
+          <div class="open-card-header">
+            <div class="open-card-icon">
+              <i class="fa-brands fa-github"></i>
+            </div>
+            <div class="open-card-title-wrap">
+              <span class="open-card-sanskrit">मुक्तस्रोत-तन्त्रांशः</span>
+              <h3 class="open-card-title">Open Source Codebase</h3>
+            </div>
+          </div>
+          <p class="open-card-desc">
+            Our platform codebase, Sanskrit NLP processors, OCR proofreading workflows, and interactive linguistic engines are developed under an open-source ethos for the global academic and developer community.
+          </p>
+          <ul class="open-list">
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>AIOC 2026 Public Release:</strong> Official repository unveiling and research paper presentation scheduled for October 31, 2026 at the 52nd All India Oriental Conference.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Transparent NLP Architectures:</strong> Sandhi splitters, Samasa disambiguation, phonetic transliterators, and grammar engines built for peer review and community extension.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Community Collaboration:</strong> Inviting developers, researchers, and Indic AI enthusiasts to contribute code, report issues, and build derivative tools.</span>
+            </li>
+          </ul>
+          <div class="open-card-footer">
+            <button type="button" class="open-action-btn" onclick="if(window.openGithubLaunchModal){openGithubLaunchModal();}else{alert('Samshodhana Mandiram Open Source Launch at AIOC on October 31, 2026!');}" title="View AIOC 2026 Open Source Launch Info">
+              <i class="fa-brands fa-github"></i>
+              <span>Open Source Launch Info</span>
+              <i class="fa-solid fa-arrow-right" style="font-size: 0.75rem;"></i>
+            </button>
+            <span class="open-pill"><i class="fa-solid fa-lock-open" style="margin-right: 4px;"></i> Public Repo (AIOC 2026)</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Open Data & Scholarly Corpora -->
+        <div class="open-card">
+          <div class="open-card-header">
+            <div class="open-card-icon">
+              <i class="fa-solid fa-database"></i>
+            </div>
+            <div class="open-card-title-wrap">
+              <span class="open-card-sanskrit">विवृत्त-दत्तांशः</span>
+              <h3 class="open-card-title">Open Sanskrit Data &amp; Corpora</h3>
+            </div>
+          </div>
+          <p class="open-card-desc">
+            Preserving classical manuscripts is meaningless if locked behind commercial paywalls. We liberate digitized texts, verified transcriptions, and vector datasets for public scholarly benefit.
+          </p>
+          <ul class="open-list">
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Unrestricted Academic Access:</strong> Digitized manuscripts, OCR page layers, and proofread Sanskrit Shastras accessible for non-commercial scholarly research.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>AI &amp; LLM-Ready Corpora:</strong> Clean, tokenized Sanskrit text chunks and high-dimensional semantic vector embeddings shared to train Indic language models.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Zero Paywalls or Gatekeeping:</strong> Faithful to the sacred Gurukula principle of <em>Vidya Dana</em> — authentic knowledge preserved and gifted freely to all seekers.</span>
+            </li>
+          </ul>
+          <div class="open-card-footer">
+            <a href="/sdl/browse" class="open-action-btn" title="Explore the Sanskrit Digital Library">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Explore Open Library</span>
+              <i class="fa-solid fa-arrow-right" style="font-size: 0.75rem;"></i>
+            </a>
+            <span class="open-pill" style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.25); color: #60a5fa;"><i class="fa-solid fa-shield-halved" style="margin-right: 4px;"></i> Open Academic Access</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Philosophy Quote / Callout -->
+      <div class="open-philosophy-banner">
+        <div class="open-quote-sanskrit">
+          ॥ न चोरहार्यं न च राजहार्यं न भ्रातृभाज्यं न च भारकारि । व्यये कृते वर्धत एव नित्यं विद्याधनं सर्वधनप्रधानम् ॥
+        </div>
+        <div class="open-quote-meaning">
+          "Knowledge cannot be stolen by thieves, nor confiscated by kings, nor divided among siblings, nor is it burdensome to carry. The more it is shared and spent, the more it grows. The wealth of knowledge is supreme among all wealth."
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-sanskrit">श्रीत्रयीविद्यागुरुकुलम् — संशोधन मन्दिरम्</div>
+      <ul class="footer-links">
+        <li><a href="/" class="footer-link">Home</a></li>
+        <li><a href="http://trayeevidya.org/" target="_blank" rel="noopener noreferrer" class="footer-link">Visit Gurukulam</a></li>
+        <li><a href="#" onclick="if(window.openGithubLaunchModal){openGithubLaunchModal();} return false;" class="footer-link"><i class="fa-brands fa-github" style="margin-right: 4px;"></i> Open Source Launch</a></li>
+      </ul>
+      <div class="footer-copy">
+        &copy; Samshodhana Mandiram — Sri Trayee Vidya Gurukulam.
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script for fetching real-time stats -->
+  <script>
+    async function loadStats() {
+      try {
+        const res = await fetch('/about-stats');
+        if (res.ok) {
+          const stats = await res.json();
+          if (stats.published_books !== undefined) {
+            document.getElementById('stat-published-books').innerText = stats.published_books.toLocaleString();
+          } else if (stats.books !== undefined) {
+            document.getElementById('stat-published-books').innerText = stats.books.toLocaleString();
+          }
+          if (stats.inprogress_books !== undefined) {
+            document.getElementById('stat-inprogress-books').innerText = stats.inprogress_books.toLocaleString();
+          }
+          if (stats.inprogress_proofread_pct !== undefined) {
+            const el = document.getElementById('stat-inprogress-proofread-pct');
+            if (el) el.innerText = stats.inprogress_proofread_pct + '%';
+          }
+          if (stats.inprogress_pages !== undefined) {
+            const el = document.getElementById('stat-inprogress-pages');
+            if (el) el.innerText = stats.inprogress_pages.toLocaleString();
+          }
+          if (stats.proofread_pct !== undefined) {
+            document.getElementById('stat-proofread-pct').innerText = stats.proofread_pct + '%';
+          }
+          if (stats.pages !== undefined) document.getElementById('stat-pages').innerText = stats.pages.toLocaleString();
+          if (stats.chunks !== undefined) document.getElementById('stat-chunks').innerText = stats.chunks.toLocaleString();
+          
+          const totalQuizzesAndGames = (stats.quizzes || 0) + (stats.games_played || 0);
+          document.getElementById('stat-quizzes').innerText = totalQuizzesAndGames ? totalQuizzesAndGames.toLocaleString() : (stats.quizzes || 0);
+          
+          // 1. Line 1: Published vs In-Progress Books Ratio (Dual Ratio)
+          const pubCount = stats.published_books || stats.books || 0;
+          const inProgCount = stats.inprogress_books || 0;
+          const totalBooks = pubCount + inProgCount;
+          const publishedRatio = totalBooks > 0 ? Math.round((pubCount / totalBooks) * 100) : 0;
+          const inProgRatio = totalBooks > 0 ? (100 - publishedRatio) : 0;
+
+          // 2. Line 2: Published vs Proofread Completeness
+          const proofreadRatio = Math.round(stats.proofread_pct || 0);
+
+          // 3. Line 3: Proofread Text vs AI Vector Dataset Ratio
+          let vectorsRatio = 0;
+          if (stats.pages && stats.chunks) {
+            // Target chunks estimate (~1.5 vectors per page)
+            const targetChunks = stats.pages * 1.5;
+            vectorsRatio = Math.min(100, Math.round((stats.chunks / targetChunks) * 100));
+          } else if (stats.proofread_pct && stats.chunks) {
+            vectorsRatio = Math.min(100, Math.round((stats.chunks / 50) * 100));
+          }
+
+          setTimeout(() => {
+            const elPubVal = document.getElementById('stat-pub-pct-val');
+            const elInprogVal = document.getElementById('stat-inprog-pct-val');
+            const elPubBar = document.getElementById('stat-ratio-published-bar');
+            const elInprogBar = document.getElementById('stat-ratio-inprog-bar');
+
+            if (elPubVal) elPubVal.innerText = publishedRatio + '% Published (' + pubCount + ')';
+            if (elInprogVal) elInprogVal.innerText = inProgRatio + '% In-Progress (' + inProgCount + ')';
+            if (elPubBar) elPubBar.style.width = publishedRatio + '%';
+            if (elInprogBar) elInprogBar.style.width = inProgRatio + '%';
+
+            const elProofText = document.getElementById('stat-ratio-proofread-text');
+            const elProofBar = document.getElementById('stat-ratio-proofread-bar');
+            if (elProofText && elProofBar) {
+              elProofText.innerText = proofreadRatio + '% Proofread';
+              elProofBar.style.width = proofreadRatio + '%';
+            }
+
+            const elVecText = document.getElementById('stat-ratio-vectors-text');
+            const elVecBar = document.getElementById('stat-ratio-vectors-bar');
+            if (elVecText && elVecBar) {
+              elVecText.innerText = vectorsRatio + '% Vectorized';
+              elVecBar.style.width = vectorsRatio + '%';
+            }
+          }, 300);
+        }
+      } catch (err) {
+        console.log('Stats load fallback:', err);
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadStats);
+  </script>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- Volunteer Pop-up Modal Backdrop & Dialog -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <div class="volunteer-modal-backdrop" id="volunteerModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="volunteerModalTitle">
+    <div class="volunteer-modal" id="volunteerModal" style="max-width: 480px;">
+      
+      <!-- Header -->
+      <div class="volunteer-modal-header">
+        <button type="button" class="volunteer-modal-close" onclick="closeVolunteerModal()" title="Close dialog" aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="volunteer-modal-badge">
+          <i class="fa-solid fa-users"></i> मानव-संसाधनम् &bull; Human Resources
+        </div>
+        <h2 class="volunteer-modal-title" id="volunteerModalTitle">Be a Volunteer</h2>
+        <p class="volunteer-modal-subtitle">
+          Contribute your time & skills — <strong>No money donations</strong>.
+        </p>
+      </div>
+
+      <!-- Body / Form -->
+      <div class="volunteer-modal-body">
+        
+        <!-- Form View -->
+        <form id="volunteerForm" onsubmit="handleVolunteerSubmit(event)">
+          
+          <!-- Short callout with hoverable 'more' popup -->
+          <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.83rem; display: flex; align-items: flex-start; gap: 10px;">
+            <i class="fa-solid fa-phone-volume" style="color: #34d399; font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+            <div style="color: var(--t-text-secondary, #b8c8d8); line-height: 1.45;">
+              Looking for <strong>creative thinking, social media handling &amp; 
+                <span class="more-skills-trigger">
+                  more <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem;"></i>
+                  <span class="more-skills-popover">
+                    <span class="more-skills-title"><i class="fa-solid fa-lightbulb"></i> Ways You Can Contribute</span>
+                    <ul class="more-skills-list">
+                      <li><i class="fa-solid fa-palette"></i> Poster, Banner &amp; Graphics Design</li>
+                      <li><i class="fa-solid fa-video"></i> Video Editing &amp; Short Reels</li>
+                      <li><i class="fa-solid fa-bullhorn"></i> Social Media &amp; Community Outreach</li>
+                      <li><i class="fa-solid fa-code"></i> Web, App &amp; Indic AI Tools</li>
+                      <li><i class="fa-solid fa-microphone"></i> Audio Katha Stories &amp; Narration</li>
+                      <li><i class="fa-solid fa-pen-nib"></i> Content Writing &amp; Summaries</li>
+                      <li><i class="fa-solid fa-book-open"></i> Sanskrit Proofreading &amp; Text Review</li>
+                      <li><i class="fa-solid fa-brain"></i> Creative Brainstorming &amp; Ideas</li>
+                    </ul>
+                  </span>
+                </span></strong>. Leave your number, we will call you soon!
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label" for="vol-name">Full Name<span class="req">*</span></label>
+            <input type="text" id="vol-name" name="name" class="form-input" placeholder="e.g. Anand Sharma" required autocomplete="name">
+          </div>
+
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label class="form-label" for="vol-phone">Phone / Mobile Number<span class="req">*</span></label>
+            <input type="tel" id="vol-phone" name="phone" class="form-input" placeholder="e.g. +91 98765 43210" required autocomplete="tel">
+          </div>
+
+          <!-- Status / Error message banner -->
+          <div id="volunteerFormError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px;"></div>
+
+          <!-- Submit Buttons -->
+          <div class="form-actions" style="margin-top: 14px;">
+            <button type="submit" class="btn-volunteer-submit" id="btnSubmitVolunteer">
+              <i class="fa-solid fa-phone"></i>
+              <span id="btnSubmitVolunteerText">Submit & Request Call</span>
+            </button>
+            <div class="form-direct-contact">
+              Prefer email? <a href="mailto:samshodhanamandiram@gmail.com">samshodhanamandiram@gmail.com</a>
+            </div>
+          </div>
+        </form>
+
+        <!-- Success Confirmation View -->
+        <div class="volunteer-success-view" id="volunteerSuccessView">
+          <div class="volunteer-success-icon">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div class="volunteer-success-title">धन्यवादः! Thank You!</div>
+          <p class="volunteer-success-desc" id="volunteerSuccessMsg">
+            We have received your number. <strong>We will call and speak with you soon!</strong>
+          </p>
+          <button type="button" class="btn-volunteer-submit" style="max-width: 160px; margin: 0 auto;" onclick="closeVolunteerModal()">
+            Done
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Volunteer Modal JavaScript Handlers -->
+  <script>
+    function openVolunteerModal() {
+      const backdrop = document.getElementById('volunteerModalBackdrop');
+      if (!backdrop) return;
+      
+      // Reset form and view state
+      const form = document.getElementById('volunteerForm');
+      if (form) form.style.display = 'block';
+      const successView = document.getElementById('volunteerSuccessView');
+      if (successView) successView.style.display = 'none';
+      const errEl = document.getElementById('volunteerFormError');
+      if (errEl) errEl.style.display = 'none';
+      
+      backdrop.classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      // Focus first input
+      setTimeout(() => {
+        const nameInput = document.getElementById('vol-name');
+        if (nameInput) nameInput.focus();
+      }, 100);
+    }
+
+    function closeVolunteerModal() {
+      const backdrop = document.getElementById('volunteerModalBackdrop');
+      if (!backdrop) return;
+      backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close on backdrop click outside the dialog
+    document.addEventListener('click', function(e) {
+      const backdrop = document.getElementById('volunteerModalBackdrop');
+      if (backdrop && e.target === backdrop) {
+        closeVolunteerModal();
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const backdrop = document.getElementById('volunteerModalBackdrop');
+        if (backdrop && backdrop.classList.contains('active')) {
+          closeVolunteerModal();
+        }
+      }
+    });
+
+    // Form submission handler
+    async function handleVolunteerSubmit(e) {
+      e.preventDefault();
+      const form = document.getElementById('volunteerForm');
+      const errEl = document.getElementById('volunteerFormError');
+      const submitBtn = document.getElementById('btnSubmitVolunteer');
+      const submitText = document.getElementById('btnSubmitVolunteerText');
+
+      if (errEl) errEl.style.display = 'none';
+
+      const payload = {
+        name: document.getElementById('vol-name').value.trim(),
+        phone: document.getElementById('vol-phone').value.trim()
+      };
+
+      if (!payload.name || !payload.phone) {
+        if (errEl) {
+          errEl.innerText = 'Please provide your Full Name and Phone Number.';
+          errEl.style.display = 'block';
+        }
+        return;
+      }
+
+      // Show loading spinner
+      submitBtn.disabled = true;
+      submitText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+      try {
+        const res = await fetch('/api/volunteer/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success !== false) {
+          form.reset();
+          form.style.display = 'none';
+          const successView = document.getElementById('volunteerSuccessView');
+          if (successView) successView.style.display = 'block';
+        } else {
+          if (errEl) {
+            errEl.innerText = data.error || data.message || 'Submission failed. Please try again or email us directly.';
+            errEl.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        console.error('Volunteer submission error:', err);
+        if (errEl) {
+          errEl.innerText = 'Network error. You can also email us directly at samshodhanamandiram@gmail.com.';
+          errEl.style.display = 'block';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitText.innerHTML = '<i class="fa-solid fa-phone"></i> Submit & Request Call';
+      }
+    }
+  </script>
+
+  <script src="/static/js/theme.js"></script>
+</body>
+</html>

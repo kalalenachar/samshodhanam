@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Builder / शब्द-रचना - Sanskrit Play</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=100">
+    <link rel="stylesheet" href="style.css?v=100">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+</head>
+<body>
+
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="confetti-container"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <a href="/play/" class="navbar-home-btn" title="Back to Games">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <h1 class="navbar-title">शब्द-रचना</h1>
+        </div>
+        <div id="timer-display" class="timer-display" style="display: none;">
+            <span>⏱️</span> <span id="timer-val">00:00</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="game-container">
+        
+        <!-- Screen 1: Set Selection -->
+        <div id="screen-selection" class="screen active">
+            <h2 class="screen-title">Choose a Level / क्रीडा-स्तरं चिनोतु</h2>
+            
+
+
+            <!-- Sets Grid -->
+            <div id="sets-grid" class="sets-grid">
+                <div class="no-sets">Loading game levels...</div>
+            </div>
+        </div>
+
+        <!-- Screen 2: Gameplay -->
+        <div id="screen-gameplay" class="screen">
+            <div class="game-info-bar">
+                <div class="info-item" id="info-level-title">Level / स्तरः</div>
+                <div class="info-item" id="info-score">Words / शब्दाः: 0/0</div>
+            </div>
+
+            <div class="hint-bar" id="builder-hint">
+                Find 0 hidden words using the syllable tiles!
+            </div>
+
+            <!-- Word Bar (Spelled Word) -->
+            <div class="word-bar-container">
+                <div id="word-bar" class="word-bar">
+                    <span style="color: var(--t-text-muted); font-weight: 600;">Spelled Word / वर्ण-संयोजनम्</span>
+                </div>
+                
+                <div class="builder-controls">
+                    <button class="builder-btn btn-clear" onclick="clearWordBar()">Clear / शोधनम्</button>
+                    <button class="builder-btn btn-submit" onclick="submitSpelledWord()">Submit / पुष्टिः</button>
+                </div>
+            </div>
+
+            <!-- Syllable Tiles bank -->
+            <div id="builder-tiles-grid" class="builder-tiles-grid"></div>
+
+            <!-- Found Words Tracker -->
+            <div class="found-items-container">
+                <div class="found-items-title">
+                    <span>Found Words / प्राप्त-शब्दाः:</span>
+                    <span id="found-words-count">0</span>
+                </div>
+                <div id="found-words-list" class="found-words-list"></div>
+            </div>
+        </div>
+
+        <!-- Screen 3: Results -->
+        <div id="screen-results" class="screen">
+            <div class="results-header">
+                <div class="score-circle">
+                    <span id="result-score-num" class="score-num">0%</span>
+                    <span class="score-label">Score / क्रीडा-अङ्काः</span>
+                </div>
+                <h2 id="result-msg" class="screen-title">Excellent! / अतिसुन्दरम्!</h2>
+            </div>
+
+            <div class="result-stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-correct">0/0</div>
+                    <div class="stat-lbl">प्राप्त-शब्दाः / Found Words</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="stat-time">0s</div>
+                    <div class="stat-lbl">समयः / Time Taken</div>
+                </div>
+            </div>
+
+            <div class="items-breakdown">
+                <h3 class="breakdown-title">शब्द-विवरणम् / Word Details</h3>
+                <div id="breakdown-list" class="breakdown-list"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action btn-action-primary" onclick="restartGame()">
+                    <span>🔄</span> क्रीडतु / Play Again
+                </button>
+                <button class="btn-action btn-action-secondary" onclick="location.href='/play/'">
+                    <span>🏠</span> Games
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- API JS Helpers -->
+    <script src="play-db.js"></script>
+
+    <!-- Game Logic JS -->
+    <script>
+        let builderSets = [];
+        let currentSet = null;
+        let selectedTimerSeconds = 300;
+        let timerInterval = null;
+        let timeRemaining = null;
+        let timeElapsed = 0;
+        let gameActive = false;
+
+        let targetWords = [];
+        let foundWords = [];
+        let currentSpelling = []; // Array of { index: tileIndex, text: syllableText }
+
+        window.addEventListener('load', async () => {
+            await loadSetsList();
+        });
+
+        async function loadSetsList() {
+            const grid = document.getElementById('sets-grid');
+            const res = await getWordBuilderSets();
+            if (res.success && res.sets.length > 0) {
+                builderSets = res.sets;
+                grid.innerHTML = '';
+                res.sets.forEach(set => {
+                    const card = document.createElement('div');
+                    card.className = 'set-card';
+                    card.onclick = () => startGame(set.id);
+                    card.innerHTML = `
+                        <img class="set-card-logo" src="/static/images/game_word_builder.png" alt="Icon">
+                        <div class="set-card-title">${set.title}</div>
+                        <div class="set-card-meta">${set.target_words.length} शब्दाः / Words</div>
+                        <div class="set-card-play">आरम्भः / Play</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = `
+                    <div class="no-sets">
+                        <p>No word builder sets found.</p>
+                        <p>Go to Admin Panel to import or add sets.</p>
+                    </div>
+                `;
+            }
+        }
+
+
+
+        function splitToSyllables(word) {
+            const matches = word.match(/.[्]?[ािीुूृेैोौ]?[ःं]?/g) || [];
+            const result = [];
+            for (let i = 0; i < matches.length; i++) {
+                let syl = matches[i];
+                if (syl.endsWith('्') && i + 1 < matches.length) {
+                    syl += matches[i+1];
+                    i++;
+                }
+                result.push(syl);
+            }
+            return result;
+        }
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        async function startGame(setId) {
+            const res = await getWordBuilderSet(setId);
+            if (!res.success || !res.set) {
+                alert("Failed to load level data.");
+                return;
+            }
+
+            currentSet = res.set;
+            if (currentSet.time_limit === null || currentSet.time_limit === 0) {
+                selectedTimerSeconds = null;
+            } else {
+                selectedTimerSeconds = currentSet.time_limit || 300;
+            }
+            targetWords = currentSet.target_words.map(w => w.trim());
+            foundWords = [];
+            currentSpelling = [];
+            timeElapsed = 0;
+
+            // Update UI headers
+            document.getElementById('info-level-title').textContent = currentSet.title;
+            document.getElementById('builder-hint').textContent = `Find ${targetWords.length} hidden words using the syllable tiles!`;
+            updateScoreUI();
+
+            // Clear trackers
+            document.getElementById('found-words-list').innerHTML = '';
+            document.getElementById('found-words-count').textContent = '0';
+            clearWordBar();
+
+            // Populate syllable tiles bank
+            const tilesGrid = document.getElementById('builder-tiles-grid');
+            tilesGrid.innerHTML = '';
+            
+            // Auto-generate unique syllables from target words dynamically
+            // or use unique predefined syllables
+            const syllablesSet = new Set();
+            if (currentSet.syllables && currentSet.syllables.length > 0) {
+                currentSet.syllables.forEach(s => {
+                    if (s.trim()) syllablesSet.add(s.trim());
+                });
+            } else {
+                targetWords.forEach(word => {
+                    const syls = splitToSyllables(word);
+                    syls.forEach(s => {
+                        if (s.trim()) syllablesSet.add(s.trim());
+                    });
+                });
+            }
+            const syllables = shuffleArray(Array.from(syllablesSet));
+
+            syllables.forEach((syl, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'syllable-tile';
+                tile.id = `tile-${index}`;
+                tile.textContent = syl;
+                tile.onclick = () => addSyllable(index, syl);
+                tilesGrid.appendChild(tile);
+            });
+
+            switchScreen('screen-gameplay');
+            initTimer();
+            gameActive = true;
+        }
+
+        function addSyllable(index, text) {
+            if (!gameActive) return;
+
+            // Add to spelling array
+            currentSpelling.push({ index, text });
+            renderWordBar();
+        }
+
+        function clearWordBar() {
+            currentSpelling = [];
+            renderWordBar();
+        }
+
+        function renderWordBar() {
+            const wordBar = document.getElementById('word-bar');
+            wordBar.innerHTML = '';
+
+            if (currentSpelling.length === 0) {
+                wordBar.innerHTML = '<span style="color: var(--t-text-muted); font-weight: 600;">वर्ण-संयोजनम् / Spelled Word</span>';
+                return;
+            }
+
+            currentSpelling.forEach((item, pos) => {
+                const span = document.createElement('span');
+                span.className = 'word-bar-tile';
+                span.textContent = item.text;
+                span.onclick = () => removeSyllableAt(pos);
+                wordBar.appendChild(span);
+            });
+        }
+
+        function removeSyllableAt(pos) {
+            if (!gameActive) return;
+
+            currentSpelling.splice(pos, 1);
+            renderWordBar();
+        }
+
+        function submitSpelledWord() {
+            if (!gameActive || currentSpelling.length === 0) return;
+
+            const word = currentSpelling.map(item => item.text).join('').trim();
+            const wordBar = document.getElementById('word-bar');
+
+            // Check if already found
+            if (foundWords.includes(word)) {
+                alert("Already found!");
+                clearWordBar();
+                return;
+            }
+
+            // Check if matches any target words
+            if (targetWords.includes(word)) {
+                // Correct word builder match!
+                foundWords.push(word);
+                updateScoreUI();
+
+                // Add to found words list
+                const listEl = document.getElementById('found-words-list');
+                const badge = document.createElement('span');
+                badge.className = 'found-word-badge';
+                badge.textContent = `✓ ${word}`;
+                listEl.appendChild(badge);
+                document.getElementById('found-words-count').textContent = foundWords.length;
+
+                // Animate correct flash
+                wordBar.style.borderColor = 'var(--success-color)';
+                setTimeout(() => {
+                wordBar.style.borderColor = 'var(--t-border)';
+                }, 500);
+
+                currentSpelling = [];
+                renderWordBar();
+
+                // Check win condition
+                if (foundWords.length === targetWords.length) {
+                    endGame();
+                }
+            } else {
+                // Incorrect word
+                wordBar.classList.add('shake');
+                wordBar.style.borderColor = 'var(--danger-color)';
+                setTimeout(() => {
+                    wordBar.classList.remove('shake');
+                    wordBar.style.borderColor = 'var(--t-border)';
+                }, 500);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('info-score').innerHTML = `शब्दाः / Words: <b style="color:var(--primary-color)">${foundWords.length}/${targetWords.length}</b>`;
+        }
+
+        function initTimer() {
+            const timerBar = document.getElementById('timer-display');
+            const timerVal = document.getElementById('timer-val');
+            
+            clearInterval(timerInterval);
+            timerBar.classList.remove('timer-low');
+
+            if (selectedTimerSeconds === null) {
+                timerBar.style.display = 'none';
+                timeRemaining = null;
+                timerInterval = setInterval(() => {
+                    timeElapsed++;
+                }, 1000);
+            } else {
+                timerBar.style.display = 'flex';
+                timeRemaining = selectedTimerSeconds;
+                timerVal.textContent = formatTime(timeRemaining);
+                
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    timeElapsed++;
+                    timerVal.textContent = formatTime(timeRemaining);
+
+                    if (timeRemaining <= 10) {
+                        timerBar.classList.add('timer-low');
+                    }
+
+                    if (timeRemaining <= 0) {
+                        endGame(); // Time's up
+                    }
+                }, 1000);
+            }
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        async function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            document.getElementById('timer-display').style.display = 'none';
+
+            const percentage = targetWords.length > 0 ? Math.round((foundWords.length / targetWords.length) * 100) : 0;
+            
+            // Set Results UI
+            document.getElementById('result-score-num').textContent = `${percentage}%`;
+            document.getElementById('stat-correct').textContent = `${foundWords.length}/${targetWords.length}`;
+            document.getElementById('stat-time').textContent = `${timeElapsed}s`;
+
+            // Message feedback
+            const msgEl = document.getElementById('result-msg');
+            if (percentage === 100) {
+                msgEl.textContent = "अतिसुन्दरम्! / Excellent!";
+                spawnConfetti();
+            } else if (percentage >= 70) {
+                msgEl.textContent = "सुन्दरम्! / Very Good!";
+                spawnConfetti(20);
+            } else {
+                msgEl.textContent = "पुनः क्रीडतु! / Try Again!";
+            }
+
+            // Generate breakdown detail
+            const listEl = document.getElementById('breakdown-list');
+            listEl.innerHTML = '';
+            targetWords.forEach(w => {
+                const item = document.createElement('div');
+                const isFound = foundWords.includes(w);
+                
+                item.className = `breakdown-item ${isFound ? 'correct' : 'incorrect'}`;
+                item.innerHTML = `
+                    <span>${w}</span>
+                    <span class="item-status ${isFound ? 'correct' : 'incorrect'}">
+                        ${isFound ? '✓ Found' : '✗ Missed'}
+                    </span>
+                `;
+                listEl.appendChild(item);
+            });
+
+            switchScreen('screen-results');
+
+            // Save results to Database
+            await saveGameResult('word_builder', currentSet.id, currentSet.title, foundWords.length, targetWords.length, percentage, timeElapsed);
+        }
+
+        function restartGame() {
+            if (currentSet) {
+                startGame(currentSet.id);
+            } else {
+                switchScreen('screen-selection');
+            }
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(scr => {
+                scr.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Confetti Generator
+        function spawnConfetti(count = 60) {
+            const container = document.getElementById('confetti-container');
+            container.innerHTML = '';
+            
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', 'var(--t-accent)', '#ec4899', '#f472b6'];
+            
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.left = `${Math.random() * 100}vw`;
+                piece.style.top = `${-Math.random() * 20}px`;
+                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+                piece.style.animationDelay = `${Math.random() * 0.8}s`;
+                piece.style.animationDuration = `${1.5 + Math.random() * 1.5}s`;
+                container.appendChild(piece);
+            }
+        }
+    </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

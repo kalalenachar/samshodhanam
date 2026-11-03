@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="sa">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanskrit Games / क्रीडा-विभागः - Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="/static/css/style.css?v=100">
+    <link rel="stylesheet" href="style.css?v=100">
+    <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+    <script src="/static/js/mobile-android.js" defer></script>
+    <style>
+        /* Dedicated styles for the selection page */
+        .selection-container {
+            flex: 1;
+            max-width: 900px;
+            width: 90%;
+            margin: 3rem auto;
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 32px;
+            border: 2px solid var(--t-border);
+            box-shadow: var(--t-shadow);
+            padding: 3rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: pageFadeIn 0.5s ease-out;
+        }
+
+        .selection-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            width: 100%;
+        }
+
+        .selection-title-sanskrit {
+            color: var(--t-accent);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .selection-title-english {
+            font-family: var(--font-latin);
+            font-size: 2.75rem;
+            font-weight: 800;
+            background: var(--t-heading-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .selection-subtitle {
+            color: var(--t-text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* Circular Games Grid */
+        .games-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 32px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        /* Reusing and refining the circular game bubble design */
+        .game-selection-item {
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--t-border);
+            box-shadow: var(--t-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .game-selection-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: -1;
+        }
+
+        /* Custom Hover Glow Gradients for each game */
+        .game-selection-item.synonym:hover::after {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%);
+            opacity: 1;
+        }
+
+        .game-selection-item.builder:hover::after {
+            background: radial-gradient(circle, rgba(20, 184, 166, 0.25) 0%, transparent 70%);
+            opacity: 1;
+        }
+
+        .game-selection-item.search:hover::after {
+            background: radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, transparent 70%);
+            opacity: 1;
+        }
+
+        .game-selection-item.admin:hover::after {
+            background: radial-gradient(circle, var(--t-accent-alpha-25) 0%, transparent 70%);
+            opacity: 1;
+        }
+
+        .game-selection-item:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: var(--t-accent);
+            box-shadow: 0 20px 40px var(--t-accent-alpha-20);
+        }
+
+        .game-bubble-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s ease;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-selection-item:hover .game-bubble-content {
+            transform: translateY(-15px);
+        }
+
+        .game-bubble-logo {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .game-selection-item:hover .game-bubble-logo {
+            transform: scale(1.15) translateY(-4px);
+        }
+
+        .game-selection-item h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            margin: 4px 0 2px 0;
+        }
+
+        .game-sanskrit-subtitle {
+            font-size: 0.85em;
+            color: var(--t-text-secondary);
+            font-weight: 600;
+        }
+
+        .game-bubble-desc {
+            position: absolute;
+            bottom: 32px;
+            left: 30px;
+            right: 30px;
+            font-size: 0.7rem;
+            color: var(--t-text-secondary);
+            line-height: 1.35;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+            margin: 0;
+        }
+
+        .game-selection-item:hover .game-bubble-desc {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .game-play-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 16px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-decoration: none;
+            border-radius: 20px;
+            color: white !important;
+            transition: background 0.2s, transform 0.2s, opacity 0.3s ease, visibility 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .game-selection-item:hover .game-play-btn {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        /* Specific Play Button Colors */
+        .game-selection-item.synonym .game-play-btn {
+            background: #3b82f6;
+        }
+        .game-selection-item.synonym:hover .game-play-btn {
+            background: #60a5fa;
+        }
+
+        .game-selection-item.builder .game-play-btn {
+            background: #14b8a6;
+        }
+        .game-selection-item.builder:hover .game-play-btn {
+            background: #2dd4bf;
+        }
+
+        .game-selection-item.search .game-play-btn {
+            background: #f59e0b;
+        }
+        .game-selection-item.search:hover .game-play-btn {
+            background: #fbbf24;
+        }
+
+        .game-selection-item.admin .game-play-btn {
+            background: var(--t-accent-hover);
+        }
+        .game-selection-item.admin:hover .game-play-btn {
+            background: var(--t-text-secondary);
+        }
+
+        @keyframes pageFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .selection-container {
+                padding: 2rem 1rem;
+                margin: 1.5rem auto;
+            }
+            .selection-title-english {
+                font-size: 2.2rem;
+            }
+            .games-grid {
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <a href="/" class="navbar-home-btn" title="Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </a>
+            <h1 class="navbar-title">क्रीडा-विभागः</h1>
+        </div>
+        <div style="width: 40px; flex-shrink: 0;"></div>
+    </header>
+
+    <!-- Selection Panel -->
+    <div class="selection-container">
+        
+
+
+        <div class="games-grid">
+
+            <!-- Game 1: Synonym Match -->
+            <div class="game-selection-item synonym" onclick="window.location.href='/play/synonym-match.html'">
+                <div class="game-bubble-content">
+                    <img src="/static/images/game_synonym_match.png" alt="पर्याय-मेलनम्" class="game-bubble-logo">
+                    <div class="game-info-text">
+                        <h3>Synonym Match</h3>
+                        <div class="game-sanskrit-subtitle">पर्याय-मेलनम्</div>
+                        <p class="game-mobile-desc">Match Sanskrit synonyms in columns</p>
+                    </div>
+                    <span class="game-play-btn">Play ▶</span>
+                </div>
+                <p class="game-bubble-desc">Link Sanskrit words to their correct synonyms in two columns.</p>
+            </div>
+
+            <!-- Game 2: Word Builder -->
+            <div class="game-selection-item builder" onclick="window.location.href='/play/word-builder.html'">
+                <div class="game-bubble-content">
+                    <img src="/static/images/game_word_builder.png" alt="शब्द-रचना" class="game-bubble-logo">
+                    <div class="game-info-text">
+                        <h3>Word Builder</h3>
+                        <div class="game-sanskrit-subtitle">शब्द-रचना</div>
+                        <p class="game-mobile-desc">Build Sanskrit words from syllable tiles</p>
+                    </div>
+                    <span class="game-play-btn">Play ▶</span>
+                </div>
+                <p class="game-bubble-desc">Tap syllable tiles in order to spell hidden Sanskrit words.</p>
+            </div>
+
+            <!-- Game 3: Word Search -->
+            <div class="game-selection-item search" onclick="window.location.href='/play/word-search.html'">
+                <div class="game-bubble-content">
+                    <img src="/static/images/game_word_search.png" alt="शब्दान्वेषणम्" class="game-bubble-logo">
+                    <div class="game-info-text">
+                        <h3>Word Search</h3>
+                        <div class="game-sanskrit-subtitle">शब्दान्वेषणम्</div>
+                        <p class="game-mobile-desc">Find hidden Sanskrit words in grid matrices</p>
+                    </div>
+                    <span class="game-play-btn">Play ▶</span>
+                </div>
+                <p class="game-bubble-desc">Trace letter paths on grid matrices to find hidden Sanskrit words.</p>
+            </div>
+
+            <!-- Game 4: Games Admin (Dynamically visible) -->
+            <div id="games-admin-bubble" class="game-selection-item admin" onclick="window.location.href='/play/play-admin.html'" style="display: none;">
+                <div class="game-bubble-content">
+                    <img src="/static/images/game_admin.png" alt="क्रीडा-प्रबन्धकः" class="game-bubble-logo">
+                    <div class="game-info-text">
+                        <h3>Games Admin</h3>
+                        <div class="game-sanskrit-subtitle">क्रीडा-प्रबन्धकः</div>
+                        <p class="game-mobile-desc">Manage Sanskrit game datasets</p>
+                    </div>
+                    <span class="game-play-btn">Manage ⚙️</span>
+                </div>
+                <p class="game-bubble-desc">Configure word builders, synonyms, and search grid datasets.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // Check authentication and show Games Admin bubble if admin or superadmin
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('user_token');
+            const userStr = localStorage.getItem('user_profile');
+
+            if (token && userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    const adminBubble = document.getElementById('games-admin-bubble');
+                    if (adminBubble && user && (user.role === 'admin' || user.role === 'super')) {
+                        adminBubble.style.display = 'flex';
+                    }
+                } catch (e) {
+                    console.error("Error parsing user profile:", e);
+                }
+            }
+        });
+    </script>
+    <footer style="margin-top: 2rem; margin-bottom: 2rem; text-align: center; font-size: 0.85rem; color: var(--t-text-secondary);">
+        Samshodhana Mandiram — Sri Trayee Vidya Gurukulam
+    </footer>
+    <script src="/sdl/static/js/theme.js?v=35"></script>
+</body>
+</html>

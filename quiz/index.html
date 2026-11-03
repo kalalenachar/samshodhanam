@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Test your knowledge with interactive MCQ quizzes across multiple subjects and levels!">
+  <title>QuizMaster — Challenge Your Knowledge</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=100">
+  <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+  <script src="/static/js/mobile-android.js" defer></script>
+  <style>
+    .player-name-field:has(#playerName[readonly]) {
+      display: none !important;
+    }
+  </style>
+  <script src="db.js"></script>
+</head>
+<body>
+  <div class="ambient-blobs-container">
+    <div class="ambient-blob ambient-blob-1"></div>
+    <div class="ambient-blob ambient-blob-2"></div>
+  </div>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="index.html" class="navbar-brand"><img src="/static/images/app_quiz.png" class="navbar-logo" alt="QuizMaster Logo">Quiz<span class="highlight">Master</span></a>
+    </div>
+    <div class="navbar-links">
+      <div id="quizUserMenu" style="display: none;">
+        <a href="/user/quiz-profile" class="quiz-user-avatar-btn" id="quizAvatarBtn" title="View Profile">
+          <span id="quizAvatarEmoji">👤</span>
+        </a>
+      </div>
+      <a href="/login?redirect=/quiz/index.html" id="userLoginLink">Login</a>
+
+    </div>
+  </nav>
+
+
+
+
+  <div class="container container-lg mt-1">
+    <div class="quiz-home-layout">
+      <!-- Left Column: Player Identity & Language config -->
+      <aside class="quiz-home-sidebar sidebar-sticky">
+        <!-- Identity Card -->
+        <div class="premium-card" style="padding: 1rem; margin-bottom: 1rem;">
+          <div class="sidebar-section-title" style="margin-bottom: 0.5rem;">
+            👤 Player Profile
+          </div>
+          <div class="identity-card" style="display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 0.65rem 0.85rem; margin-bottom: 0.75rem; text-align: left; background: var(--t-hover-bg); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 14px;">
+            <div class="sidebar-avatar-glow" id="sidebarAvatarContainer" style="margin-bottom: 0; flex-shrink: 0;">
+              <div class="quiz-user-avatar-btn" id="sidebarAvatar" style="width: 40px; height: 40px; font-size: 18px; cursor: default; pointer-events: none;">👤</div>
+            </div>
+            <div style="flex-grow: 1; min-width: 0;">
+              <div id="sidebarPlayerName" style="font-weight: 700; font-size: 0.95rem; color: var(--t-text-primary); word-break: break-all; line-height: 1.3;">Guest Player</div>
+              <div id="sidebarPlayerRole" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; line-height: 1.2;">Guest Mode</div>
+            </div>
+          </div>
+
+          <form id="startForm" onsubmit="event.preventDefault();">
+            <div class="form-group" style="margin-bottom: 0;">
+              <div class="player-name-field">
+                <label for="playerName" style="font-weight: 600; font-size: 0.8rem; margin-bottom: 0.25rem; display: block;">Your Name / नाम</label>
+                <div class="input-with-icon" style="position: relative;">
+                  <input type="text" id="playerName" class="form-input" placeholder="Enter your name..." required autocomplete="off" autofocus style="padding: 0.55rem 0.75rem 0.55rem 2.2rem; font-size: 0.85rem;">
+                  <span class="input-with-icon-symbol" style="position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem;">👤</span>
+                </div>
+              </div>
+              <div id="authStatusBadge" style="margin-top: 6px; font-size: 0.8rem; line-height: 1.35;"></div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Language Card -->
+        <div class="premium-card" style="padding: 1rem;">
+          <div class="sidebar-section-title" style="margin-bottom: 0.5rem;">
+            🌐 Assessment Language / भाषा
+          </div>
+          <div class="glass-radio-group">
+            <input type="radio" name="quizLanguage" id="glass-sa" value="sa" checked>
+            <label for="glass-sa">संस्कृतम्</label>
+
+            <input type="radio" name="quizLanguage" id="glass-en" value="en">
+            <label for="glass-en">English</label>
+
+            <input type="radio" name="quizLanguage" id="glass-hi" value="hi">
+            <label for="glass-hi">हिन्दी</label>
+
+            <input type="radio" name="quizLanguage" id="glass-kn" value="kn">
+            <label for="glass-kn">ಕನ್ನಡ</label>
+
+            <input type="radio" name="quizLanguage" id="glass-te" value="te">
+            <label for="glass-te">తెలుగు</label>
+
+            <div class="glass-glider"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: Quiz Explorer -->
+      <main class="quiz-home-main" id="quizExplorerMain">
+        <div class="premium-card" style="padding: 1.75rem 2rem; min-height: 480px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="font-weight: 700; font-size: 1.15rem; color: var(--t-text-primary); display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" style="flex-shrink: 0;">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="13" x2="15" y2="13"></line>
+                <line x1="9" y1="17" x2="13" y2="17"></line>
+              </svg>
+              Select Assessment Category
+            </div>
+            
+            <div class="explorer-search-wrapper" style="margin: 0; min-width: 260px;">
+              <input type="text" id="quizSearchInput" class="explorer-search-input" placeholder="Search subjects or exams..." autocomplete="off">
+              <span class="explorer-search-icon">🔍</span>
+            </div>
+          </div>
+
+          <div class="explorer-container" style="margin-top: 0;">
+            <div class="explorer-breadcrumbs" id="explorerBreadcrumbs"></div>
+            <div class="explorer-grid" id="explorerGrid">
+              <div style="padding: 2.5rem 1.5rem; text-align: center; color: var(--text-muted); width: 100%;">
+                <div class="loading-spinner" style="margin: 0 auto 0.75rem;"></div>
+                Loading quiz explorer...
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div style="height: 4rem;"></div>
+
+  <footer class="footer">
+    <div class="footer-quote">"ज्ञानेन सदृशं पवित्रमिह विद्यते"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull; 
+      <a href="/library">Sanskrit Digital Library</a> &bull; 
+      <a href="/#contact">Contact Us</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    let categoriesData = [];
+    let currentPath = []; // Navigation stack of category nodes
+    let selectedQuiz = null;
+    let searchQuery = ''; // Dynamic search text filter
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'error') icon = '❌';
+      if (type === 'warning') icon = '⚠️';
+      t.innerHTML = `<span style="font-size: 1.1rem; display: flex; align-items: center;">${icon}</span> <span>${msg}</span>`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateX(20px)';
+        t.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    // Check for pending session toasts
+    const pendingToast = sessionStorage.getItem('pending_toast');
+    if (pendingToast) {
+      try {
+        const toastData = JSON.parse(pendingToast);
+        showToast(toastData.message, toastData.type);
+      } catch (e) {}
+      sessionStorage.removeItem('pending_toast');
+    }
+
+    async function loadCategories() {
+      try {
+        const res = await fetch('/api/v1/quiz/categories');
+        const data = await res.json();
+        if (data.success && data.categories) {
+          categoriesData = data.categories;
+          renderExplorer();
+        } else {
+          document.getElementById('explorerGrid').innerHTML = '<div style="color: var(--danger); padding:1.5rem; text-align:center;">Error loading quiz categories.</div>';
+        }
+      } catch (err) {
+        console.error('Error loading quiz categories:', err);
+        document.getElementById('explorerGrid').innerHTML = '<div style="color: var(--danger); padding:1.5rem; text-align:center;">Failed to load.</div>';
+      }
+    }
+
+    function getCurrentFolderChildren() {
+      if (currentPath.length === 0) {
+        return categoriesData;
+      }
+      return currentPath[currentPath.length - 1].children || [];
+    }
+
+    function renderFolderIconHTML(node) {
+      if (!node.icon) {
+        return `
+          <svg width="60" height="60" viewBox="0 0 24 24" style="display: block; margin: 0 auto;">
+            <defs>
+              <linearGradient id="folderGrad-${node.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fdba74" />
+                <stop offset="100%" stop-color="#f97316" />
+              </linearGradient>
+            </defs>
+            <path d="M20 18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" fill="url(#folderGrad-${node.id})" />
+            <path d="M4 7V6a2 2 0 0 1 2-2h4l2 2.5H18a2 2 0 0 1 2v.5" fill="none" stroke="#fdba74" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+      if (node.icon.startsWith('/') || node.icon.startsWith('http')) {
+        return `<img src="${node.icon}" style="width: 86px; height: 86px; object-fit: cover; border-radius: 14px; display: block; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">`;
+      }
+      return `<span style="font-size: 3.5rem; display: block; line-height: 1.1;">${node.icon}</span>`;
+    }
+
+    function renderQuizIconHTML(node) {
+      return `
+        <svg width="60" height="60" viewBox="0 0 24 24" style="display: block; margin: 0 auto;">
+          <defs>
+            <linearGradient id="quizGrad-${node.id}" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#a5b4fc" />
+              <stop offset="100%" stop-color="#818cf8" />
+            </linearGradient>
+          </defs>
+          <rect x="4" y="3" width="16" height="18" rx="2" fill="url(#quizGrad-${node.id})" />
+          <line x1="8" y1="8" x2="16" y2="8" stroke="#e0e7ff" stroke-width="2" stroke-linecap="round" />
+          <line x1="8" y1="12" x2="16" y2="12" stroke="#e0e7ff" stroke-width="2" stroke-linecap="round" />
+          <line x1="8" y1="16" x2="13" y2="16" stroke="#e0e7ff" stroke-width="2" stroke-linecap="round" />
+          <circle cx="17" cy="17" r="4.5" fill="#10b981" />
+          <path d="M15.5 17l1 1 2-2" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+        </svg>
+      `;
+    }
+
+    function searchCategoriesRecursively(nodes, query, path = []) {
+      let results = [];
+      for (const node of nodes) {
+        const matchesName = node.name.toLowerCase().includes(query.toLowerCase());
+        const matchesSubject = node.type === 'quiz' && node.subject && node.subject.toLowerCase().includes(query.toLowerCase());
+        
+        if (matchesName || matchesSubject) {
+          results.push({
+            node,
+            path: [...path]
+          });
+        }
+        if (node.children && node.children.length > 0) {
+          results = results.concat(searchCategoriesRecursively(node.children, query, [...path, node]));
+        }
+      }
+      return results;
+    }
+
+    function findNodeAndPath(nodes, targetId, path = []) {
+      for (const node of nodes) {
+        if (node.id === targetId) {
+          return [...path, node];
+        }
+        if (node.children && node.children.length > 0) {
+          const found = findNodeAndPath(node.children, targetId, [...path, node]);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function navigateIntoSearchResult(nodeId) {
+      const fullNodePath = findNodeAndPath(categoriesData, nodeId);
+      if (fullNodePath) {
+        currentPath = fullNodePath;
+        clearSearch();
+      }
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      const input = document.getElementById('quizSearchInput');
+      if (input) input.value = '';
+      renderExplorer();
+    }
+
+    function renderExplorer() {
+      const grid = document.getElementById('explorerGrid');
+      const breadcrumbs = document.getElementById('explorerBreadcrumbs');
+      if (!grid || !breadcrumbs) return;
+
+      if (searchQuery.length > 0) {
+        // 1. Render Search Breadcrumbs
+        breadcrumbs.innerHTML = `<span style="display: flex; align-items: center; width: 100%;">🔍 Search results for: <strong style="color: var(--accent); margin-left: 4px;">"${escapeHtml(searchQuery)}"</strong> <a href="#" onclick="clearSearch(); event.preventDefault();" style="margin-left: auto; font-size: 0.8rem; font-weight: 600; color: var(--danger); text-decoration: none;">Clear Search ✕</a></span>`;
+
+        // 2. Perform search
+        const matches = searchCategoriesRecursively(categoriesData, searchQuery);
+        const visibleMatches = matches.filter(match => match.node.type !== 'quiz' || (match.node.count && match.node.count > 0));
+        
+        if (visibleMatches.length === 0) {
+          grid.innerHTML = `
+            <div class="search-empty-state">
+              <div class="search-empty-icon">🔍</div>
+              <div style="font-weight: 600; font-size: 1.05rem; color: var(--t-text-primary); margin-bottom: 0.25rem;">No quizzes or subjects found</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">We couldn't find any results matching "${escapeHtml(searchQuery)}".</div>
+              <button type="button" class="btn-reset-search" onclick="clearSearch()">Clear Search</button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = visibleMatches.map(match => {
+          const { node, path } = match;
+          const pathStr = path.length > 0 ? 'Home / ' + path.map(p => p.name).join(' / ') : 'Home';
+          
+          if (node.type === 'folder') {
+            const folderChildren = node.children || [];
+            const folderQuizCount = folderChildren.filter(c => c.type !== 'quiz' || (c.count && c.count > 0)).length;
+            return `
+              <div class="explorer-item-card folder-node" onclick="navigateIntoSearchResult('${node.id}')">
+                <div class="explorer-item-icon-wrapper">${renderFolderIconHTML(node)}</div>
+                <div class="explorer-item-name">${escapeHtml(node.name)}</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">In: ${escapeHtml(pathStr)}</div>
+                <div class="pill-badge">${folderQuizCount} items</div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="explorer-item-card quiz-node" onclick="selectQuizItem('${escapeJS(node.subject)}', '${escapeJS(node.level)}', ${node.count})">
+                <div class="explorer-item-icon-wrapper">${renderQuizIconHTML(node)}</div>
+                <div class="explorer-item-name">${escapeHtml(node.name)}</div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; font-style: italic;">In: ${escapeHtml(pathStr)}</div>
+                <div class="pill-badge">${node.count || 0} Questions</div>
+              </div>
+            `;
+          }
+        }).join('');
+      } else {
+        // Standard Explorer Mode
+        // 1. Render Breadcrumbs
+        let bcHtml = `<a href="#" onclick="navigateBreadcrumb(-1); event.preventDefault();">🏠 Home</a>`;
+        currentPath.forEach((node, idx) => {
+          bcHtml += ` <span style="opacity: 0.5;">/</span> <a href="#" onclick="navigateBreadcrumb(${idx}); event.preventDefault();">${escapeHtml(node.name)}</a>`;
+        });
+        breadcrumbs.innerHTML = bcHtml;
+
+        // 2. Render Grid items
+        const children = getCurrentFolderChildren();
+        const visibleChildren = children.filter(node => node.type !== 'quiz' || (node.count && node.count > 0));
+
+        if (visibleChildren.length === 0) {
+          grid.innerHTML = '<div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); width: 100%;">This folder is empty.</div>';
+          return;
+        }
+
+        grid.innerHTML = visibleChildren.map(node => {
+          if (node.type === 'folder') {
+            const folderChildren = node.children || [];
+            const folderQuizCount = folderChildren.filter(c => c.type !== 'quiz' || (c.count && c.count > 0)).length;
+            return `
+              <div class="explorer-item-card folder-node" onclick="navigateInto('${node.id}')">
+                <div class="explorer-item-icon-wrapper">${renderFolderIconHTML(node)}</div>
+                <div class="explorer-item-name">${escapeHtml(node.name)}</div>
+                <div class="pill-badge">${folderQuizCount} items</div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="explorer-item-card quiz-node" onclick="selectQuizItem('${escapeJS(node.subject)}', '${escapeJS(node.level)}', ${node.count})">
+                <div class="explorer-item-icon-wrapper">${renderQuizIconHTML(node)}</div>
+                <div class="explorer-item-name">${escapeHtml(node.name)}</div>
+                <div class="pill-badge">${node.count || 0} Questions</div>
+              </div>
+            `;
+          }
+        }).join('');
+      }
+    }
+
+    function navigateInto(nodeId) {
+      const children = getCurrentFolderChildren();
+      const found = children.find(c => c.id === nodeId);
+      if (found && found.type === 'folder') {
+        currentPath.push(found);
+        renderExplorer();
+      }
+    }
+
+    function navigateBreadcrumb(idx) {
+      if (idx === -1) {
+        currentPath = [];
+      } else {
+        currentPath = currentPath.slice(0, idx + 1);
+      }
+      renderExplorer();
+    }
+
+    function selectQuizItem(subject, level, count) {
+      const nameInput = document.getElementById('playerName');
+      const name = nameInput.value.trim();
+      if (!name) {
+        showToast("Please enter your name first / कृपया नामं लिखन्तु।", "warning");
+        nameInput.focus();
+        nameInput.style.animation = 'none';
+        nameInput.offsetHeight; // trigger reflow
+        nameInput.style.animation = 'shake 0.4s ease';
+        return;
+      }
+
+      selectedQuiz = { subject, level, count };
+      const lang = document.querySelector('input[name="quizLanguage"]:checked')?.value || 'sa';
+
+      // Store quiz params in sessionStorage
+      sessionStorage.setItem('quizPlayerName', name);
+      sessionStorage.setItem('quizSubject', subject);
+      sessionStorage.setItem('quizLevel', level);
+      sessionStorage.setItem('quizLanguage', lang);
+      sessionStorage.setItem('quizTotalCount', count);
+
+      // Directly show quick start modal to let student pick question count by default
+      showQuickStartModal(count);
+    }
+
+
+
+    function escapeHtml(s) {
+      if (typeof s !== 'string') return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function escapeJS(s) {
+      if (typeof s !== 'string') return '';
+      return s.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    async function syncSession() {
+      const token = localStorage.getItem('user_token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const res = await fetch('/sdl/api/external/session-sync', {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data.logged_in) {
+          localStorage.setItem('user_token', data.token);
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
+        } else {
+          if (token) {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_profile');
+          }
+        }
+      } catch (err) {
+        console.error('Session sync failed:', err);
+      } finally {
+        checkQuizAuth();
+      }
+    }
+
+    function checkQuizAuth() {
+      const token = localStorage.getItem('user_token');
+      const userStr = localStorage.getItem('user_profile');
+      const nameInput = document.getElementById('playerName');
+      const badge = document.getElementById('authStatusBadge');
+      const userMenu = document.getElementById('quizUserMenu');
+      const loginLink = document.getElementById('userLoginLink');
+
+      // Sidebar Profile updates
+      const sbAvatar = document.getElementById('sidebarAvatar');
+      const sbName = document.getElementById('sidebarPlayerName');
+      const sbRole = document.getElementById('sidebarPlayerRole');
+
+      if (token && userStr) {
+        if (loginLink) loginLink.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'inline-flex';
+
+        try {
+          const user = JSON.parse(userStr);
+          if (nameInput) {
+            nameInput.value = user.display_name || '';
+            nameInput.readOnly = true;
+            nameInput.style.background = '#1e293b';
+            nameInput.style.color = '#94a3b8';
+          }
+          if (badge) {
+            badge.innerHTML = `<span style="color: #34d399; font-weight: 600;">✓ Logged in as ${escapeHtml(user.display_name || 'User')}.</span> <span style="color: var(--text-muted);">Your score will be saved automatically.</span>`;
+          }
+
+          // Update sidebar details
+          if (sbName) sbName.textContent = user.display_name || 'User';
+          if (sbRole) sbRole.textContent = (user.role === 'super' || user.role === 'admin' || user.display_name === 'SUPERADMIN') ? 'Administrator' : 'Learner';
+          if (sbAvatar) {
+            if (user.profile_pic) {
+              const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+              sbAvatar.style.background = `url("${picUrl}") no-repeat center/cover`;
+              sbAvatar.textContent = '';
+            } else {
+              sbAvatar.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+              sbAvatar.textContent = user.avatar_emoji || '👤';
+            }
+          }
+
+          // Update avatar details in top navbar
+          const avatarBtn = document.getElementById('quizAvatarBtn');
+          const avatarEmoji = document.getElementById('quizAvatarEmoji');
+
+          if (avatarBtn) {
+            avatarBtn.title = `View Profile (${user.display_name || 'User'})`;
+            if (user.profile_pic) {
+              const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+              avatarBtn.style.background = `url("${picUrl}") no-repeat center/cover`;
+              if (avatarEmoji) avatarEmoji.textContent = '';
+            } else {
+              avatarBtn.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+              if (avatarEmoji) avatarEmoji.textContent = user.avatar_emoji || '👤';
+            }
+
+            if (user.role === 'super' || user.role === 'admin' || user.display_name === 'SUPERADMIN') {
+              sessionStorage.setItem('isAdmin', 'true');
+              avatarBtn.href = 'admin-dashboard.html';
+            } else {
+              avatarBtn.href = '/user/quiz-profile';
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          showGuestBadge(nameInput, badge);
+          if (userMenu) userMenu.style.display = 'none';
+          if (loginLink) {
+            loginLink.style.display = 'inline-block';
+            loginLink.href = '/login?redirect=/quiz/index.html';
+          }
+        }
+      } else {
+        showGuestBadge(nameInput, badge);
+        if (userMenu) userMenu.style.display = 'none';
+        if (loginLink) {
+          loginLink.style.display = 'inline-block';
+          loginLink.href = '/login?redirect=/quiz/index.html';
+        }
+      }
+    }
+
+    function showGuestBadge(nameInput, badge) {
+      const sbAvatar = document.getElementById('sidebarAvatar');
+      const sbName = document.getElementById('sidebarPlayerName');
+      const sbRole = document.getElementById('sidebarPlayerRole');
+
+      if (nameInput) {
+        nameInput.readOnly = false;
+        nameInput.style.background = '';
+        nameInput.style.color = '';
+        if (sbName) sbName.textContent = nameInput.value.trim() || 'Guest Player';
+      } else {
+        if (sbName) sbName.textContent = 'Guest Player';
+      }
+      if (sbRole) sbRole.textContent = 'Guest Mode';
+      if (sbAvatar) {
+        sbAvatar.style.background = '';
+        sbAvatar.textContent = '👤';
+      }
+
+      if (badge) {
+        badge.innerHTML = `<span style="color: #fbbf24; font-weight: 500;">💡 Guest Mode.</span> <a href="/login?redirect=/quiz/index.html" style="color: #818cf8; font-weight: 600; text-decoration: none;">Login here</a> to track scores.`;
+      }
+    }
+
+    // Add keyframe animation for shake
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        75% { transform: translateX(6px); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Live search listener
+    document.addEventListener('DOMContentLoaded', () => {
+      const searchInput = document.getElementById('quizSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value.trim();
+          renderExplorer();
+        });
+      }
+
+      const nameInput = document.getElementById('playerName');
+      if (nameInput) {
+        nameInput.addEventListener('input', (e) => {
+          const sbName = document.getElementById('sidebarPlayerName');
+          if (sbName && !nameInput.readOnly) {
+            sbName.textContent = nameInput.value.trim() || 'Guest Player';
+          }
+        });
+      }
+    });
+
+    loadCategories();
+    syncSession();
+  </script>
+
+  <!-- Quick Start Modal (shown by default) -->
+  <div class="modal-overlay" id="quickStartModal">
+    <div class="modal" style="max-width: 440px; padding: 0; overflow: hidden;">
+      <div style="padding: 1.15rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+        <div style="font-weight: 700; font-size: 1.1rem; color: var(--t-text-primary); display: flex; align-items: center; gap: 0.5rem;">
+          🚀 Quick Start
+        </div>
+        <button class="modal-close" onclick="closeModal('quickStartModal')">✕</button>
+      </div>
+      <div style="padding: 1.5rem 1.75rem;">
+        <div style="text-align: center; margin-bottom: 1.25rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚡</div>
+          <div style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;">Choose how many questions you'd like, then jump straight into your assessment.</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="quickLimitSelect" style="color: var(--text-primary); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.35rem; display: block;">Number of Questions</label>
+          <select id="quickLimitSelect" class="form-select" style="background: var(--bg-body); border-color: var(--border);" required>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+          <a href="#" onclick="event.preventDefault(); openInstructionsModal();" class="btn btn-secondary" style="flex: 1; justify-content: center; font-size: 0.82rem;">📋 View Instructions</a>
+          <button class="btn btn-success btn-lg" id="quickStartBtn" style="flex: 1.5; border-radius: 8px; justify-content: center;">Start Quiz →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- General Instructions Popup Modal (view only, shown on request) -->
+  <div class="modal-overlay" id="quickInstructionsModal">
+    <div class="modal" style="max-width: 1100px; padding: 0; overflow: hidden;">
+      <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); border-radius: var(--radius-xl) var(--radius-xl) 0 0;">
+        <div style="font-weight: 800; font-size: 1.25rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+          🧠 Quiz<span style="color: #f59e0b;">Master</span> — Instructions
+        </div>
+        <button class="modal-close" onclick="closeInstructionsModal()">✕</button>
+      </div>
+
+      <div class="quick-instructions-body">
+        <h2 style="text-align: center; font-size: 1.35rem; margin-bottom: 1.5rem; font-weight: 700; color: var(--t-text-primary); background: var(--t-heading-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">General Instructions</h2>
+        
+        <div class="quick-instructions-grid">
+          <!-- Left Column -->
+          <div>
+            <h3 style="font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; border-bottom: 2px solid var(--accent); display: inline-block;">Please read carefully</h3>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.6rem; line-height: 1.5;">1. Total duration of the examination <strong>depends on the number of questions selected</strong>.</p>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.6rem; line-height: 1.5;">2. The clock will display the remaining time available for you to complete the examination.</p>
+            <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.85rem; line-height: 1.5;">3. The Questions Palette status symbols:</p>
+            
+            <div class="palette-symbols-grid">
+              <div class="instruction-row">
+                <div class="instruction-symbol symbol-not-visited">1</div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Not visited yet.</span>
+              </div>
+              <div class="instruction-row">
+                <div class="instruction-symbol symbol-not-answered">2</div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Not answered.</span>
+              </div>
+              <div class="instruction-row">
+                <div class="instruction-symbol symbol-answered">3</div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Answered.</span>
+              </div>
+              <div class="instruction-row">
+                <div class="instruction-symbol symbol-review">4</div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Marked for review.</span>
+              </div>
+            </div>
+            <div class="instruction-row" style="margin-top: 0.85rem;">
+              <div class="instruction-symbol symbol-review-answered">5</div>
+              <span style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">Answered & Marked for Review (will be evaluated).</span>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div>
+            <h3 style="font-size: 1rem; color: var(--accent); margin-bottom: 0.75rem; border-bottom: 2px solid var(--accent); display: inline-block;">Answering a Question</h3>
+            <ol style="margin-top: 0.5rem; padding-left: 1.25rem; line-height: 1.6;">
+              <li style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem;">To select your answer, click on the button of one of the options.</li>
+              <li style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem;">To deselect your chosen answer, click on the <strong>Clear Response</strong> button.</li>
+              <li style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem;">To save your answer, you MUST click on the <strong>Save & Next</strong> button.</li>
+              <li style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem;">To mark the question for review, click on the <strong>Mark for Review & Next</strong> button.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 1rem 1.5rem; display: flex; justify-content: flex-end; border-top: 1px solid var(--border); background: var(--t-bg-surface-hover);">
+        <button class="btn btn-secondary" onclick="closeInstructionsModal()" style="min-width: 120px;">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    function showQuickStartModal(totalCount) {
+      const select = document.getElementById('quickLimitSelect');
+      if (!select) return;
+      select.innerHTML = '';
+
+      const limits = [10, 25, 50, 100];
+      limits.forEach(limit => {
+        if (totalCount >= limit) {
+          const opt = document.createElement('option');
+          opt.value = limit;
+          opt.textContent = `${limit} Questions`;
+          select.appendChild(opt);
+        }
+      });
+
+      if (totalCount > 0) {
+        const opt = document.createElement('option');
+        opt.value = totalCount;
+        opt.textContent = `All Questions (${totalCount} total)`;
+        opt.selected = true;
+        select.appendChild(opt);
+      }
+
+      openModal('quickStartModal');
+    }
+
+    function openInstructionsModal() {
+      closeModal('quickStartModal');
+      openModal('quickInstructionsModal');
+    }
+
+    function closeInstructionsModal() {
+      closeModal('quickInstructionsModal');
+      openModal('quickStartModal');
+    }
+
+    document.getElementById('quickStartBtn').onclick = () => {
+      const limit = document.getElementById('quickLimitSelect').value;
+      sessionStorage.setItem('quizLimit', limit);
+      closeModal('quickStartModal');
+      window.location.href = 'quiz.html';
+    };
+
+    // Initialize Language Selection Radio Toggle
+    const savedLang = sessionStorage.getItem('quizLanguage') || 'sa';
+    const radioBtn = document.getElementById(`glass-${savedLang}`);
+    if (radioBtn) {
+      radioBtn.checked = true;
+    }
+
+    // Add event listeners to radio buttons to update session storage
+    document.querySelectorAll('input[name="quizLanguage"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        sessionStorage.setItem('quizLanguage', e.target.value);
+      });
+    });
+  </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+</html>

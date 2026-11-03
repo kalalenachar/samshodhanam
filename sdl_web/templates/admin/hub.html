@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function () {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function () {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) { }
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) { }
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Hub - Sanskrit Digital Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --card-bg: var(--t-bg-surface);
+            --card-hover-bg: var(--t-bg-surface-hover);
+            --glass-border: var(--t-border);
+            --text-heading: var(--t-text-primary);
+            --accent-purple: var(--t-accent-hover);
+            --accent-blue: #38bdf8;
+            --accent-teal: #2dd4bf;
+            --accent-pink: #f472b6;
+            --accent-amber: #fbbf24;
+            --accent-emerald: #34d399;
+        }
+
+        :root[data-theme="light"],
+        html[data-theme="light"] {
+            --accent-purple: var(--t-accent);
+            --accent-blue: #0284c7;
+            --accent-teal: #0f766e;
+            --accent-pink: #db2777;
+            --accent-amber: #b45309;
+            --accent-emerald: #059669;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        .hub-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa 0%, var(--t-text-secondary) 50%, var(--t-text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin: 40px 0 10px;
+            font-size: 2.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .hub-subtitle {
+            text-align: center;
+            color: var(--t-text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+            font-weight: 400;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--t-text-secondary);
+            margin: 40px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--t-border-light);
+            padding-bottom: 8px;
+        }
+
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .hub-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--t-shadow);
+        }
+
+        .hub-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--t-border-light) 0%, rgba(255, 255, 255, 0) 100%);
+            pointer-events: none;
+        }
+
+        .hub-card-glow {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.1;
+            top: -50px;
+            right: -50px;
+            transition: opacity 0.4s ease;
+        }
+
+        .hub-card:hover .hub-card-glow {
+            opacity: 0.25;
+        }
+
+        .hub-card:hover {
+            transform: translateY(-6px);
+            background: var(--card-hover-bg);
+            border-color: var(--t-border-hover);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), var(--t-accent-glow);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            background: var(--t-border-light);
+            width: 65px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            border: 1px solid var(--t-border-light);
+            transition: transform 0.3s ease;
+        }
+
+        .hub-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: var(--t-hover-bg);
+            color: var(--t-text-secondary);
+            border: 1px solid var(--t-border);
+        }
+
+        .card-meta {
+            margin-top: 10px;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 8px;
+        }
+
+        .card-description {
+            font-size: 0.9rem;
+            color: var(--t-text-muted);
+            line-height: 1.5;
+        }
+
+        .card-arrow {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: var(--t-text-muted);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .hub-card:hover .card-arrow {
+            opacity: 1;
+            transform: translateX(0);
+            color: var(--t-text-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header admin-header">
+        <h1><span class="emoji">⚙️</span> <span>Admin</span> Hub</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub" class="active">🏠 Hub</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container" style="max-width: 1100px; padding-bottom: 80px;">
+        <h1 class="hub-title">Samshodhana Mandiram</h1>
+        <div class="hub-subtitle">Sri Trayee Vidya Gurukulam — Unified Administrative Control Hub</div>
+
+        <!-- Section 1: Department Management Panels -->
+        <h2 class="section-title"><span>📂</span> Department Admin Panels</h2>
+        <div class="hub-grid">
+
+            <!-- Sanskrit Digital Library -->
+            <a href="/admin" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-blue);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-blue);">📚</div>
+                    <span class="card-badge">{{ book_count }} books</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">SDL Library</h3>
+                    <p class="card-description">Manage Sanskrit Digital Library catalog, OCR text corrections, and tag
+                        curation.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- Community Reviews & Contributions -->
+            <a href="/admin/review-queue" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-emerald);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-emerald);">🛡️</div>
+                    <span class="card-badge">Review Queue</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Community Review</h3>
+                    <p class="card-description">Review public contributions, approve or reject page edits with diffs, and verify community-uploaded books.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- Category & Tag Taxonomy -->
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/taxonomy" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-emerald);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-emerald);">🏷️</div>
+                    <span class="card-badge">Taxonomy Manager</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Categories & Tags</h3>
+                    <p class="card-description">Superadmin taxonomy management, interactive category visualization tree, permitted tags, and book distribution.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Play / क्रीडा -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_PLAY' in session.get('admin_permissions', []) %}
+            <a href="/play/play-admin.html" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-purple);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-purple);">🎮</div>
+                    <span class="card-badge">{{ play_count }} sets</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Play</h3>
+                    <p class="card-description">Create, import, and manage Sanskrit educational games: Synonym Match,
+                        Word Builder, and Word Search.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Quiz / प्रश्नोत्तरी -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_QUIZ' in session.get('admin_permissions', []) %}
+            <a href="/quiz/admin-dashboard.html" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-amber);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-amber);">🧠</div>
+                    <span class="card-badge">{{ quiz_count }} questions</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Quiz</h3>
+                    <p class="card-description">Manage the multilingual Sanskrit quiz question bank, difficulty levels,
+                        and bulk imports.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Katha Stories -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_KATHA' in session.get('admin_permissions', []) %}
+            <a href="/katha/admin-dashboard.html" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-teal);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-teal);">📖</div>
+                    <span class="card-badge">{{ katha_count }} stories</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Katha Stories</h3>
+                    <p class="card-description">Publish, review, edit, and organize narrative stories and illustrations.
+                    </p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Research Articles -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_ARTICLES' in session.get('admin_permissions', [])
+            %}
+            <a href="/articles/admin-dashboard.html" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-pink);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-pink);">📜</div>
+                    <span class="card-badge">{{ article_count }} articles</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Research Articles</h3>
+                    <p class="card-description">Coordinate scholarly publications, categories, draft status, and public
+                        feedback.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+        </div>
+
+
+        <!-- Section 1.5: Apps Controller -->
+        <h2 class="section-title"><span>🧩</span> Apps Controller</h2>
+        <div class="hub-grid">
+
+            <!-- Rigveda Samhita Card -->
+            <a href="/apps/rigveda/" target="_blank" class="hub-card">
+                <div class="hub-card-glow" style="background: #f59e0b;"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: #f59e0b; font-family: 'Noto Serif Devanagari', serif; font-weight: bold; font-size: 1.4rem;">ऋ</div>
+                    <span class="card-badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">Vedic Canon</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Rigveda Samhita</h3>
+                    <p class="card-description">Digital reader and scholarly explorer for Rigveda with Padapatha, Sayana Bhashya, Vedic accents, and audio chanting.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+
+            <!-- Chandas Meter Analyzer -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+            <a href="/admin/chandas" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-emerald);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-emerald);">🎵</div>
+                    <span class="card-badge">Prosody</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Chandas</h3>
+                    <p class="card-description">Configure the Sanskrit meter analyzer — sample verses, recognition settings, and fuzzy correction options.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+
+            <!-- Vyakarana Companion Admin -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+            <a href="/admin/vyakarana" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-purple);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-purple);">🕉️</div>
+                    <span class="card-badge">Grammar Companion</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Vyakarana Studio</h3>
+                    <p class="card-description">Modify Ashtadhyayi database, manage commentaries (Vyakhya), edit Shiva Sutras, Ganapatha, and classical texts.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+
+            <!-- Sanskrit STT Admin -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+            <a href="/admin/sanskrit-stt" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-purple);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-purple);">🎙️</div>
+                    <span class="card-badge">Speech-to-Text AI</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Sanskrit Speech to Text</h3>
+                    <p class="card-description">Configure Advanced STT engine, Telegram Bot integration, AI post-processing prompt, audio thresholds, and transcription logs.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Transliterator Telegram Bot Admin -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+            <a href="/admin/transliterator-bot" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-teal);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-teal);">🌐</div>
+                    <span class="card-badge">Telegram Bot</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Transliterator Bot</h3>
+                    <p class="card-description">Manage Multiscript Transliterator Telegram Bot, token credentials, service status, and Speech-to-Text cross-bot linking.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Telegram OCR Bot Admin -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_AI' in session.get('admin_permissions', []) %}
+            <a href="/admin/ocr-bot" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-purple);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-purple);">🤖</div>
+                    <span class="card-badge">OCR Telegram Bot</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Telegram OCR Bot</h3>
+                    <p class="card-description">Manage OCR Telegram Bot, OCR credentials, script transliteration, and process control.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+
+        </div>
+
+
+        <!-- Section 2: Shared Administrative Tools -->
+        <h2 class="section-title"><span>🛠️</span> Shared Admin Tools</h2>
+        <div class="hub-grid">
+
+            <!-- User Management -->
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_USERS' in session.get('admin_permissions', []) %}
+            <a href="/admin/users" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-blue);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-blue);">👤</div>
+                    <span class="card-badge">{{ user_count }} users</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Users</h3>
+                    <p class="card-description">Manage public registered users, passwords, and profile details.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+            <!-- Admin Management -->
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/manage-admins" class="hub-card">
+                <div class="hub-card-glow" style="background: var(--accent-purple);"></div>
+                <div class="card-top">
+                    <div class="card-icon" style="color: var(--accent-purple);">🔐</div>
+                    <span class="card-badge">{{ admin_count }} admins</span>
+                </div>
+                <div class="card-meta">
+                    <h3 class="card-title">Admins</h3>
+                    <p class="card-description">Provision low-level administrator accounts and delegate granular
+                        permissions.</p>
+                </div>
+                <div class="card-arrow">→</div>
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Set sessionStorage flags based on current admin permissions to avoid duplicate login prompt
+            const role = "{{ session.get('admin_role', '') }}";
+            const perms = {{ (session.get('admin_permissions') or[]) | tojson
+        }};
+
+        if (role === 'super') {
+            sessionStorage.setItem('isAdmin', 'true');
+            sessionStorage.setItem('isPlayAdmin', 'true');
+            sessionStorage.setItem('isKathaAdmin', 'true');
+            sessionStorage.setItem('isArticlesAdmin', 'true');
+        } else {
+            if (perms.includes('PERM_MANAGE_QUIZ') || perms.includes('PERM_MANAGE_PLAY')) {
+                sessionStorage.setItem('isAdmin', 'true');
+            }
+            if (perms.includes('PERM_MANAGE_PLAY')) {
+                sessionStorage.setItem('isPlayAdmin', 'true');
+            }
+            if (perms.includes('PERM_MANAGE_KATHA')) {
+                sessionStorage.setItem('isKathaAdmin', 'true');
+            }
+            if (perms.includes('PERM_MANAGE_ARTICLES')) {
+                sessionStorage.setItem('isArticlesAdmin', 'true');
+            }
+        }
+        }) ();
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script>
+</body>
+
+</html>

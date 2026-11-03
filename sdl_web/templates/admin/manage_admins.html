@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Admins - Sanskrit Digital Library</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <style>
+        .admin-card {
+            background: var(--t-bg-surface);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .permissions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+            padding: 15px;
+            background: var(--t-bg-surface-hover);
+            border-radius: 6px;
+        }
+
+        .perm-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--t-bg-overlay);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--t-bg-surface);
+            padding: 30px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--t-input-border);
+            border-radius: 6px;
+            background: var(--t-input-bg);
+            color: var(--t-input-text);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 2px;
+            background: var(--t-hover-bg);
+            color: var(--t-text-secondary);
+            border: 1px solid var(--t-border-light);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header admin-header">
+        <h1><span class="emoji">⚙️</span> <span>Admin</span> Management</h1>
+        <nav>
+            <a href="/">Portal Home</a>
+            <a href="/admin/hub">🏠 Hub</a>
+            {% if session.get('admin_role') == 'super' or 'PERM_MANAGE_USERS' in session.get('admin_permissions', []) %}
+            <a href="/admin/users">Users</a>
+            {% endif %}
+            {% if session.get('admin_role') == 'super' %}
+            <a href="/admin/manage-admins" class="active">Admins</a>
+            {% endif %}
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="dashboard-header-flex"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><span class="emoji">👥</span> Low-Level Admins</h2>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add New Admin</button>
+        </div>
+
+        <div class="admin-card">
+            <table class="books-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Permissions</th>
+                        <th>Created At</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for username, data in admins.items() %}
+                    <tr>
+                        <td data-label="Username"><strong>{{ username|upper }}</strong></td>
+                        <td data-label="Permissions">
+                            {% for perm in data.permissions %}
+                            <span class="badge">{{ perm.replace('PERM_', '').replace('_', ' ') }}</span>
+                            {% endfor %}
+                            {% if not data.permissions %}
+                            <span style="color: #999; font-style: italic;">No permissions</span>
+                            {% endif %}
+                        </td>
+                        <td data-label="Created At" style="font-size: 12px; color: var(--t-text-muted);">{{ data.created_at[:10] if data.created_at else '-' }}
+                        </td>
+                        <td data-label="Last Login" style="font-size: 12px; color: var(--t-text-muted);">{{ data.last_login[:16].replace('T', ' ') if
+                            data.last_login else 'Never' }}</td>
+                        <td class="actions" data-label="Actions">
+                            <button class="btn btn-primary" style="padding: 5px 10px; font-size: 12px;"
+                                onclick="openEditModal('{{ username }}')">✏️ Edit</button>
+                            <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;"
+                                onclick="deleteAdmin('{{ username }}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 30px; color: #999;">No low-level admins
+                            found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div id="addAdminModal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Low-Level Admin</h3>
+            <form id="addAdminForm" onsubmit="submitAddAdmin(event)">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password (min 8 chars)</label>
+                    <input type="password" name="password" minlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+                <label>Permissions</label>
+                <div class="permissions-grid">
+                    {% for perm in all_permissions %}
+                    <div class="perm-item">
+                        <input type="checkbox" name="permissions" value="{{ perm }}" id="add_{{ perm }}">
+                        <label for="add_{{ perm }}">{{ perm.replace('PERM_', '').replace('_', ' ') }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-danger" onclick="closeModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Admin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Admin Modal -->
+    <div id="editAdminModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Admin: <span id="editUsernameDisplay"></span></h3>
+            <form id="editAdminForm" onsubmit="submitEditAdmin(event)">
+                <input type="hidden" name="username" id="editUsernameHidden">
+                <div class="form-group">
+                    <label>New Password (leave blank to keep current)</label>
+                    <input type="password" name="password" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" name="confirm_password">
+                </div>
+                <label>Permissions</label>
+                <div class="permissions-grid">
+                    {% for perm in all_permissions %}
+                    <div class="perm-item">
+                        <input type="checkbox" name="permissions" value="{{ perm }}" id="edit_{{ perm }}">
+                        <label for="edit_{{ perm }}">{{ perm.replace('PERM_', '').replace('_', ' ') }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-danger" onclick="closeModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAddModal() {
+            document.getElementById('addAdminForm').reset();
+            document.getElementById('addAdminModal').style.display = 'flex';
+        }
+
+        function openEditModal(username) {
+            fetch(`/admin/edit-admin/${encodeURIComponent(username)}`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('editUsernameDisplay').textContent = data.username;
+                    document.getElementById('editUsernameHidden').value = data.username;
+                    document.getElementById('editAdminForm').reset();
+
+                    // Set checkboxes
+                    const checkboxes = document.querySelectorAll('#editAdminForm [name="permissions"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = data.permissions.includes(cb.value);
+                    });
+
+                    document.getElementById('editAdminModal').style.display = 'flex';
+                });
+        }
+
+        function closeModals() {
+            document.getElementById('addAdminModal').style.display = 'none';
+            document.getElementById('editAdminModal').style.display = 'none';
+        }
+
+        function submitAddAdmin(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            fetch('/admin/add-admin', {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                });
+        }
+
+        function submitEditAdmin(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const username = document.getElementById('editUsernameHidden').value;
+            fetch(`/admin/edit-admin/${encodeURIComponent(username)}`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                });
+        }
+
+        function deleteAdmin(username) {
+            if (!confirm(`Are you sure you want to delete admin "${username}"?`)) return;
+
+            fetch(`/admin/delete-admin/${encodeURIComponent(username)}`, {
+                method: 'POST'
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                });
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=30"></script></body>
+
+</html>

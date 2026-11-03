@@ -1,0 +1,9 @@
+# =============================================================================
+# Samshodhana Sanskrit Speech-to-Text — Client & Bot Dependencies
+# Connects to the Central Cloud STT API (no local inference models)
+# =============================================================================
+
+python-telegram-bot>=21.0
+httpx>=0.27.0
+requests>=2.31.0
+python-dotenv>=1.0.0

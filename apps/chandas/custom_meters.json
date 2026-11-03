@@ -1,0 +1,15 @@
+[
+  {
+    "key": "custom_1783605199018",
+    "name": "New Cusggtom Meter",
+    "padas": 4,
+    "syllables_per_pada": 3,
+    "pattern": [
+      "ल",
+      "ल",
+      "ल"
+    ],
+    "description": "Custofffffm Laghu-Guru structure",
+    "builtin": false
+  }
+]

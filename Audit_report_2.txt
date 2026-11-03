@@ -1,0 +1,352 @@
+================================================================================
+          OPEN-SAMSHO SECURITY, PRIVACY & ARCHITECTURE AUDIT (AUDIT 2)
+  Assessment of User Surveillance, Telemetry Snooping, Outbound Phone-Homing,
+              Leftover Debug Backdoors & Open-Source Decoupling
+================================================================================
+Target Project: Open-samsho (https://github.com/Open-Samsho)
+Date:           October 24, 2026
+Auditor:        Antigravity AI Security & Architecture Auditor
+Scope:          Privacy, User Surveillance ("No Admin is Watching & Nothing is Logged"),
+                Hardcoded Endpoints, Secret Leaks, Auth & Session Architecture,
+                Open-Source Decoupling
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY
+2. FINDINGS OVERVIEW MATRIX
+3. DETAILED AUDIT FINDINGS & REMEDIATIONS
+   3.1. AUD2-01 [CRITICAL] Verbatim Speech Transcripts Stored in DB & Displayed to Admins
+   3.2. AUD2-02 [CRITICAL] Silent Outbound Phone-Homing to samshodhanamandiram.in
+   3.3. AUD2-03 [HIGH]     Leftover Debug Backdoor Route Exposing Users & Active Auth Tokens
+   3.4. AUD2-04 [HIGH]     Admin Surveillance Over User Reading Habits & Personal Mobile Numbers
+   3.5. AUD2-05 [MEDIUM]   OCR Uploads & Rendered Page Slices Retained on Disk for 2 Hours
+   3.6. AUD2-06 [MEDIUM]   Plaintext In-Memory Document Caching in Telegram OCR Bot
+   3.7. AUD2-07 [LOW]      Configuration Hygiene & Missing Root .env.example
+4. ARCHITECTURAL STRENGTHS VERIFIED IN AUDIT 2
+5. CONCLUSION & STEP-BY-STEP ACTION PLAN
+================================================================================
+
+
+1. EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+Open-samsho is an open-source digital library and Sanskrit NLP platform upon
+which production instances such as samshodhanamandiram.in are deployed.
+
+When a user, contributor, or security researcher audits this repository, it
+must present a flawless, trustworthy, privacy-first open-source architecture:
+- ZERO SURVEILLANCE: No administrator can watch users' reading activity,
+  favourite books, or listen to/read their spoken words.
+- ZERO UNNECESSARY LOGGING: No verbatim speech transcripts, OCR document
+  contents, or personal queries stored permanently.
+- ZERO SILENT PHONE-HOMING: No user documents, images, or audio clips
+  automatically exfiltrated to external private servers
+  (samshodhanamandiram.in) by default.
+- NO DEBUG BACKDOORS OR CREDENTIAL LEAKS: No diagnostic routes exposing tokens,
+  user tables, or server logs.
+
+While previous hardening rounds successfully eliminated silent email forwarding
+and raw audio disk storage, this fresh comprehensive audit (Audit 2) has
+identified 7 Critical/High/Medium severity privacy and architecture flaws that
+still violate the open-source privacy contract.
+
+
+2. FINDINGS OVERVIEW MATRIX
+--------------------------------------------------------------------------------
+ID      | Category          | Severity | Status  | Component & File Location
+--------+-------------------+----------+---------+--------------------------------------------------------------
+AUD2-01 | User Surveillance | CRITICAL | ACTIVE  | apps/sanskrit_stt/backend/bot_db.py (L54-65)
+        |                   |          |         | sdl_web/templates/admin/sanskrit_stt_admin.html (L933-985)
+AUD2-02 | Data Exfiltration | CRITICAL | ACTIVE  | apps/ocr_bot/config.py (L39), ocr_service.py (L39)
+        |                   |          |         | apps/sanskrit_stt/backend/bot_audio_processor.py (L9)
+        |                   |          |         | sdl_web/config.py (L73), sdl_web/ocr.py (L167)
+AUD2-03 | Debug Backdoor    | HIGH     | ACTIVE  | sdl_web/api_v1.py (L2011-2068)
+AUD2-04 | Admin Snooping    | HIGH     | ACTIVE  | sdl_web/admin_shared.py (L256-300)
+        |                   |          |         | sdl_web/templates/admin/users.html (L865-915)
+AUD2-05 | Disk Retention    | MEDIUM   | ACTIVE  | sdl_web/ocr.py (L528-540)
+AUD2-06 | RAM Retention     | MEDIUM   | ACTIVE  | apps/ocr_bot/telegram_bot.py (L64-78)
+AUD2-07 | Config Hygiene    | LOW      | ACTIVE  | Root Directory & sdl_web/config.py (L12)
+--------------------------------------------------------------------------------
+
+
+3. DETAILED AUDIT FINDINGS & REMEDIATIONS
+--------------------------------------------------------------------------------
+
+3.1. AUD2-01 [CRITICAL]: Verbatim Speech Transcripts Stored in DB & Displayed to Admins
+--------------------------------------------------------------------------------
+- Severity: CRITICAL
+- Vulnerability Type: CWE-359 (Exposure of Private Personal Information / Telemetry Snooping)
+- Files Affected:
+  * apps/sanskrit_stt/backend/bot_db.py:L54-L65, L516-L528
+  * apps/sanskrit_stt/backend/telegram_bot.py:L1102
+  * apps/backend.py:L2706-L2725
+  * sdl_web/admin_shared.py:L573-L600
+  * sdl_web/templates/admin/sanskrit_stt_admin.html:L889-L985
+
+Analysis:
+While raw voice recordings (.wav, .ogg) are deleted immediately after transcription,
+the STT service still inserts the verbatim text of everything spoken into the
+transcription_logs table:
+
+  # apps/sanskrit_stt/backend/bot_db.py
+  cursor.execute("""
+      INSERT INTO transcription_logs (telegram_id, access_code, language,
+                                     duration_sec, char_count, transcript_snippet,
+                                     full_transcript, audio_filename)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  """, (telegram_id, access_code, language, duration_sec, char_count,
+        snippet_text, full_text, audio_filename))
+
+Furthermore, in the Admin Web Interface (/admin/sanskrit-stt and
+apps/sanskrit_stt/admin.html), lines 933-985 render a complete popup modal:
+  * Title: "Full Speech Transcript"
+  * Displays: "1. Raw STT Output Text", "2. AI Cleaned Output", "3. AI Assist Output"
+  * Features: "Copy to Clipboard" and "Download Transcript .txt" buttons
+
+Privacy Evaluation:
+Anyone auditing this project will notice that the administrator has an active
+window into every spoken interaction. If a researcher, student, or community
+member uses the bot for confidential notes or private dictations, the admin
+is silently archiving and reviewing their words.
+
+Required Remediation:
+1. Modify log_transcription(): Stop recording full_transcript, transcript_snippet,
+   cleaned_transcript, and assisted_transcript. Set these fields to empty strings
+   or remove the columns entirely.
+2. Retain Only Operational Telemetry: The table should only store anonymous
+   metrics needed for rate limiting and quota verification:
+   (telegram_id, access_code, language, duration_sec, char_count, timestamp).
+3. Remove Transcript Viewer UI: In sanskrit_stt_admin.html and
+   apps/sanskrit_stt/admin.html, remove the transcript modal dialog, text preview
+   cells, and transcript download actions. Display only duration, language code,
+   and completion status.
+
+
+3.2. AUD2-02 [CRITICAL]: Silent Outbound Phone-Homing to samshodhanamandiram.in
+--------------------------------------------------------------------------------
+- Severity: CRITICAL
+- Vulnerability Type: CWE-200 / CWE-918 (Unintended Data Exfiltration / Insecure Default Configuration)
+- Files Affected:
+  * apps/ocr_bot/config.py:L39
+  * apps/ocr_bot/ocr_service.py:L39
+  * apps/sanskrit_stt/backend/bot_audio_processor.py:L9
+  * apps/sanskrit_stt/backend/telegram_bot.py:L39
+  * apps/sanskrit_stt/backend/stt_service.py:L19
+  * apps/backend.py:L220, L2354, L2402, L2461
+  * sdl_web/config.py:L73
+  * sdl_web/ocr.py:L167
+  * sdl_web/scripts/ocr_images.py:L114, L457
+
+Analysis:
+In an open-source codebase, hardcoding fallback API endpoints pointing to a
+private production domain (samshodhanamandiram.in) means any third party who
+clones and starts the OCR bot, STT service, or web portal without setting up
+custom environment variables automatically routes confidential user documents,
+scanned book pages, and audio clips to your private organization's servers:
+
+  # apps/ocr_bot/config.py
+  SAMSHO_OCR_API_URL = os.getenv("SAMSHO_OCR_API_URL", "https://samshodhanamandiram.in/api/v1/ocr")
+
+  # apps/sanskrit_stt/backend/bot_audio_processor.py
+  SAMSHO_STT_API_URL = os.getenv("SAMSHO_STT_API_URL", "https://samshodhanamandiram.in/api/v1/stt")
+
+  # sdl_web/config.py
+  SAMSHO_NLP_API_URL = os.environ.get('SAMSHO_NLP_API_URL', 'https://samshodhanamandiram.in/apps/api')
+
+Privacy Evaluation:
+This behavior is categorized as "silent phone-homing" and data exfiltration.
+An open-source distribution must be 100% self-contained and local-first by default.
+
+Required Remediation:
+1. Neutralize Fallback URLs: Change all default fallback URLs from
+   "https://samshodhanamandiram.in/..." to "" (empty string) or localhost
+   (e.g., http://127.0.0.1:8091/ws/ for the local STT service).
+2. Fail Gracefully: If SAMSHO_OCR_API_URL or SAMSHO_STT_API_URL is unset,
+   fall back to local processing (e.g. local Tesseract / PyMuPDF or local Whisper)
+   or return an explicit configuration error:
+   "No OCR endpoint configured. Set SAMSHO_OCR_API_URL in .env to enable remote processing."
+
+
+3.3. AUD2-03 [HIGH]: Leftover Debug Backdoor Route Exposing Users & Active Auth Tokens
+--------------------------------------------------------------------------------
+- Severity: HIGH
+- Vulnerability Type: CWE-489 (Active Debug Code in Production / Information Disclosure)
+- File Affected: sdl_web/api_v1.py:L2011-L2068
+
+Analysis:
+Inside sdl_web/api_v1.py, lines 2011-2068 define an unauthenticated debug route
+at @api_bp.route('/debug/profile-pic'):
+
+  conn = common_db.get_db()
+  cursor = conn.execute("SELECT id, email, avatar_idx, profile_pic FROM users")
+  users = [dict(row) for row in cursor.fetchall()]
+
+  cursor_tokens = conn.execute("SELECT token, user_id, created_at FROM user_tokens")
+  tokens = [dict(row) for row in cursor_tokens.fetchall()]
+
+  logs = subprocess.check_output(['journalctl', '-u', 'samshodhanamandiram', '-n', '50']).decode('utf-8')
+
+This endpoint directly dumps:
+1. Every registered user's ID, email address, and avatar configuration.
+2. Every active authentication bearer token from the user_tokens table.
+3. The host system's Gunicorn journalctl execution logs.
+
+Privacy Evaluation:
+Having an endpoint named /debug/profile-pic that exposes active user session
+tokens and host system logs is a severe security backdoor. Any attacker or visitor
+could hijack all active user sessions without credentials.
+
+Required Remediation:
+Delete the entire debug_profile_pic route and handler from sdl_web/api_v1.py.
+
+
+3.4. AUD2-04 [HIGH]: Admin Surveillance Over User Reading Habits & Personal Mobile Numbers
+--------------------------------------------------------------------------------
+- Severity: HIGH
+- Vulnerability Type: CWE-359 (Privacy Violation / Excessive Admin Privilege)
+- Files Affected:
+  * sdl_web/admin_shared.py:L256-L300
+  * sdl_web/templates/admin/users.html:L865-L915
+
+Analysis:
+When an administrator browses to /admin/users, the API endpoint
+/admin/api/user/<int:user_id>/details queries:
+  * common_db.get_favourites(user_id): returns every book the user has favourited.
+  * common_db.get_booklists(user_id): returns all private reading lists created by the user.
+  * common_db.get_user_by_id(user_id): exposes the user's unmasked personal phone number.
+
+The admin template contains active inspection tabs:
+  <div class="tabs-header">
+      <button class="tab-btn active">Favourites (<span id="favsCount">0</span>)</button>
+      <button class="tab-btn">Custom Booklists (<span id="listsCount">0</span>)</button>
+      <button class="tab-btn">Feedback (<span id="feedbackCount">0</span>)</button>
+  </div>
+
+Privacy Evaluation:
+In an open-source digital library, an individual's reading interests, spiritual
+curiosities, and personal reading lists must remain private. An administrator has
+no legitimate administrative requirement to spy on which books or categories a user
+explores.
+
+Required Remediation:
+1. Redact Reading Data: In admin_get_user_details(), remove get_favourites() and
+   get_booklists(). Return only administrative account status fields (User ID,
+   Display Name, Email, Account Status, Feedback count).
+2. Mask Personal Identifiers: Mask phone numbers in responses (e.g., +91 ******1234).
+3. Remove Surveillance UI: Remove the Favourites and Booklists tabs from users.html.
+
+
+3.5. AUD2-05 [MEDIUM]: OCR Uploads & Rendered Page Slices Retained on Disk for 2 Hours
+--------------------------------------------------------------------------------
+- Severity: MEDIUM
+- Vulnerability Type: CWE-404 / CWE-200 (Improper Resource Shutdown / Data Overretention)
+- File Affected: sdl_web/ocr.py:L528-L540
+
+Analysis:
+In sdl_web/ocr.py, temporary folder cleanup only purges folders older than 2 hours:
+
+  def cleanup_old_ocr_folders():
+      now = time.time()
+      for item in os.listdir(OCR_DIR):
+          item_path = os.path.join(OCR_DIR, item)
+          if os.path.isdir(item_path) and item.startswith('ocr_task_'):
+              stat = os.stat(item_path)
+              if now - stat.st_mtime > 7200: # 2 hours
+                  shutil.rmtree(item_path)
+
+Throughout this 2-hour window, all uploaded PDFs, book scans, and high-resolution
+intermediate page slices (.png) remain sitting unencrypted on server storage.
+
+Required Remediation:
+1. Immediate Page Cleanup: Delete rendered page image slices immediately after
+   text extraction is finished for each page.
+2. Shorten Task TTL: Hook task folder deletion to response completion or lower
+   the retention TTL to 10 minutes (600 seconds).
+
+
+3.6. AUD2-06 [MEDIUM]: Plaintext In-Memory Document Caching in Telegram OCR Bot
+--------------------------------------------------------------------------------
+- Severity: MEDIUM
+- Vulnerability Type: CWE-400 / CWE-316 (Unbounded Memory Retention of Sensitive Data)
+- File Affected: apps/ocr_bot/telegram_bot.py:L64-L78
+
+Analysis:
+The OCR Telegram bot caches extracted document text and Telegram chat IDs in RAM:
+
+  JOB_CACHE: Dict[str, Dict[str, Any]] = {}
+  MAX_CACHE_SIZE = 200
+
+Items are only evicted once the cache exceeds 200 entries. In low-traffic
+deployments, extracted confidential documents remain resident in server memory
+indefinitely.
+
+Required Remediation:
+Add a time-based TTL check (e.g., purge any cached item older than 15 minutes)
+inside clean_job_cache() and run this check on every job completion.
+
+
+3.7. AUD2-07 [LOW]: Configuration Hygiene & Missing Root .env.example
+--------------------------------------------------------------------------------
+- Severity: LOW
+- Vulnerability Type: Incomplete Configuration Template
+- Files Affected: Project Root & sdl_web/config.py:L12
+
+Analysis:
+There is currently no .env.example in the repository root. New deployers lack
+a standardized reference for:
+  * SECRET_KEY (defaults to insecure string 'your-secret-key-change-in-production')
+  * ADMIN_EMAIL
+  * SUPPORT_EMAIL
+  * SAMSHO_OCR_API_URL
+  * SAMSHO_STT_API_URL
+  * GOOGLE_CLIENT_ID
+
+Required Remediation:
+Create a well-documented .env.example in the root repository with clear comments,
+strong generation instructions, and safe localhost defaults.
+
+
+4. ARCHITECTURAL STRENGTHS VERIFIED IN AUDIT 2
+--------------------------------------------------------------------------------
+The audit confirmed several strong privacy and security mechanisms already in place:
+1. Zero Third-Party Web Trackers: No Google Analytics, Meta Pixel, Hotjar, or
+   external beacons exist in any HTML template.
+2. Cryptographic Token & OTP Storage: user_tokens and user_otps in db/common_db.py
+   are hashed with SHA-256 prior to storage; passwords use bcrypt.
+3. No Voice Audio on Disk: Voice clips sent to the Telegram STT bot are wiped
+   from disk immediately upon completion of transcription.
+4. No Chat Surveillance: User chat logging and live-support intercept systems
+   have been completely excised.
+5. Path Traversal & Upload Security: All static file serving and file upload
+   endpoints validate paths, inspect MIME types, and reject unsafe extensions.
+6. SQL Parameterization: Database queries across db/ and sdl_web/ strictly use
+   parameterized queries (?) with table name whitelists.
+
+
+5. CONCLUSION & STEP-BY-STEP ACTION PLAN
+--------------------------------------------------------------------------------
+To achieve a completely pristine, privacy-first open-source architecture, execute
+the following remediation plan:
+
+Phase 1: Zero User Surveillance
+- [ ] In apps/sanskrit_stt/backend/bot_db.py, stop recording speech text in
+      transcription_logs.
+- [ ] In sdl_web/templates/admin/sanskrit_stt_admin.html and apps/sanskrit_stt/admin.html,
+      remove the speech transcript modal viewer and download actions.
+- [ ] In sdl_web/admin_shared.py and sdl_web/templates/admin/users.html, remove
+      favourite books and custom booklist queries and views. Mask mobile numbers.
+
+Phase 2: Eliminate Phone-Homing & Backdoors
+- [ ] Delete the /debug/profile-pic endpoint from sdl_web/api_v1.py.
+- [ ] Replace all https://samshodhanamandiram.in fallbacks across config files with
+      empty strings or localhost defaults.
+
+Phase 3: Storage & Cache Lifecycle Tightening
+- [ ] Reduce OCR task disk retention from 7200s to 600s in sdl_web/ocr.py and delete
+      per-page slice images immediately.
+- [ ] Add 15-minute TTL eviction to JOB_CACHE in apps/ocr_bot/telegram_bot.py.
+- [ ] Add a comprehensive root .env.example file.
+
+================================================================================
+                           END OF AUDIT REPORT 2
+================================================================================

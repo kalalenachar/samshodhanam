@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="sa" data-theme="light">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sanskrit Speech to Text — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="/static/css/theme.css?v=36">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --stt-accent: #818cf8;
+            --stt-accent-glow: rgba(129, 140, 248, 0.35);
+            --stt-bg-glass: rgba(255, 255, 255, 0.85);
+            --stt-card-border: rgba(129, 140, 248, 0.2);
+        }
+
+        [data-theme="dark"] {
+            --stt-bg-glass: rgba(15, 23, 42, 0.85);
+            --stt-card-border: rgba(255, 255, 255, 0.1);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary, #cbd5e1);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--stt-card-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--t-text-primary, #fff);
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateX(-3px);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start, #0f172a) 0%, var(--t-bg-body-mid, #1e1b4b) 50%, var(--t-bg-body-end, #0f172a) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary, #f8fafc);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            padding: 16px 32px;
+            background: var(--t-bg-header, rgba(15, 23, 42, 0.75));
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--stt-card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--t-text-primary, #fff);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 14px var(--stt-accent-glow);
+        }
+
+        .server-status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--stt-card-border);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444; /* Offline red by default */
+            box-shadow: 0 0 8px #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.online {
+            background: #10b981; /* Online green */
+            box-shadow: 0 0 8px #10b981;
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            text-align: center;
+            padding: 24px 20px;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', 'Noto Sans Devanagari', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .hero-sub {
+            font-size: 1.1rem;
+            color: var(--t-text-secondary, #94a3b8);
+            font-weight: 500;
+        }
+
+        /* App Grid Layout */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Container */
+        .card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.7));
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--stt-card-border);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--stt-card-border);
+            padding-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Mode Tabs */
+        .mode-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--t-text-secondary, #94a3b8);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+            color: #fff;
+            box-shadow: 0 4px 12px var(--stt-accent-glow);
+        }
+
+        /* Live Recording Control */
+        .mic-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .mic-button-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mic-pulse-ring {
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            background: var(--stt-accent-glow);
+            animation: pulse 2s infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mic-button-wrapper.recording .mic-pulse-ring {
+            opacity: 1;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            50% { transform: scale(1.3); opacity: 0.2; }
+            100% { transform: scale(0.9); opacity: 0.8; }
+        }
+
+        .mic-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px var(--stt-accent-glow);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2;
+        }
+
+        .mic-btn:hover {
+            transform: scale(1.08);
+        }
+
+        .mic-button-wrapper.recording .mic-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .timer-display {
+            font-family: monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #818cf8;
+        }
+
+        /* Audio Visualizer Canvas */
+        .visualizer-canvas {
+            width: 100%;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        /* File Upload Box */
+        .upload-box {
+            border: 2px dashed var(--stt-card-border);
+            border-radius: 16px;
+            padding: 36px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-box:hover, .upload-box.dragover {
+            border-color: var(--stt-accent);
+            background: rgba(129, 140, 248, 0.08);
+        }
+
+        .upload-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+            color: var(--stt-accent);
+        }
+
+        /* Transcript Output Area */
+        .transcript-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .transcript-box {
+            width: 100%;
+            min-height: 260px;
+            flex: 1;
+            padding: 18px;
+            border-radius: 14px;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--stt-card-border);
+            color: var(--t-text-primary, #f8fafc);
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            font-size: 1.15rem;
+            line-height: 1.7;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.25s ease;
+        }
+
+        .transcript-box:focus {
+            border-color: var(--stt-accent);
+            box-shadow: 0 0 0 3px var(--stt-accent-glow);
+        }
+
+        /* Toolbar Actions */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--stt-card-border);
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--t-text-primary, #fff);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background: var(--stt-accent);
+            color: white;
+            border-color: var(--stt-accent);
+        }
+
+        .script-select {
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--stt-card-border);
+            color: var(--t-text-primary, #fff);
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* Confidence & Stats Badge */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            font-size: 0.85rem;
+            color: var(--t-text-secondary, #94a3b8);
+        }
+
+        /* Instructions Footer Box */
+        .instructions-card {
+            background: rgba(129, 140, 248, 0.05);
+            border: 1px dashed var(--stt-card-border);
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--t-text-secondary, #cbd5e1);
+        }
+
+        .instructions-card h4 {
+            color: var(--stt-accent);
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="/" class="back-btn">
+                <span>←</span> Portal Home
+            </a>
+            <div class="brand-link">
+                <div class="brand-icon">🎙️</div>
+                <span>Sanskrit Speech to Text</span>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="server-status-pill" id="statusPill">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Checking Telegram Bot...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Title -->
+        <div class="hero-banner">
+            <h1 class="hero-title">Sanskrit Speech to Text</h1>
+            <p class="hero-sub">संस्कृत-वाक्-प्रतिलेखनम्</p>
+        </div>
+
+        <!-- App Grid -->
+        <div class="app-grid">
+            
+            <!-- Left Card: Audio Input & Recording -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>🎧</span> Audio Input
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <select class="script-select" id="languageSelect" title="Select Speech Language" onchange="handleLanguageChange()">
+                            <option value="sa">Sanskrit (संस्कृतम्)</option>
+                            <option value="hi">Hindi (हिन्दी)</option>
+                            <option value="kn">Kannada (ಕನ್ನಡ)</option>
+                            <option value="te">Telugu (తెలుగు)</option>
+                            <option value="ta">Tamil (தமிழ்)</option>
+                            <option value="ml">Malayalam (മലയാളം)</option>
+                            <option value="mr">Marathi (मराठी)</option>
+                            <option value="bn">Bengali (বাংলা)</option>
+                            <option value="gu">Gujarati (ગુજરાતી)</option>
+                            <option value="pa">Punjabi (ਪੰਜਾਬੀ)</option>
+                            <option value="or">Odia (ଓଡ଼ିଆ)</option>
+                            <option value="as">Assamese (অসমीया)</option>
+                            <option value="ur">Urdu (اردو)</option>
+                            <option value="ne">Nepali (नेपाली)</option>
+                        </select>
+                        <!-- Mode Switch Tabs -->
+                        <div class="mode-tabs">
+                            <button class="tab-btn active" id="tabLive" onclick="switchMode('live')">🎙️ Live Mic</button>
+                            <button class="tab-btn" id="tabFile" onclick="switchMode('file')">📁 Upload File</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode 1: Live Microphone Recording -->
+                <div id="liveSection" class="mic-section">
+                    <div class="mic-button-wrapper" id="micWrapper">
+                        <div class="mic-pulse-ring"></div>
+                        <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
+                            🎙️
+                        </button>
+                    </div>
+
+                    <div id="recordingStatus" style="font-weight: 600; font-size: 1rem;">Click to start recording</div>
+                    <div class="timer-display" id="timerDisplay">00:00</div>
+
+                    <!-- Audio Waveform Visualizer -->
+                    <canvas id="visualizer" class="visualizer-canvas"></canvas>
+                </div>
+
+                <!-- Mode 2: Audio File Upload -->
+                <div id="fileSection" class="mic-section" style="display: none;">
+                    <div class="upload-box" id="uploadBox" onclick="document.getElementById('audioFileInput').click()">
+                        <div class="upload-icon">📤</div>
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 6px;">Click or Drag Audio File Here</div>
+                        <div style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8);">Supports WAV, MP3, M4A, FLAC, OGG (Max 25MB)</div>
+                    </div>
+                    <input type="file" id="audioFileInput" accept="audio/*" style="display: none;" onchange="handleFileSelected(event)">
+
+                    <div id="selectedFileInfo" style="display: none; font-weight: 600; width: 100%; text-align: center;">
+                        <span id="fileNameDisplay">file.wav</span>
+                        <button class="btn-action" style="margin: 12px auto 0;" id="transcribeFileBtn" onclick="transcribeUploadedFile()">⚡ Transcribe Audio File</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Card: Transcript Result -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span>📜</span> <span id="transcriptTitleText">Sanskrit Transcript (प्रतिलेखनम्)</span>
+                    </div>
+                </div>
+
+                <div class="transcript-container">
+                    <textarea id="transcriptTextarea" class="transcript-box" placeholder="Your spoken Sanskrit text will appear here in real time..."></textarea>
+
+                    <div class="toolbar">
+                        <div class="stats-bar">
+                            <span id="wordCount">Words: 0</span>
+                            <span id="charCount">Chars: 0</span>
+                            <span id="confidenceScore">Confidence: —</span>
+                        </div>
+                        <div class="action-group">
+                            <button class="btn-action" id="aiCleanBtn" onclick="toggleAiClean()" style="background: linear-gradient(135deg, #6366f1, #a855f7); color: white; border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);">✨ AI Clean</button>
+                            <button class="btn-action" id="aiAssistBtn" onclick="triggerAiAssist()" style="background: linear-gradient(135deg, #059669, #10b981); color: white; border: none; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">🤖 AI Assist (Audio)</button>
+                            <button class="btn-action" onclick="copyTranscript()">📋 Copy</button>
+                            <button class="btn-action" onclick="downloadTranscript()">📥 Download (.txt)</button>
+                            <button class="btn-action" onclick="clearTranscript()">🗑️ Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Clean Output Box (Appears alongside Raw STT) -->
+                <div id="aiCleanResultBox" style="display: none; margin-top: 16px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-weight: 700; color: #a855f7; display: flex; align-items: center; gap: 8px;">
+                            <span>✨</span> AI Cleaned Output (Phonetic Proofread)
+                        </div>
+                        <button class="btn-action" onclick="copyAiCleanText()" style="padding: 4px 10px; font-size: 0.8rem; background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.4);">📋 Copy Cleaned</button>
+                    </div>
+                    <textarea id="aiCleanTextarea" class="transcript-box" readonly style="min-height: 100px; background: rgba(0, 0, 0, 0.2); border-color: rgba(168, 85, 247, 0.2); color: #f8fafc; font-size: 1.05rem;" placeholder="Cleaned Sanskrit text will appear here..."></textarea>
+                </div>
+
+                <!-- AI Assist Output Box (Appears alongside Raw STT & AI Clean) -->
+                <div id="aiAssistResultBox" style="display: none; margin-top: 16px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-weight: 700; color: #10b981; display: flex; align-items: center; gap: 8px;">
+                            <span>🤖</span> AI Assist Output (Multimodal Audio Proofread)
+                        </div>
+                        <button class="btn-action" onclick="copyAiAssistText()" style="padding: 4px 10px; font-size: 0.8rem; background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4);">📋 Copy Assisted</button>
+                    </div>
+                    <textarea id="aiAssistTextarea" class="transcript-box" readonly style="min-height: 100px; background: rgba(0, 0, 0, 0.2); border-color: rgba(16, 185, 129, 0.2); color: #f8fafc; font-size: 1.05rem;" placeholder="Audio-verified Sanskrit text will appear here..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instructions Footer Card -->
+        <div class="instructions-card">
+            <h4>💡 How to use Sanskrit Speech-to-Text:</h4>
+            <ul>
+                <li><strong>Live Microphone:</strong> Click the microphone button and speak Sanskrit clearly. Real-time streaming transcription feeds text directly as you speak.</li>
+                <li><strong>Audio File Upload:</strong> Upload recorded Sanskrit audio or chantings to transcribe entire audio files.</li>
+                <li><strong>Telegram STT Bot:</strong> Send voice notes directly on Telegram using admin-generated Access Codes.</li>
+                <li><strong>Backend Engine:</strong> Powered by our self-hosted <code>Samshodhana STT</code> server with a 600M Parameter Multilingual Conformer model.</li>
+            </ul>
+        </div>
+    </main>
+
+    <!-- Telegram Bot Admin Modal -->
+    <div id="botAdminModal" class="card" style="display: none; position: fixed; inset: 20px; z-index: 10000; background: var(--t-bg-overlay, rgba(15,23,42,0.95)); backdrop-filter: blur(20px); overflow-y: auto; max-width: 1000px; margin: 0 auto;">
+        <div class="card-header">
+            <div class="card-title">
+                <span>👑</span> Telegram Bot Admin Panel (संस्कृत-वाक्-प्रतिलेखक बोट्)
+            </div>
+            <button class="btn-action" onclick="toggleAdminPanel()">✕ Close Admin</button>
+        </div>
+
+        <!-- System Overview Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 16px 0;">
+            <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                <div style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8);">Telegram Bot Token</div>
+                <div id="botTokenStatus" style="font-size: 1.1rem; font-weight: 700; color: #818cf8; margin-top: 4px;">Checking...</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                <div style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8);">Active Access Codes</div>
+                <div id="activeCodesCount" style="font-size: 1.4rem; font-weight: 700; color: #34d399; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                <div style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8);">Registered Telegram Users</div>
+                <div id="totalUsersCount" style="font-size: 1.4rem; font-weight: 700; color: #fbbf24; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                <div style="font-size: 0.85rem; color: var(--t-text-secondary, #94a3b8);">Total Audio Transcribed</div>
+                <div id="totalAudioTranscribed" style="font-size: 1.4rem; font-weight: 700; color: #c084fc; margin-top: 4px;">0 mins</div>
+            </div>
+        </div>
+
+        <!-- Token Config Box -->
+        <div style="background: rgba(129, 140, 248, 0.05); padding: 20px; border-radius: 14px; border: 1px solid var(--stt-card-border); margin-bottom: 20px;">
+            <h4 style="margin-bottom: 12px; color: #818cf8;">⚙️ Configure Telegram Bot Credentials</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                <input type="text" id="adminBotTokenInput" placeholder="Paste Telegram Bot Token (e.g. 123456789:ABCDefG...)" style="flex: 2; min-width: 260px; padding: 10px 14px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--stt-card-border); color: white; outline: none;">
+                <input type="text" id="adminSetupSecretInput" placeholder="Setup Secret (e.g. admin123)" style="flex: 1; min-width: 160px; padding: 10px 14px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--stt-card-border); color: white; outline: none;">
+                <button class="btn-action" style="background: linear-gradient(135deg, #10b981, #059669); border: none; padding: 10px 20px;" onclick="saveBotConfig()">💾 Save Configuration</button>
+            </div>
+        </div>
+
+        <!-- Access Code Management -->
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1.1rem; font-weight: 700;">🔑 Access Code Generator</h3>
+            </div>
+            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                <input type="text" id="newCodeInput" placeholder="New Code String (e.g. GURUKUL2026)" style="flex: 2; padding: 10px 14px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--stt-card-border); color: white; outline: none; text-transform: uppercase;">
+                <input type="number" id="newCodeMaxMins" placeholder="Daily Limit (Mins)" value="100" style="width: 160px; padding: 10px 14px; border-radius: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--stt-card-border); color: white; outline: none;">
+                <button class="btn-action" style="background: linear-gradient(135deg, #6366f1, #818cf8); border: none;" onclick="createAccessCode()">➕ Create Code</button>
+            </div>
+
+            <!-- Access Code Table -->
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--stt-card-border); background: rgba(255,255,255,0.03);">
+                            <th style="padding: 12px 16px;">Code</th>
+                            <th style="padding: 12px 16px;">Status</th>
+                            <th style="padding: 12px 16px;">Daily Usage</th>
+                            <th style="padding: 12px 16px;">Total Audio</th>
+                            <th style="padding: 12px 16px;">Requests</th>
+                            <th style="padding: 12px 16px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accessCodesTableBody">
+                        <tr><td colspan="6" style="padding: 20px; text-align: center; color: #888;">Loading access codes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Registered Telegram Users & Audit Logs Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px;">
+            <!-- Registered Users -->
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">👥 Telegram Users</h3>
+                <div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--stt-card-border); background: rgba(255,255,255,0.03);">
+                                <th style="padding: 10px 12px;">User</th>
+                                <th style="padding: 10px 12px;">Code</th>
+                                <th style="padding: 10px 12px;">Total Transcribed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="telegramUsersTableBody">
+                            <tr><td colspan="3" style="padding: 16px; text-align: center; color: #888;">No registered users yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Audit Logs -->
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;">📜 Recent Audio Transcription Logs</h3>
+                <div style="max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--stt-card-border);">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--stt-card-border); background: rgba(255,255,255,0.03);">
+                                <th style="padding: 10px 12px;">Time</th>
+                                <th style="padding: 10px 12px;">Duration</th>
+                                <th style="padding: 10px 12px;">Snippet</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transcriptionLogsTableBody">
+                            <tr><td colspan="3" style="padding: 16px; text-align: center; color: #888;">No transcription logs recorded yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script>
+        let currentMode = 'live';
+        let isRecording = false;
+        let mediaRecorder = null;
+        let socket = null;
+        let audioContext = null;
+        let visualizerCanvas = document.getElementById('visualizer');
+        let visualizerCtx = visualizerCanvas.getContext('2d');
+        let animationFrameId = null;
+        let recordingStartTime = 0;
+        let timerInterval = null;
+        let selectedFile = null;
+        let recordedAudioChunks = [];
+        let recordedAudioBlob = null;
+        let rawDevanagariText = "";
+        let originalRawText = "";
+        let cleanedDevanagariText = "";
+        let isCleanedState = false;
+
+        // Check backend server status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            checkServerStatus();
+            loadEnabledLanguages();
+            setInterval(checkServerStatus, 10000);
+        });
+
+        async function loadEnabledLanguages() {
+            try {
+                const res = await fetch('/apps/api/stt/languages');
+                const data = await res.json();
+                if (data.success) {
+                    const select = document.getElementById('languageSelect');
+                    const allLangs = data.all_languages || {};
+                    const enabledLangs = data.enabled || [];
+                    const defaultLang = data.default || 'sa';
+
+                    select.innerHTML = enabledLangs.map(code => {
+                        const name = allLangs[code] || code;
+                        const sel = code === defaultLang ? 'selected' : '';
+                        return `<option value="${code}" ${sel}>${name}</option>`;
+                    }).join('');
+                    handleLanguageChange();
+                }
+            } catch (err) {
+                console.error("Error loading enabled languages:", err);
+            }
+        }
+
+        function handleLanguageChange() {
+            const select = document.getElementById('languageSelect');
+            if (!select || select.selectedIndex === -1) return;
+            const langName = select.options[select.selectedIndex].text;
+            const shortName = langName.split(' ')[0];
+            const titleEl = document.getElementById('transcriptTitleText');
+            if (titleEl) {
+                titleEl.textContent = `${shortName} Transcript`;
+            }
+        }
+
+        async function checkServerStatus() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const statusPill = document.getElementById('statusPill');
+            try {
+                const res = await fetch('/apps/api/stt/status');
+                const data = await res.json();
+                
+                const bs = data.bot_status || {};
+                const isBotRunning = bs.is_running;
+                const botUsername = (bs.bot_info && bs.bot_info.username) ? `@${bs.bot_info.username}` : '';
+
+                if (data.online) {
+                    statusDot.className = 'status-dot online';
+                    statusDot.style.background = '';
+                    const isCloud = data.mode === 'cloud_api';
+                    statusText.textContent = isCloud ? (isBotRunning ? `Cloud STT Ready (${botUsername})` : 'Cloud STT API Ready') : `Telegram Bot Online${botUsername ? ' (' + botUsername + ')' : ''}`;
+                    if (statusPill) statusPill.title = `Central Cloud STT API is ready (${data.api_url || 'online'})`;
+                } else if (isBotRunning) {
+                    if (data.loading) {
+                        statusDot.className = 'status-dot';
+                        statusDot.style.background = '#f59e0b';
+                        statusText.textContent = `Telegram Bot (Loading AI Model...)`;
+                        if (statusPill) statusPill.title = "Telegram Bot is active, AI model is initializing";
+                    } else {
+                        statusDot.className = 'status-dot';
+                        statusDot.style.background = '#f59e0b';
+                        statusText.textContent = `Telegram Bot (STT Engine Offline)`;
+                        if (statusPill) statusPill.title = "Telegram Bot is active, but STT backend engine is unreachable";
+                    }
+                } else {
+                    statusDot.className = 'status-dot';
+                    statusDot.style.background = '#ef4444';
+                    statusText.textContent = 'Telegram Bot Offline';
+                    if (statusPill) statusPill.title = bs.status_label || "Telegram Bot service is offline";
+                }
+            } catch (err) {
+                statusDot.className = 'status-dot online';
+                statusDot.style.background = '';
+                statusText.textContent = 'Cloud STT API Ready';
+                if (statusPill) statusPill.title = "Connected to Central Cloud STT API";
+            }
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            if (isRecording) stopRecording();
+
+            document.getElementById('tabLive').classList.toggle('active', mode === 'live');
+            document.getElementById('tabFile').classList.toggle('active', mode === 'file');
+            document.getElementById('liveSection').style.display = mode === 'live' ? 'flex' : 'none';
+            document.getElementById('fileSection').style.display = mode === 'file' ? 'flex' : 'none';
+        }
+
+        // Live Microphone Toggle
+        function toggleRecording() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                // Connect Audio Visualizer
+                setupVisualizer(stream);
+
+                // Open WebSocket connection to local Samshodhana STT server
+                const selectedLang = document.getElementById('languageSelect').value || 'sa';
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsHost = window.location.hostname || '127.0.0.1';
+                // On production (HTTPS), route through Nginx proxy at /ws/stt/
+                // On local dev (HTTP), connect directly to port 8091
+                const isLocalDev = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                const wsUrl = isLocalDev
+                    ? `${wsProtocol}//${wsHost}:8091/ws/transcribe?language=${selectedLang}`
+                    : `${wsProtocol}//${wsHost}/ws/stt/transcribe?language=${selectedLang}`;
+
+                socket = new WebSocket(wsUrl);
+
+                socket.onopen = () => {
+                    console.log(`WebSocket connection established with Samshodhana STT (${selectedLang}).`);
+                    // Send initialization payload to backend
+                    socket.send(JSON.stringify({
+                        type: "start",
+                        lang: selectedLang,
+                        session_id: "sess_" + Date.now()
+                    }));
+                    recordingStatus.textContent = "Listening... Speak clearly";
+                    micWrapper.classList.add('recording');
+                    isRecording = true;
+                    startTimer();
+                };
+
+                socket.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        const text = msg.text || msg.transcript;
+                        if (text) {
+                            rawDevanagariText = (rawDevanagariText + " " + text).trim();
+                            cleanedDevanagariText = "";
+                            isCleanedState = false;
+                            const aiBtn = document.getElementById('aiCleanBtn');
+                            if (aiBtn) {
+                                aiBtn.innerHTML = '✨ AI Clean';
+                                aiBtn.style.background = 'linear-gradient(135deg, #6366f1, #a855f7)';
+                            }
+                            updateTranscriptDisplay();
+                        }
+                    } catch (e) {
+                        console.error("Error parsing WS message:", e);
+                    }
+                };
+
+                socket.onerror = (err) => {
+                    console.warn("WebSocket not active, will transcribe via Central Cloud STT API on stop:", err);
+                };
+
+                socket.onclose = () => {
+                    if (isRecording) stopRecording();
+                };
+
+                // Stream PCM Audio Chunks & Save MediaRecorder Blob
+                recordedAudioChunks = [];
+                try {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+                    };
+                    mediaRecorder.onstop = async () => {
+                        recordedAudioBlob = new Blob(recordedAudioChunks, { type: 'audio/webm' });
+                        if (!rawDevanagariText.trim() && recordedAudioBlob.size > 500) {
+                            await transcribeRecordedBlob(recordedAudioBlob);
+                        }
+                    };
+                    mediaRecorder.start();
+                } catch (recErr) {
+                    console.warn("MediaRecorder fallback warning:", recErr);
+                }
+
+                const source = audioContext.createMediaStreamSource(stream);
+                
+                // Use AudioWorkletNode instead of deprecated ScriptProcessorNode
+                const workletCode = `
+class PCMProcessor extends AudioWorkletProcessor {
+    process(inputs, outputs, parameters) {
+        const input = inputs[0];
+        if (input && input.length > 0) {
+            const inputData = input[0];
+            const pcm16 = new Int16Array(inputData.length);
+            for (let i = 0; i < inputData.length; i++) {
+                const s = Math.max(-1, Math.min(1, inputData[i]));
+                pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            this.port.postMessage(pcm16.buffer, [pcm16.buffer]);
+        }
+        return true;
+    }
+}
+registerProcessor('pcm-processor', PCMProcessor);
+`;
+                const blob = new Blob([workletCode], { type: 'application/javascript' });
+                const workletUrl = URL.createObjectURL(blob);
+                
+                await audioContext.audioWorklet.addModule(workletUrl);
+                const processor = new AudioWorkletNode(audioContext, 'pcm-processor');
+                
+                processor.port.onmessage = (e) => {
+                    if (!isRecording || !socket || socket.readyState !== WebSocket.OPEN) return;
+                    socket.send(e.data);
+                };
+
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+
+            } catch (err) {
+                console.error("Microphone access error:", err);
+                alert("Microphone access denied or audio device not found.");
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('micWrapper').classList.remove('recording');
+            document.getElementById('recordingStatus').textContent = "Click to start recording";
+            stopTimer();
+
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                try { mediaRecorder.stop(); } catch(e) {}
+            }
+
+            if (socket) {
+                if (socket.readyState === WebSocket.OPEN) {
+                    try { socket.send(JSON.stringify({ type: "stop" })); } catch(e) {}
+                }
+                socket.close();
+                socket = null;
+            }
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+
+        // Timer Helper
+        function startTimer() {
+            recordingStartTime = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsedSec = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+                const secs = String(elapsedSec % 60).padStart(2, '0');
+                document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('timerDisplay').textContent = "00:00";
+        }
+
+        // Audio Waveform Visualizer
+        function setupVisualizer(stream) {
+            const analyser = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 128;
+            analyser.smoothingTimeConstant = 0.8;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            const peakArray = new Float32Array(bufferLength);
+
+            visualizerCanvas.width = visualizerCanvas.offsetWidth || 300;
+            visualizerCanvas.height = visualizerCanvas.offsetHeight || 50;
+
+            function draw() {
+                if (!isRecording) return;
+                animationFrameId = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+
+                const width = visualizerCanvas.width;
+                const height = visualizerCanvas.height;
+
+                visualizerCtx.clearRect(0, 0, width, height);
+
+                const barWidth = (width / bufferLength) * 1.8;
+                let x = 0;
+
+                const gradient = visualizerCtx.createLinearGradient(0, height, 0, 0);
+                gradient.addColorStop(0, '#6366f1');
+                gradient.addColorStop(0.5, '#a855f7');
+                gradient.addColorStop(1, '#f472b6');
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const value = dataArray[i] / 255.0;
+                    const barHeight = Math.max(4, value * height);
+
+                    if (barHeight > peakArray[i]) {
+                        peakArray[i] = barHeight;
+                    } else {
+                        peakArray[i] = Math.max(0, peakArray[i] - 1.2);
+                    }
+
+                    visualizerCtx.fillStyle = gradient;
+                    visualizerCtx.beginPath();
+                    if (visualizerCtx.roundRect) {
+                        visualizerCtx.roundRect(x, height - barHeight, barWidth, barHeight, [4, 4, 0, 0]);
+                    } else {
+                        visualizerCtx.rect(x, height - barHeight, barWidth, barHeight);
+                    }
+                    visualizerCtx.fill();
+
+                    visualizerCtx.fillStyle = '#ffffff';
+                    visualizerCtx.fillRect(x, Math.max(0, height - peakArray[i] - 3), barWidth, 2);
+
+                    x += barWidth + 2;
+                }
+            }
+            draw();
+        }
+
+        // File Selection & Upload
+        function handleFileSelected(event) {
+            const files = event.target.files;
+            if (files && files[0]) {
+                selectedFile = files[0];
+                document.getElementById('fileNameDisplay').textContent = `📄 ${selectedFile.name} (${(selectedFile.size / 1024 / 1024).toFixed(2)} MB)`;
+                document.getElementById('selectedFileInfo').style.display = 'block';
+            }
+        }
+
+        async function transcribeRecordedBlob(blob) {
+            const recordingStatus = document.getElementById('recordingStatus');
+            recordingStatus.textContent = "⏳ Transcribing via Cloud STT API...";
+            const formData = new FormData();
+            formData.append('audio', blob, 'mic_recording.webm');
+            formData.append('language', document.getElementById('languageSelect').value || 'sa');
+            const code = localStorage.getItem('stt_access_code') || '';
+            if (code) {
+                formData.append('access_code', code);
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && data.result) {
+                    const text = data.result.text || data.result.transcript;
+                    if (text) {
+                        rawDevanagariText = (rawDevanagariText + " " + text).trim();
+                        originalRawText = rawDevanagariText;
+                        updateTranscriptDisplay();
+                        recordingStatus.textContent = "Transcription completed";
+                    } else {
+                        recordingStatus.textContent = "No speech detected";
+                    }
+                } else if (res.status === 401 || data.login_required) {
+                    alert("🔑 Login Required\n\n" + (data.error || "Please log in or enter an access code to transcribe."));
+                }
+            } catch (err) {
+                console.error("Cloud STT error:", err);
+            } finally {
+                setTimeout(() => {
+                    if (!isRecording) recordingStatus.textContent = "Click to start recording";
+                }, 2000);
+            }
+        }
+
+        async function transcribeUploadedFile() {
+            if (!selectedFile) return;
+            const btn = document.getElementById('transcribeFileBtn');
+            btn.disabled = true;
+            btn.textContent = "⏳ Transcribing Audio...";
+
+            const formData = new FormData();
+            formData.append('audio', selectedFile);
+            formData.append('language', document.getElementById('languageSelect').value || 'sa');
+            const code = localStorage.getItem('stt_access_code') || '';
+            if (code) {
+                formData.append('access_code', code);
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && data.result) {
+                    const text = data.result.text || data.result.transcript;
+                    if (text) {
+                        rawDevanagariText = text;
+                        originalRawText = text;
+                        cleanedDevanagariText = "";
+                        isCleanedState = false;
+                        const aiBtn = document.getElementById('aiCleanBtn');
+                        if (aiBtn) {
+                            aiBtn.innerHTML = '✨ AI Clean';
+                            aiBtn.style.background = 'linear-gradient(135deg, #6366f1, #a855f7)';
+                        }
+                        updateTranscriptDisplay();
+                        document.getElementById('confidenceScore').textContent = `Confidence: ${(data.result.confidence * 100 || 95).toFixed(1)}%`;
+                    } else if (data.result.error_message) {
+                        alert(`Batch Transcription Error: ${data.result.error_message}`);
+                    } else {
+                        alert("File uploaded successfully, but no speech was detected in the audio file.");
+                    }
+                } else if (res.status === 401 || data.login_required) {
+                    alert("🔑 Login Required\n\n" + (data.error || "Login is required to upload audio files and use Speech-to-Text. Please log in or enter a valid access code."));
+                } else {
+                    alert(data.error || "Failed to transcribe audio file.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection error while sending file to backend.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "⚡ Transcribe Audio File";
+            }
+        }
+
+        // Transcript Display & Action Handlers
+        function updateTranscriptDisplay() {
+            document.getElementById('transcriptTextarea').value = rawDevanagariText;
+            
+            // Count Words & Chars
+            const text = rawDevanagariText.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const chars = text.length;
+            document.getElementById('wordCount').textContent = `Words: ${words}`;
+            document.getElementById('charCount').textContent = `Chars: ${chars}`;
+        }
+
+        async function toggleAiClean() {
+            const btn = document.getElementById('aiCleanBtn');
+            if (!rawDevanagariText.trim()) {
+                alert("Please record or upload audio to generate a transcript first.");
+                return;
+            }
+
+            if (cleanedDevanagariText) {
+                document.getElementById('aiCleanTextarea').value = cleanedDevanagariText;
+                document.getElementById('aiCleanResultBox').style.display = 'block';
+                showToast("✨ Gemini AI Cleaned Output displayed");
+                return;
+            }
+
+            // Call backend /api/stt/ai_clean
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Cleaning...';
+            try {
+                const lang = document.getElementById('languageSelect').value || 'sa';
+                const code = localStorage.getItem('stt_access_code') || '';
+                const res = await fetch('/apps/api/stt/ai_clean', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: rawDevanagariText,
+                        language_code: lang,
+                        access_code: code
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.cleaned_text) {
+                    cleanedDevanagariText = data.cleaned_text;
+                    document.getElementById('aiCleanTextarea').value = cleanedDevanagariText;
+                    document.getElementById('aiCleanResultBox').style.display = 'block';
+                    showToast("✨ Text cleaned by Gemini AI (Phonetic Proofread)");
+                } else if (res.status === 401 || data.login_required) {
+                    alert("🔑 Login Required\n\n" + (data.error || "Login is required to use AI features. Please log in to your account or enter a valid access code."));
+                } else if (data.permission_denied || res.status === 403) {
+                    alert("🔒 Access Restricted\n\n" + (data.error || "AI Clean feature is not enabled for your access code. Please contact system administrator to request access."));
+                } else {
+                    alert("AI Clean error: " + (data.error || "Failed to process text"));
+                }
+            } catch (err) {
+                console.error("AI Clean error:", err);
+                alert("Connection error while requesting AI Clean.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '✨ AI Clean (Gemini)';
+            }
+        }
+
+        function copyAiCleanText() {
+            const txt = document.getElementById('aiCleanTextarea').value;
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("📋 Cleaned text copied to clipboard!");
+            });
+        }
+
+        async function triggerAiAssist() {
+            const btn = document.getElementById('aiAssistBtn');
+            if (!rawDevanagariText.trim()) {
+                alert("Please record or upload audio to generate a transcript first.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Processing Audio...';
+            try {
+                const formData = new FormData();
+                const audioFileToUse = selectedFile || recordedAudioBlob;
+                if (audioFileToUse) {
+                    formData.append('audio', audioFileToUse, selectedFile ? selectedFile.name : 'recorded_audio.webm');
+                }
+                formData.append('text', rawDevanagariText);
+                formData.append('language_code', document.getElementById('languageSelect').value || 'sa');
+                const code = localStorage.getItem('stt_access_code') || '';
+                if (code) {
+                    formData.append('access_code', code);
+                }
+
+                const res = await fetch('/apps/api/stt/ai_assist', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success && data.assisted_text) {
+                    document.getElementById('aiAssistTextarea').value = data.assisted_text;
+                    document.getElementById('aiAssistResultBox').style.display = 'block';
+                    showToast("🤖 Text verified & cleaned by Gemini AI Assist");
+                } else if (res.status === 401 || data.login_required) {
+                    alert("🔑 Login Required\n\n" + (data.error || "Login is required to use AI features. Please log in to your account or enter a valid access code."));
+                } else if (data.permission_denied || res.status === 403) {
+                    alert("🔒 Access Restricted\n\n" + (data.error || "AI Assist feature is not enabled for your access code. Please contact system administrator to request access."));
+                } else {
+                    alert("AI Assist error: " + (data.error || "Failed to process audio text"));
+                }
+            } catch (err) {
+                console.error("AI Assist error:", err);
+                alert("Connection error while requesting AI Assist.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🤖 AI Assist (Audio)';
+            }
+        }
+
+        function copyAiAssistText() {
+            const txt = document.getElementById('aiAssistTextarea').value;
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("📋 Assisted text copied to clipboard!");
+            });
+        }
+
+        function clearTranscript() {
+            rawDevanagariText = "";
+            originalRawText = "";
+            cleanedDevanagariText = "";
+            isCleanedState = false;
+            recordedAudioBlob = null;
+            selectedFile = null;
+            const btn = document.getElementById('aiCleanBtn');
+            if (btn) {
+                btn.innerHTML = '✨ AI Clean (Gemini)';
+                btn.style.background = 'linear-gradient(135deg, #6366f1, #a855f7)';
+            }
+            const aiBox = document.getElementById('aiCleanResultBox');
+            if (aiBox) aiBox.style.display = 'none';
+            const aiArea = document.getElementById('aiCleanTextarea');
+            if (aiArea) aiArea.value = '';
+
+            const assistBox = document.getElementById('aiAssistResultBox');
+            if (assistBox) assistBox.style.display = 'none';
+            const assistArea = document.getElementById('aiAssistTextarea');
+            if (assistArea) assistArea.value = '';
+
+            updateTranscriptDisplay();
+            document.getElementById('confidenceScore').textContent = "Confidence: —";
+        }
+
+        function showToast(msg) {
+            let toast = document.getElementById('toastNotification');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toastNotification';
+                toast.style.cssText = "position: fixed; bottom: 30px; right: 30px; background: rgba(16, 185, 129, 0.95); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 600; z-index: 100000; box-shadow: 0 10px 25px rgba(0,0,0,0.3); backdrop-filter: blur(10px); transition: opacity 0.3s ease;";
+                document.body.appendChild(toast);
+            }
+            toast.textContent = msg;
+            toast.style.opacity = '1';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 2500);
+        }
+
+        function copyTranscript() {
+            const text = document.getElementById('transcriptTextarea').value;
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            showToast("📋 Transcript copied to clipboard!");
+        }
+
+        function downloadTranscript() {
+            const text = document.getElementById('transcriptTextarea').value;
+            if (!text) return;
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `Sanskrit_STT_${Date.now()}.txt`;
+            a.click();
+            showToast("📥 Transcript saved as .txt!");
+        }
+
+        // =============================================================================
+        // TELEGRAM BOT WEB ADMIN CONTROLLER
+        // =============================================================================
+
+        function toggleAdminPanel() {
+            const modal = document.getElementById('botAdminModal');
+            if (modal.style.display === 'none' || !modal.style.display) {
+                modal.style.display = 'block';
+                loadBotAdminData();
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        async function loadBotAdminData() {
+            await fetchBotOverview();
+            await fetchAccessCodes();
+            await fetchTelegramUsers();
+            await fetchTranscriptionLogs();
+        }
+
+        async function fetchBotOverview() {
+            try {
+                const res = await fetch('/apps/api/stt/bot/overview');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('botTokenStatus').textContent = data.has_token ? `✅ ${data.masked_token}` : '❌ Not Configured';
+                    document.getElementById('botTokenStatus').style.color = data.has_token ? '#34d399' : '#ef4444';
+                    document.getElementById('activeCodesCount').textContent = data.active_codes;
+                    document.getElementById('totalUsersCount').textContent = data.total_users;
+                    document.getElementById('totalAudioTranscribed').textContent = `${data.total_audio_min} mins`;
+                    if (data.setup_secret) {
+                        document.getElementById('adminSetupSecretInput').value = data.setup_secret;
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching bot overview:", err);
+            }
+        }
+
+        async function saveBotConfig() {
+            const token = document.getElementById('adminBotTokenInput').value.trim();
+            const secret = document.getElementById('adminSetupSecretInput').value.trim();
+            try {
+                const res = await fetch('/apps/api/stt/bot/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, secret })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Telegram Bot configuration saved successfully!");
+                    document.getElementById('adminBotTokenInput').value = "";
+                    fetchBotOverview();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection error saving bot configuration.");
+            }
+        }
+
+        async function fetchAccessCodes() {
+            const tbody = document.getElementById('accessCodesTableBody');
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes');
+                const data = await res.json();
+                if (data.success && data.codes && data.codes.length > 0) {
+                    tbody.innerHTML = data.codes.map(c => {
+                        const statusBadge = c.status === 'active' 
+                            ? `<span style="background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Active</span>`
+                            : `<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Revoked</span>`;
+                        const dailyUsedMins = Math.ceil((c.daily_used_seconds || 0) / 60);
+                        const dailyMaxMins = Math.ceil((c.daily_max_seconds || 6000) / 60);
+                        const totalUsedMins = Math.ceil((c.total_used_seconds || 0) / 60);
+                        
+                        const actionBtn = c.status === 'active' 
+                            ? `<button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #ef4444;" onclick="revokeAccessCode('${c.code}')">⛔ Revoke</button>`
+                            : `<span style="color: #666;">Disabled</span>`;
+
+                        return `
+                            <tr style="border-bottom: 1px solid var(--stt-card-border);">
+                                <td style="padding: 10px 16px; font-family: monospace; font-weight: 700; color: #818cf8;">${c.code}</td>
+                                <td style="padding: 10px 16px;">${statusBadge}</td>
+                                <td style="padding: 10px 16px;">${dailyUsedMins} / ${dailyMaxMins} mins</td>
+                                <td style="padding: 10px 16px;">${totalUsedMins} mins</td>
+                                <td style="padding: 10px 16px;">${c.request_count || 0}</td>
+                                <td style="padding: 10px 16px;">${actionBtn}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #888;">No access codes generated yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function createAccessCode() {
+            const code = document.getElementById('newCodeInput').value.trim().toUpperCase();
+            const max_minutes = parseFloat(document.getElementById('newCodeMaxMins').value || 100);
+
+            if (!code) {
+                alert("Please enter a code string (e.g. GURUKUL2026)");
+                return;
+            }
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, max_minutes })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('newCodeInput').value = "";
+                    fetchAccessCodes();
+                    fetchBotOverview();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error generating access code.");
+            }
+        }
+
+        async function revokeAccessCode(code) {
+            if (!confirm(`Are you sure you want to revoke Access Code '${code}'?`)) return;
+
+            try {
+                const res = await fetch('/apps/api/stt/bot/codes/revoke', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fetchAccessCodes();
+                    fetchBotOverview();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchTelegramUsers() {
+            const tbody = document.getElementById('telegramUsersTableBody');
+            try {
+                const res = await fetch('/apps/api/stt/bot/users');
+                const data = await res.json();
+                if (data.success && data.users && data.users.length > 0) {
+                    tbody.innerHTML = data.users.map(u => `
+                        <tr style="border-bottom: 1px solid var(--stt-card-border);">
+                            <td style="padding: 8px 12px; font-weight: 600;">${u.first_name || 'User'} <span style="color:#888; font-weight:normal;">(@${u.username || u.telegram_id})</span></td>
+                            <td style="padding: 8px 12px; font-family: monospace; color:#818cf8;">${u.access_code}</td>
+                            <td style="padding: 8px 12px;">${Math.ceil((u.total_used_seconds || 0)/60)} mins (${u.request_count || 0} reqs)</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" style="padding: 16px; text-align: center; color: #888;">No registered Telegram users yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fetchTranscriptionLogs() {
+            const tbody = document.getElementById('transcriptionLogsTableBody');
+            try {
+                const res = await fetch('/apps/api/stt/bot/logs');
+                const data = await res.json();
+                if (data.success && data.logs && data.logs.length > 0) {
+                    tbody.innerHTML = data.logs.map(l => {
+                        const dateStr = new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        return `
+                            <tr style="border-bottom: 1px solid var(--stt-card-border);">
+                                <td style="padding: 8px 12px; color: #888;">${dateStr}</td>
+                                <td style="padding: 8px 12px; font-weight: 600; color: #34d399;">${(l.duration_sec || 0).toFixed(1)}s</td>
+                                <td style="padding: 8px 12px; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${l.transcript_snippet || ''}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" style="padding: 16px; text-align: center; color: #888;">No transcription logs recorded yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>

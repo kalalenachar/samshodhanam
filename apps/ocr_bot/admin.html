@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram OCR Bot Admin — Samshodhanam</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(168, 85, 247, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--card-border);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.online {
+            background-color: var(--success);
+            box-shadow: 0 0 12px var(--success);
+        }
+
+        .status-dot.offline {
+            background-color: var(--danger);
+            box-shadow: 0 0 12px var(--danger);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            box-shadow: 0 4px 14px 0 var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 0.5rem;
+            color: #ffffff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus {
+            border-color: #a855f7;
+        }
+
+        .tokens-list {
+            list-style: none;
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 1rem;
+        }
+
+        .token-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.8rem;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.4rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--card-border);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-zone:hover {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.05);
+        }
+
+        .log-console {
+            background: #020617;
+            border: 1px solid var(--card-border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.825rem;
+            color: #38bdf8;
+            height: 320px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #1e293b;
+            color: #ffffff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #a855f7;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <span style="font-size: 2rem;">🤖</span>
+            <div>
+                <h1>Telegram OCR Bot Control Center</h1>
+                <p style="font-size: 0.85rem; color: var(--text-sub);">Samshodhanam Digital Library & OCR Suite</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Checking...</span>
+        </div>
+    </header>
+
+    <div class="grid">
+        <!-- Process Controls -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">⚡ Process Controls</div>
+            </div>
+            <p style="font-size: 0.875rem; color: var(--text-sub); margin-bottom: 1.25rem;">
+                Manage real-time execution of python process <code>apps/ocr_bot/run_bot.py</code>.
+            </p>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="triggerAction('start')">▶️ Start Bot</button>
+                <button class="btn btn-secondary" onclick="triggerAction('restart')">🔄 Restart</button>
+                <button class="btn btn-danger" onclick="triggerAction('stop')">⏹️ Stop</button>
+            </div>
+            <div style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-sub);">
+                Process PID: <strong id="botPid" style="color: #cbd5e1;">--</strong>
+            </div>
+        </div>
+
+        <!-- Bot Credentials -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🔑 Bot Configuration</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Telegram Bot Token</label>
+                <input type="text" id="inputToken" class="form-input" placeholder="e.g. 1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ">
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()">💾 Save Token</button>
+        </div>
+
+        <!-- OCR API Configuration -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">☁️ Samshodhanam OCR API</div>
+                <span style="font-size: 0.8rem; color: #a855f7; font-weight: 600;" id="tokenCountLabel">Checking...</span>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.8rem;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-sub); display: block; margin-bottom: 0.3rem;">OCR API Endpoint</label>
+                <input type="text" id="inputOcrApiUrl" class="input-field" placeholder="http://localhost:5001/api/v1/ocr" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-sub); display: block; margin-bottom: 0.3rem;">API Key (Optional)</label>
+                <input type="password" id="inputOcrApiKey" class="input-field" placeholder="Bearer Token / API Key" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <button class="btn btn-primary" onclick="saveOcrApiConfig()">💾 Save API Settings</button>
+        </div>
+    </div>
+
+    <!-- Live Console Output -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">🖥️ Console Logs Output (telegram_ocr_bot.log)</div>
+            <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 0.3rem 0.75rem;" onclick="fetchLogs()">🔄 Refresh Logs</button>
+        </div>
+        <div class="log-console" id="logConsole">Loading log output...</div>
+    </div>
+</div>
+
+<div class="toast" id="toast">Action performed successfully</div>
+
+<script>
+    async function apiFetch(endpoint, options = {}) {
+        let res = await fetch('/apps/api/ocr_bot/' + endpoint, options);
+        if (!res.ok && res.status === 404) {
+            res = await fetch('/api/ocr_bot/' + endpoint, options);
+        }
+        return res;
+    }
+
+    async function fetchStatus() {
+        try {
+            const res = await apiFetch('status');
+            const data = await res.json();
+            if (data.success && data.data) {
+                const s = data.data;
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                const pid = document.getElementById('botPid');
+                const countLbl = document.getElementById('tokenCountLabel');
+                const tokenList = document.getElementById('tokensList');
+                const tokenInput = document.getElementById('inputToken');
+
+                if (s.is_running) {
+                    dot.className = 'status-dot online';
+                    text.textContent = `Online (PID: ${s.pid})`;
+                    pid.textContent = s.pid;
+                } else {
+                    dot.className = 'status-dot offline';
+                    text.textContent = 'Stopped 🔴';
+                    pid.textContent = 'Offline';
+                }
+
+                if (!tokenInput.value && s.masked_token) {
+                    tokenInput.placeholder = s.masked_token;
+                }
+
+                countLbl.textContent = s.has_ocr_api ? 'Connected' : 'Offline';
+
+                const inputApiUrl = document.getElementById('inputOcrApiUrl');
+                if (inputApiUrl && !inputApiUrl.value && s.ocr_api_url) {
+                    inputApiUrl.value = s.ocr_api_url;
+                }
+            }
+        } catch (e) {
+            console.error('Fetch status error:', e);
+        }
+    }
+
+    async function triggerAction(action) {
+        showToast(`Processing ${action}...`);
+        try {
+            const res = await apiFetch('action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+            const data = await res.json();
+            showToast(data.message || 'Action executed.');
+            fetchStatus();
+            fetchLogs();
+        } catch (e) {
+            showToast('Action failed: ' + e);
+        }
+    }
+
+    async function saveConfig() {
+        const token = document.getElementById('inputToken').value.trim();
+        if (!token) {
+            showToast('Please enter a valid Bot Token.');
+            return;
+        }
+        try {
+            const res = await apiFetch('config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token })
+            });
+            const data = await res.json();
+            showToast(data.message || 'Token saved.');
+            fetchStatus();
+        } catch (e) {
+            showToast('Save failed: ' + e);
+        }
+    }
+
+    async function saveOcrApiConfig() {
+        const apiUrl = (document.getElementById('inputOcrApiUrl').value || '').trim();
+        const apiKey = (document.getElementById('inputOcrApiKey').value || '').trim();
+
+        showToast('Saving OCR API configuration...');
+        try {
+            const res = await apiFetch('set_api_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_url: apiUrl, api_key: apiKey })
+            });
+            const data = await res.json();
+            showToast(data.message || 'API configuration saved.');
+            fetchStatus();
+        } catch (e) {
+            showToast('Save failed: ' + e);
+        }
+    }
+
+    async function fetchLogs() {
+        try {
+            const res = await apiFetch('logs?lines=60');
+            const data = await res.json();
+            if (data.success && data.logs) {
+                const consoleEl = document.getElementById('logConsole');
+                consoleEl.textContent = data.logs;
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        } catch (e) {
+            console.error('Fetch logs error:', e);
+        }
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    // Auto-refresh status and logs every 5 seconds
+    fetchStatus();
+    fetchLogs();
+    setInterval(fetchStatus, 5000);
+    setInterval(fetchLogs, 5000);
+</script>
+</body>
+</html>

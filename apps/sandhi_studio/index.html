@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandhi Studio — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="/static/css/theme.css?v=35">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Serif+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        // Apply active theme before rendering
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            transform: translateX(-3px);
+        }
+        .app-title-block {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 100px;
+        }
+        .app-title-block h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ef4444, #f43f5e, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        .app-title-block p {
+            color: var(--t-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .glass-panel {
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--t-shadow);
+        }
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 12px;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--t-text-secondary);
+            font-size: 16px;
+            font-weight: 600;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+        }
+        .tab-btn.active {
+            color: white;
+            background: #ef4444;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--t-text-secondary);
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--t-text-primary);
+            font-size: 16px;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            line-height: 1.6;
+            outline: none;
+            transition: all 0.2s;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--t-border);
+            color: var(--t-text-primary);
+            font-weight: 600;
+            font-size: 15px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--t-hover-bg);
+            border-color: var(--t-border-hover);
+        }
+        .results-section {
+            margin-top: 35px;
+            border-top: 1px dashed var(--t-border);
+            padding-top: 30px;
+            display: none;
+        }
+        .word-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .word-pill {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            line-height: 1.6;
+            animation: popIn 0.3s ease;
+        }
+        .rule-table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            margin-top: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--t-border);
+        }
+        th {
+            background: var(--t-hover-bg);
+            font-weight: 600;
+            color: var(--t-text-secondary);
+        }
+        td {
+            color: var(--t-text-primary);
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        .rule-sutra {
+            font-family: 'Noto Sans Devanagari', monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        /* Redesigned Equations Grid */
+        .equation-builder {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--t-border);
+            border-radius: 20px;
+            padding: 24px;
+            min-height: 120px;
+            justify-content: center;
+        }
+        .eq-card {
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            animation: popIn 0.3s ease;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .eq-card:hover {
+            border-color: #ef4444;
+            transform: translateY(-2px);
+        }
+        .eq-card input {
+            border: none;
+            background: none;
+            color: var(--t-text-primary);
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            width: 100px;
+            text-align: center;
+            outline: none;
+            padding: 6px 0;
+            line-height: 1.6;
+            transition: width 0.2s;
+        }
+        .eq-card .btn-card-del {
+            color: var(--t-text-muted);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .eq-card .btn-card-del:hover {
+            color: #ef4444;
+        }
+        .eq-plus {
+            font-size: 24px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.3);
+            user-select: none;
+            transition: opacity 0.3s;
+        }
+        .eq-card .card-move {
+            display: flex;
+            gap: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--t-text-muted);
+            user-select: none;
+            margin-right: 2px;
+        }
+        .eq-card .card-move span:hover {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .final-word-glow {
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-align: center;
+            color: #ef4444;
+            text-shadow: 0 0 25px rgba(239, 68, 68, 0.3);
+            margin: 25px 0;
+            font-family: 'Noto Serif Devanagari', 'Outfit', serif;
+            line-height: 1.6;
+            animation: popIn 0.4s ease;
+        }
+        
+        /* Redesigned Merging Path Timeline */
+        .sandhi-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 15px;
+        }
+        .timeline-step {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            animation: slideIn 0.4s ease;
+        }
+        .step-number {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+            color: white;
+            font-weight: 800;
+            font-size: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .step-details {
+            flex-grow: 1;
+        }
+        .step-formula {
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            line-height: 1.6;
+        }
+        .step-formula span.word {
+            color: var(--t-text-secondary);
+        }
+        .step-formula span.plus {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .step-formula span.arrow {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .step-formula span.fused {
+            color: #ef4444;
+        }
+        .step-rule-badge {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .step-rule-name {
+            font-size: 14px;
+            color: var(--t-text-secondary);
+            font-weight: 600;
+        }
+        
+        @keyframes popIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        /* Sanskrit Keyboard Switch Styling */
+        .sanskrit-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--t-border);
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: var(--t-bg-surface);
+            transition: .4s;
+        }
+        input:checked + .slider {
+            background-color: var(--t-accent);
+        }
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--t-accent);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--t-text-on-accent, #0c1a2e);
+        }
+        .slider.round {
+            border-radius: 20px;
+        }
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        body.osk-active {
+            padding-bottom: 210px;
+        }
+        
+        /* Mobile Responsive Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px 8px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+            .back-btn {
+                align-self: flex-start;
+            }
+            .app-title-block {
+                margin-right: 0;
+            }
+            .app-title-block h1 {
+                font-size: 1.8rem;
+            }
+            .app-title-block p {
+                font-size: 13px;
+            }
+            .glass-panel {
+                padding: 20px 12px;
+                border-radius: 16px;
+            }
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+                padding-bottom: 8px;
+            }
+            .tab-btn {
+                width: 100%;
+                text-align: center;
+                padding: 10px;
+                font-size: 15px;
+            }
+            
+            /* Responsive Table -> Cards for Sandhi Transitions */
+            .rule-table-container {
+                border: none;
+                margin-top: 10px;
+            }
+            .rule-table-container table,
+            .rule-table-container thead,
+            .rule-table-container tbody,
+            .rule-table-container th,
+            .rule-table-container td,
+            .rule-table-container tr {
+                display: block;
+            }
+            .rule-table-container thead {
+                display: none;
+            }
+            .rule-table-container tr {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid var(--t-border);
+                border-radius: 12px;
+                margin-bottom: 16px;
+                padding: 12px 14px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            .rule-table-container td {
+                border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+                padding: 8px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                font-size: 14px;
+            }
+            .rule-table-container td:last-child {
+                border-bottom: none;
+            }
+            .rule-table-container td[data-label]::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--t-text-secondary);
+                font-family: 'Inter', sans-serif;
+                font-size: 12px;
+                text-align: left;
+                margin-right: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .rule-table-container td:not([data-label]) {
+                display: block;
+                text-align: center;
+                justify-content: center;
+            }
+            
+            /* Adjustments for equation builder blocks */
+            .equation-builder {
+                padding: 16px 12px;
+                gap: 8px;
+            }
+            .eq-card {
+                width: 100%;
+                justify-content: space-between;
+                padding: 12px;
+            }
+            .eq-card input {
+                flex-grow: 1;
+                width: auto !important;
+                font-size: 18px;
+            }
+            .eq-plus {
+                width: 100%;
+                text-align: center;
+                margin: 4px 0;
+                font-size: 20px;
+            }
+            
+            /* General buttons and spacing */
+            .btn-submit, .btn-secondary {
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+            textarea, input[type="text"] {
+                padding: 12px;
+                font-size: 15px;
+            }
+            .final-word-glow {
+                font-size: 2rem;
+            }
+            .timeline-step {
+                padding: 14px;
+                gap: 12px;
+            }
+            .step-formula {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="/#apps" class="back-btn">
+                <span>←</span> Back
+            </a>
+            <div class="app-title-block">
+                <div style="font-size: 0.8rem; font-weight: 600; color: var(--t-accent, #d4af37); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Sri Trayee Vidya Gurukulam</div>
+                <h1>Sandhi Studio</h1>
+                <p>Educational Sanskrit Sound Merging &amp; Splitting Workbench</p>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <div class="sanskrit-toggle-container" style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; gap: 8px;">
+                <label class="switch">
+                    <input type="checkbox" id="sandhiSanskrit">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-size: 14px; font-weight: 600; color: var(--t-text-secondary);">Type in Sanskrit (ITRANS)</span>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('joiner')">Joiner (सन्धि-सङ्गतिः)</button>
+                <button class="tab-btn" onclick="switchTab('splitter')">Splitter (पद-च्छेदः)</button>
+            </div>
+
+            <!-- Tab 1: Joiner -->
+            <div id="tab-joiner" class="tab-content active">
+                <p style="color: var(--t-text-secondary); margin-bottom: 20px; font-size: 14px; text-align: center;">
+                    Construct your sandhi equation. Click or edit text directly inside the cards, or swap positions:
+                </p>
+                
+                <div class="equation-builder" id="equation-container">
+                    <!-- Dynamic equation blocks joined by "+" -->
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 25px; margin-bottom: 20px;">
+                    <button class="btn-secondary" onclick="addEquationBlock()" style="flex: 1;">+ Insert Word</button>
+                    <button class="btn-submit" onclick="runJoiner()" style="flex: 2;">Fuse Equation</button>
+                    <button class="btn-secondary" onclick="clearEquation()" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444;">Clear</button>
+                </div>
+
+                <div id="join-results" class="results-section">
+                    <h3 style="text-align: center; font-size: 15px; color: var(--t-text-secondary); margin-bottom: 10px;">Fused Sanskrit Result:</h3>
+                    <div class="final-word-glow" id="join-fused-output"></div>
+
+                    <h3 style="margin-top: 35px; margin-bottom: 15px; font-size: 16px; font-weight: 700; text-align: center; color:#ef4444;">Phonetic Sandhi Merging Path</h3>
+                    <div class="sandhi-timeline" id="join-timeline">
+                        <!-- Dynamic step cards -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Splitter -->
+            <div id="tab-splitter" class="tab-content">
+                <div class="form-group">
+                    <label for="split-input">Paste continuous Sanskrit verse (Devanagari):</label>
+                    <textarea id="split-input" class="sanskrit-enabled" data-sanskrit-id="sandhiSanskrit" rows="4" placeholder="e.g., सूर्योदयः प्रभवति कुरुक्षेत्रे..."></textarea>
+                </div>
+                <button class="btn-submit" onclick="runSplitter()" style="width: 100%;">Split &amp; Analyze</button>
+
+                <div id="split-results" class="results-section">
+                    <!-- Dynamically populated with all valid alternative splits -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme switcher -->
+    <script src="/static/js/theme.js?v=35"></script>
+    <script src="/static/js/keymanweb.js?v=100"></script>
+    <script src="/static/js/sanskrit_keyboard.js"></script>
+    <script>
+        let joinerWords = ['सूर्य', 'उदयः'];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderBlocks();
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // Splitter logic
+        async function runSplitter() {
+            const text = document.getElementById('split-input').value.trim();
+            if (!text) {
+                alert("Please enter some Sanskrit text.");
+                return;
+            }
+
+            const resultsDiv = document.getElementById('split-results');
+            resultsDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/apps/api/sandhi/split', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    let html = '';
+                    const alts = data.alternatives && data.alternatives.length > 0 ? data.alternatives : [data];
+                    
+                    alts.forEach((alt, index) => {
+                        html += `<div style="margin-bottom: 30px; ${alts.length > 1 ? 'border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.2);' : ''}">`;
+                        if (alts.length > 1) {
+                            html += `<h2 style="color: var(--t-accent); font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Valid Split Alternative ${index + 1}</h2>`;
+                        }
+                        
+                        html += `<h3 style="margin-bottom: 12px; font-size: 16px; font-weight: 600;">Segmented Words (पदानि):</h3>
+                        <div class="word-pills">
+                            ${alt.words.map(w => `<span class="word-pill">${w}</span>`).join('')}
+                        </div>`;
+                        
+                        html += `<h3 style="margin-top: 25px; margin-bottom: 8px; font-size: 16px; font-weight: 600;">Sandhi Transitions Mapped:</h3>
+                        <div class="rule-table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Boundary Words</th>
+                                        <th>Merged Result</th>
+                                        <th>Phonetic Change Type</th>
+                                        <th>Ashtadhyayi Rule</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                                
+                        if (alt.joins.length === 0) {
+                            html += `<tr><td colspan="4" style="text-align: center; color: var(--t-text-secondary);">No sandhi merges detected. Space-separated or direct characters.</td></tr>`;
+                        } else {
+                            html += alt.joins.map(j => `
+                                <tr>
+                                    <td data-label="Boundary Words" style="font-weight: 600;">${j.word1} + ${j.word2}</td>
+                                    <td data-label="Merged Result" style="color: #ef4444; font-weight: 700;">${j.fused}</td>
+                                    <td data-label="Change Type"><span style="background: rgba(239,68,68,0.1); padding: 4px 8px; border-radius: 6px; color:#ef4444; font-size:12px; font-weight:600;">${j.type || 'Phonetics'}</span></td>
+                                    <td data-label="Rule"><span class="rule-sutra">${j.rule || 'N/A'}</span></td>
+                                </tr>
+                            `).join('');
+                        }
+                        
+                        html += `       </tbody>
+                            </table>
+                        </div></div>`;
+                    });
+                    
+                    resultsDiv.innerHTML = html;
+                    resultsDiv.style.display = 'block';
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Connection failed.");
+            }
+        }
+
+        // Joiner Equation builder
+        function renderBlocks() {
+            const container = document.getElementById('equation-container');
+            if (joinerWords.length === 0) {
+                container.innerHTML = `<p style="color:var(--t-text-secondary); font-size:14px; text-align:center; width:100%; padding:20px;">No words. Click "+ Insert Word" to begin.</p>`;
+                return;
+            }
+            
+            let html = '';
+            joinerWords.forEach((b, idx) => {
+                html += `
+                    <div class="eq-card" id="eq-card-${idx}">
+                        <div class="card-move">
+                            <span onclick="moveCard(${idx}, -1)" title="Move left">◀</span>
+                            <span onclick="moveCard(${idx}, 1)" title="Move right">▶</span>
+                        </div>
+                        <input type="text" class="sanskrit-enabled" data-sanskrit-id="sandhiSanskrit" value="${b}" onchange="updateBlock(${idx}, this.value)" style="width: ${Math.max(70, b.length * 17 + 15)}px;">
+                        <span class="btn-card-del" onclick="deleteBlock(${idx})" title="Delete block">✕</span>
+                    </div>
+                `;
+                if (idx < joinerWords.length - 1) {
+                    html += `<span class="eq-plus" id="eq-plus-${idx}">+</span>`;
+                }
+            });
+            container.innerHTML = html;
+
+            if (typeof keyman !== 'undefined' && keyman.attachToControl) {
+                const toggle = document.getElementById('sandhiSanskrit');
+                if (toggle && toggle.checked) {
+                    setTimeout(() => {
+                        document.querySelectorAll('.eq-card input').forEach(input => {
+                            keyman.attachToControl(input);
+                        });
+                    }, 50);
+                }
+            }
+        }
+
+        function updateBlock(idx, val) {
+            joinerWords[idx] = val.trim();
+            renderBlocks();
+        }
+
+        function addEquationBlock() {
+            joinerWords.push('');
+            renderBlocks();
+            setTimeout(() => {
+                const inputs = document.querySelectorAll('.eq-card input');
+                if (inputs.length > 0) {
+                    inputs[inputs.length - 1].focus();
+                }
+            }, 50);
+        }
+
+        function deleteBlock(idx) {
+            joinerWords.splice(idx, 1);
+            renderBlocks();
+        }
+
+        function moveCard(idx, dir) {
+            const targetIdx = idx + dir;
+            if (targetIdx < 0 || targetIdx >= joinerWords.length) return;
+            const temp = joinerWords[idx];
+            joinerWords[idx] = joinerWords[targetIdx];
+            joinerWords[targetIdx] = temp;
+            renderBlocks();
+        }
+
+        function clearEquation() {
+            joinerWords = [];
+            renderBlocks();
+            document.getElementById('join-results').style.display = 'none';
+        }
+
+        async function runJoiner() {
+            // filter out empty terms
+            const words = joinerWords.filter(w => w.trim() !== '');
+            if (words.length < 2) {
+                alert("Please add at least 2 non-empty words to conjoin.");
+                return;
+            }
+
+            const resultsDiv = document.getElementById('join-results');
+            resultsDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/apps/api/sandhi/join', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ words: words })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Animation sliding effect
+                    const cards = document.querySelectorAll('.eq-card');
+                    const pluses = document.querySelectorAll('.eq-plus');
+                    
+                    cards.forEach(c => c.style.transform = 'scale(0.95) translateX(10px)');
+                    pluses.forEach(p => p.style.opacity = '0');
+                    
+                    setTimeout(() => {
+                        cards.forEach(c => c.style.transform = 'none');
+                        pluses.forEach(p => p.style.opacity = '1');
+                        
+                        document.getElementById('join-fused-output').textContent = data.fused;
+                        
+                        const timeline = document.getElementById('join-timeline');
+                        timeline.innerHTML = data.steps.map((step, idx) => `
+                            <div class="timeline-step">
+                                <div class="step-number">${idx + 1}</div>
+                                <div class="step-details">
+                                    <div class="step-formula">
+                                        <span class="word">${step.w1}</span>
+                                        <span class="plus">+</span>
+                                        <span class="word">${step.w2}</span>
+                                        <span class="arrow">➔</span>
+                                        <span class="fused">${step.result}</span>
+                                    </div>
+                                    <div>
+                                        <span class="step-rule-badge">${step.type}</span>
+                                        <span class="step-rule-name">${step.rule}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        resultsDiv.style.display = 'block';
+                        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Connection failed.");
+            }
+        }
+    </script>
+    <footer style="margin-top: 40px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; color: var(--t-text-secondary);">
+        Samshodhana Mandiram — Sri Trayee Vidya Gurukulam
+    </footer>
+</body>
+</html>

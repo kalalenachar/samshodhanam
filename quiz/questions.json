@@ -1,0 +1,122 @@
+[
+  {
+    "subject": "व्याकरणम् (Grammar)",
+    "level": "प्रथमा (Basic)",
+    "question": {
+      "sa": "माहेश्वरसूत्राणां सङ्ख्या का अस्ति?",
+      "en": "What is the total number of Maheshwara Sutras?",
+      "hi": "माहेश्वर सूत्रों की कुल संख्या कितनी है?"
+    },
+    "options": {
+      "sa": ["द्वादश (१२)", "चतुर्दश (१४)", "षोडश (१६)", "दश (१०)"],
+      "en": ["12", "14", "16", "10"],
+      "hi": ["12", "14", "16", "10"]
+    },
+    "answerIndex": 1,
+    "explanation": {
+      "sa": "नृत्तावसाने नटराजराजो ननाद ढक्कां नवपञ्चवारम्। अतः माहेश्वरसूत्राणि चतुर्दश (१४) सन्ति।",
+      "en": "Lord Shiva played his Damaru 14 times (9 + 5), yielding the 14 Maheshwara Sutras (A-i-u-ṇ...).",
+      "hi": "भगवान शिव के डमरू से 14 बार ध्वनियां निकलीं जिनसे 14 माहेश्वर सूत्र बने।"
+    }
+  },
+  {
+    "subject": "व्याकरणम् (Grammar)",
+    "level": "प्रथमा (Basic)",
+    "question": {
+      "sa": "'अष्टाध्यायी' कस्य महर्षेः कृतिः अस्ति?",
+      "en": "Who is the revered author of Ashtadhyayi?",
+      "hi": "'अष्टाध्यायी' किस महर्षि की रचना है?"
+    },
+    "options": {
+      "sa": ["महर्षि-पतञ्जलिः", "महर्षि-पाणिनिः", "महर्षि-कात्यायनः", "भर्तृहरिः"],
+      "en": ["Maharshi Patanjali", "Maharshi Panini", "Maharshi Katyayana", "Bhartrihari"],
+      "hi": ["महर्षि पतंजलि", "महर्षि पाणिनि", "महर्षि कात्यायन", "भर्तृहरि"]
+    },
+    "answerIndex": 1,
+    "explanation": {
+      "sa": "अष्टाध्यायी पाणिनिना विरचिता संस्कृतव्याकरणस्य मूर्धन्यग्रन्थः अस्ति।",
+      "en": "Ashtadhyayi was composed by Maharshi Panini (~500 BCE) containing nearly 4,000 sutras.",
+      "hi": "अष्टाध्यायी महर्षि पाणिनि द्वारा रचित संस्कृत व्याकरण का अमर ग्रंथ है।"
+    }
+  },
+  {
+    "subject": "व्याकरणम् (Grammar)",
+    "level": "मध्यमा (Intermediate)",
+    "question": {
+      "sa": "'विद्या + आलयः' इत्यस्य सन्धिः कः?",
+      "en": "What is the sandhi result of 'Vidyā + Ālayaḥ'?",
+      "hi": "'विद्या + आलयः' का संधि रूप क्या है?"
+    },
+    "options": {
+      "sa": ["विद्योदयः", "विद्यालयः", "विद्य्यालयः", "विद्येयः"],
+      "en": ["Vidyodayaḥ", "Vidyālayaḥ", "Vidyhyālayaḥ", "Vidyeyaḥ"],
+      "hi": ["विद्योदयः", "विद्यालयः", "विद्य्यालयः", "विद्येयः"]
+    },
+    "answerIndex": 1,
+    "explanation": {
+      "sa": "'अकः सवर्णे दीर्घः' (६.१.१०१) इति सूत्रेण सवर्णदीर्घसन्धिः भवति।",
+      "en": "By Panini's sutra 'Akaḥ Savarṇe Dīrghaḥ', similar vowels join to form a long vowel (ā + ā = ā).",
+      "hi": "'अकः सवर्णे दीर्घः' सूत्र से सवर्ण दीर्घ संधि होकर 'विद्यालयः' बनता है।"
+    }
+  },
+  {
+    "subject": "साहित्यम् (Literature)",
+    "level": "प्रथमा (Basic)",
+    "question": {
+      "sa": "कविकुलगुरुः इति उपाधिना कः प्रसिद्धः?",
+      "en": "Which classical poet is renowned with the title 'Kavikula-guru'?",
+      "hi": "'कविकुलगुरु' की उपाधि से कौन प्रसिद्ध हैं?"
+    },
+    "options": {
+      "sa": ["भवभूतिः", "बाणभट्टः", "कालिदासः", "भारविः"],
+      "en": ["Bhavabhuti", "Banabhatta", "Kalidasa", "Bharavi"],
+      "hi": ["भवभूति", "बाणभट्ट", "कालिदास", "भारवि"]
+    },
+    "answerIndex": 2,
+    "explanation": {
+      "sa": "महाकविः कालिदासः रघुवंश-मेघदूत-अभिज्ञानशाकुन्तलादिभिः ग्रन्थैः कविकुलगुरुः इति ख्यातः।",
+      "en": "Mahakavi Kalidasa, author of Abhijñānaśākuntalam, Raghuvamsham, and Meghadutam, is hailed as Kavikula-guru.",
+      "hi": "महाकवि कालिदास को अपनी अप्रतिम कृतियों के कारण कविकुलगुरु कहा जाता है।"
+    }
+  },
+  {
+    "subject": "साहित्यम् (Literature)",
+    "level": "प्रथमा (Basic)",
+    "question": {
+      "sa": "संस्कृतस्य आद्यकाव्यं किम् उच्यते?",
+      "en": "Which ancient epic is known as the Adikavya (first poetic epic) of Sanskrit?",
+      "hi": "संस्कृत का आदिकाव्य किसे कहा जाता है?"
+    },
+    "options": {
+      "sa": ["महाभारतम्", "श्रीमद्वाल्मीकिरामायणम्", "श्रीमद्भगवद्गीता", "रघुवंशम्"],
+      "en": ["Mahabharata", "Srimad Valmiki Ramayana", "Bhagavad Gita", "Raghuvamsham"],
+      "hi": ["महाभारत", "श्रीमद्वाल्मीकि रामायण", "श्रीमद्भगवद्गीता", "रघुवंश"]
+    },
+    "answerIndex": 1,
+    "explanation": {
+      "sa": "ऋषिणा वाल्मीकिना रचितं रामायणम् आदिकाव्यम्, वाल्मीकिश्च आदिकविः उच्यते।",
+      "en": "Composed by Sage Valmiki, the Ramayana is revered as the first poetic composition (Adikavya).",
+      "hi": "महर्षि वाल्मीकि रचित रामायण को संस्कृत साहित्य का आदिकाव्य माना जाता है।"
+    }
+  },
+  {
+    "subject": "सुभाषितम् (Wisdom)",
+    "level": "प्रथमा (Basic)",
+    "question": {
+      "sa": "'सत्यमेव जयते नानृतम्' इति वाक्यं कस्मात् उपनिषदः उद्धृतम्?",
+      "en": "From which Upanishad is the national motto 'Satyameva Jayate' taken?",
+      "hi": "'सत्यमेव जयते' महावाक्य किस उपनिषद् से लिया गया है?"
+    },
+    "options": {
+      "sa": ["कठोपनिषदः", "केनोपनिषदः", "मुण्डकोपनिषदः", "ताण्ड्योपनिषदः"],
+      "en": ["Katha Upanishad", "Kena Upanishad", "Mundaka Upanishad", "Tandya Upanishad"],
+      "hi": ["कठोपनिषद्", "केनोपनिषद्", "मुण्डकोपनिषद्", "ताण्ड्योपनिषद्"]
+    },
+    "answerIndex": 2,
+    "explanation": {
+      "sa": "'सत्यमेव जयते नानृतं सत्येन पन्था विततो देवयानः' इति मुण्डकोपनिषदि (३.१.६) वर्तते।",
+      "en": "'Satyameva Jayate Nānṛtam' is from Mundaka Upanishad (3.1.6).",
+      "hi": "'सत्यमेव जयते नानृतम्' मुण्डकोपनिषद् के तृतीय मुण्डक के प्रथम खण्ड का छठा मन्त्र है।"
+    }
+  }
+]

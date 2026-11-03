@@ -1,0 +1,800 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}Upload Panel - Sanskrit Digital Library{% endblock %}
+{% block header_title %}Upload Panel{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Override parent container to expand to 90% viewport width */
+    .container {
+        max-width: 90% !important;
+        width: 90% !important;
+    }
+
+    /* Premium Glassmorphic / Modern Layout */
+    .upload-container {
+        max-width: 100%;
+        width: 100%;
+        margin: 30px auto;
+        padding: 0 15px;
+    }
+
+    .upload-card-wrapper {
+        background: var(--t-bg-surface);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 16px;
+        box-shadow: var(--t-shadow);
+        border: 1px solid var(--t-border);
+        padding: 24px 30px;
+        transition: all 0.3s ease;
+    }
+
+    /* Elegant Tab Control */
+    .upload-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid var(--t-text-primary);
+        padding-bottom: 8px;
+        position: relative;
+    }
+
+    .upload-tab-btn {
+        background: none;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--t-text-muted);
+        padding: 8px 18px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .upload-tab-btn:hover {
+        color: var(--t-accent);
+        background: var(--t-accent-alpha-05);
+    }
+
+    .upload-tab-btn.active {
+        color: var(--t-accent);
+        background: var(--t-accent-alpha-08);
+        box-shadow: inset 0 -2px 0 var(--t-accent);
+    }
+
+    /* Tab content animation */
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Elegant ZIP upload zone */
+    .premium-upload-zone {
+        border: 2px dashed var(--t-accent-alpha-35);
+        border-radius: 12px;
+        padding: 35px 20px;
+        text-align: center;
+        cursor: pointer;
+        background: linear-gradient(135deg, var(--t-accent-alpha-05) 0%, var(--t-accent-alpha-05) 100%);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .premium-upload-zone:hover {
+        border-color: var(--t-accent);
+        background: linear-gradient(135deg, var(--t-accent-alpha-05) 0%, var(--t-accent-alpha-08) 100%);
+        box-shadow: 0 10px 25px var(--t-accent-alpha-08);
+    }
+
+    .premium-upload-zone.dragover {
+        border-color: var(--t-accent);
+        background: linear-gradient(135deg, var(--t-accent-alpha-08) 0%, var(--t-accent-alpha-12) 100%);
+        box-shadow: 0 15px 30px var(--t-accent-alpha-15);
+        transform: scale(1.01);
+    }
+
+    .premium-upload-icon {
+        font-size: 38px;
+        margin-bottom: 10px;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+
+    .premium-upload-zone:hover .premium-upload-icon {
+        transform: translateY(-4px) scale(1.08);
+    }
+
+    .premium-upload-zone h4 {
+        font-size: 16px;
+        color: var(--t-text-primary);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .premium-upload-zone p {
+        font-size: 13px;
+        color: var(--t-text-muted);
+        margin-bottom: 12px;
+    }
+
+    /* Premium forms */
+    .premium-form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 12px;
+    }
+
+    .premium-form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .premium-form-field label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--t-text-secondary);
+    }
+
+    .premium-input {
+        padding: 8px 12px;
+        border: 1.5px solid var(--t-input-border);
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: all 0.3s ease;
+        background: var(--t-input-bg);
+        color: var(--t-input-text);
+    }
+
+    .premium-input:focus {
+        border-color: var(--t-input-focus-border);
+        background: var(--t-input-focus-bg);
+        box-shadow: 0 0 0 3px var(--t-accent-alpha-15);
+    }
+
+    .premium-textarea {
+        min-height: 180px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .text-counter {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--t-text-muted);
+        margin-top: 4px;
+        margin-bottom: 10px;
+        padding: 0 5px;
+    }
+
+    .action-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+    /* Sleek buttons */
+    .btn-premium {
+        padding: 9px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-premium-primary {
+        background: var(--t-accent-gradient);
+        color: var(--t-text-on-accent, white);
+        box-shadow: 0 4px 10px var(--t-accent-alpha-15);
+    }
+
+    .btn-premium-primary:hover {
+        opacity: 0.95;
+        box-shadow: 0 5px 15px var(--t-accent-alpha-25);
+        transform: translateY(-1px);
+    }
+
+    .btn-premium-primary:active {
+        transform: translateY(1px);
+    }
+
+    /* Alert / info card */
+    .info-card {
+        background: var(--t-accent-alpha-12);
+        border-left: 4px solid var(--t-accent);
+        border-radius: 6px;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        color: var(--t-text-secondary);
+        line-height: 1.4;
+    }
+
+    .info-card strong {
+        color: var(--t-text-primary);
+    }
+
+    /* Sanskrit toggle */
+    .sanskrit-toggle-premium {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--t-hover-bg);
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--t-border);
+        color: var(--t-text-primary);
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 10px !important;
+        }
+
+        .upload-card-wrapper {
+            padding: 15px 12px !important;
+        }
+
+        .upload-tabs {
+            flex-direction: row !important;
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            padding-bottom: 6px !important;
+            gap: 5px !important;
+            scrollbar-width: none !important;
+        }
+
+        .upload-tabs::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        .upload-tab-btn {
+            padding: 6px 12px !important;
+            font-size: 13px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .action-row {
+            flex-direction: column-reverse !important;
+            gap: 12px !important;
+            align-items: stretch !important;
+        }
+
+        .btn-premium {
+            width: 100% !important;
+            justify-content: center !important;
+            padding: 12px !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-card-wrapper">
+        <div class="upload-tabs">
+            <button class="upload-tab-btn active" onclick="switchTab('zip-tab')">
+                <span>📤</span> Bulk ZIP Upload
+            </button>
+            <button class="upload-tab-btn" onclick="switchTab('text-tab')">
+                <span>📝</span> Create Text-Only Book
+            </button>
+        </div>
+
+        <!-- Tab 1: ZIP Upload -->
+        <div id="zip-tab" class="tab-content active">
+            <div class="info-card">
+                <strong>Requirements:</strong> Upload a ZIP file containing folders representing books. Each folder should contain a <code>.txt</code> file (OCR text with optional page markers) and a <code>metadata.txt</code> file (specifying Source, Tags, etc.).
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: left; max-width: 400px; margin-left: 0;">
+                <label for="zipPublishStatus" style="display: block; font-weight: 600; color: var(--t-text-primary); margin-bottom: 8px;">Default Publish Status</label>
+                <select id="zipPublishStatus" class="premium-input" style="width: 100%; padding: 10px; border: 1px solid var(--t-border); background: var(--t-input-bg); color: var(--t-input-text); border-radius: 6px; font-size: 14px; outline: none; font-family: inherit;">
+                    <option value="published">Published (Visible to public)</option>
+                    <option value="draft">Draft (Visible to admin only)</option>
+                </select>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">Sets the default publication state for all books inside the ZIP.</div>
+            </div>
+
+            <div class="premium-upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <div class="premium-upload-icon">📁</div>
+                <h4>Select a ZIP file to upload</h4>
+                <p>Drag & drop your ZIP folder here or click to browse</p>
+                <input type="file" id="fileInput" accept=".zip" onchange="handleFileSelect(event)" style="display: none;">
+                <button class="btn-premium btn-premium-primary">Choose ZIP File</button>
+            </div>
+        </div>
+
+        <!-- Tab 2: Text Upload -->
+        <div id="text-tab" class="tab-content">
+            <div class="info-card">
+                <strong>Text-Only Creator:</strong> Paste the book text here. The system will automatically split it into pages based on the character limit, compress it, and import it as a book in the database.
+            </div>
+
+            <div class="premium-form-grid">
+                <div class="premium-form-field">
+                    <label for="textBookName">Book Name</label>
+                    <input type="text" id="textBookName" class="premium-input sanskrit-enabled" data-sanskrit-id="textUploadSanskrit" placeholder="e.g. Bhagavad Gita">
+                </div>
+                <div class="premium-form-field">
+                    <label for="textBookTags">Tags (Permitted Taxonomy Tags Only)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="textBookTags" class="premium-input" placeholder="Select tags using button..." readonly style="background: var(--t-hover-bg); cursor: pointer; flex: 1;" onclick="toggleTextUploadTagPickerModal()">
+                        <button type="button" class="btn-premium" style="background: var(--t-accent-alpha-12); color: var(--t-accent); border: 1px solid var(--t-accent-alpha-30); font-size: 13px; padding: 7px 14px; white-space: nowrap;" onclick="toggleTextUploadTagPickerModal()">🏷️ Choose Tags</button>
+                    </div>
+                    <div id="textUploadTagPickerPills" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+                </div>
+            </div>
+
+            <div class="premium-form-field" style="margin-bottom: 20px;">
+                <label for="charsPerPage">Approximate Characters Per Page</label>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <input type="number" id="charsPerPage" class="premium-input" value="2000" min="0" step="100" style="width: 180px;">
+                    <span style="font-size: 13px; color: #64748b;">(Set to 0 to upload directly as a single page without splitting)</span>
+                </div>
+            </div>
+
+            <div class="premium-form-field" style="margin-bottom: 20px;">
+                <label for="textPublishStatus">Publish Status</label>
+                <select id="textPublishStatus" class="premium-input" style="width: 180px; font-family: inherit;">
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                </select>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">Choose whether this text-only book should be visible to the public immediately or saved as a draft.</div>
+            </div>
+
+            <div class="premium-form-field" style="margin-bottom: 20px;">
+                <label for="textLevelsRaw">Level Hierarchy <span style="font-weight: 400; color: #888; font-size: 12px;">(optional — for multi-level commentaries)</span></label>
+                <input type="text" id="textLevelsRaw" class="premium-input sanskrit-enabled" data-sanskrit-id="textUploadSanskrit" placeholder='e.g. Level: 1- "ब्रह्मसूत्रम्", 1.1-"प्रथमाध्यायः", 2-"अनुव्याख्यानम्", 3-"न्यायसुधा"'>
+                <div style="font-size: 12px; color: #888; margin-top: 4px;">Format: <code>Level: 1- "ब्रह्मसूत्रम्", 1.1-"प्रथमाध्यायः", 2-"अनुव्याख्यानम्", 3-"न्यायसुधा"</code></div>
+            </div>
+
+            <div class="premium-form-field" style="margin-bottom: 20px;">
+                <label for="textContent">Paste Text Content</label>
+                <textarea id="textContent" class="premium-input premium-textarea sanskrit-enabled" data-sanskrit-id="textUploadSanskrit" placeholder="Paste Sanskrit or English text here..." oninput="updateCharCount()"></textarea>
+            </div>
+
+            <div class="text-counter">
+                <span id="charCountDisplay">0 characters</span>
+                <span id="wordCountDisplay">0 words</span>
+            </div>
+
+            <div class="action-row">
+                <div class="sanskrit-toggle-premium">
+                    <label class="switch" style="margin: 0;">
+                        <input type="checkbox" id="textUploadSanskrit" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <label for="textUploadSanskrit" style="font-size: 14px; font-weight: 600; color: #475569; cursor: pointer;">Type in Sanskrit</label>
+                </div>
+                <button class="btn-premium btn-premium-primary" onclick="uploadTextOnly()">
+                    <span>🚀</span> Create Book
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Text Upload Tag Picker Modal -->
+<div id="textUploadTagPickerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--t-bg-surface); border: 1px solid var(--t-border); border-radius: 16px; max-width: 650px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 25px; box-shadow: var(--t-shadow);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 18px; color: var(--t-text-primary);">Select Permitted Taxonomy Tags</h3>
+            <button type="button" onclick="toggleTextUploadTagPickerModal()" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--t-text-muted);">&times;</button>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="textUploadTagSearch" placeholder="🔍 Search taxonomy tags..." oninput="renderTextUploadModalTaxonomy(this.value)" style="width: 100%; padding: 9px 14px; border: 1px solid var(--t-border); border-radius: 8px; font-size: 13.5px; background: var(--t-input-bg); color: var(--t-input-text); outline: none;">
+        </div>
+        <div id="textUploadModalTaxonomyBranches" style="display: flex; flex-direction: column; gap: 15px;"></div>
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" class="btn-premium btn-premium-primary" onclick="toggleTextUploadTagPickerModal()">Done</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Taxonomy Tag Picker for Text Upload
+    let textUploadTaxonomyCache = null;
+
+    async function loadTextUploadTaxonomy() {
+        try {
+            const res = await fetch('/api/v1/taxonomy');
+            textUploadTaxonomyCache = await res.json();
+            renderTextUploadModalTaxonomy();
+            renderTextUploadSelectedPills();
+        } catch (err) {
+            console.error('Failed to load taxonomy:', err);
+        }
+    }
+
+    function toggleTextUploadTagPickerModal() {
+        const modal = document.getElementById('textUploadTagPickerModal');
+        if (!modal) return;
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        } else {
+            modal.style.display = 'flex';
+            if (!textUploadTaxonomyCache) {
+                loadTextUploadTaxonomy();
+            } else {
+                renderTextUploadModalTaxonomy();
+            }
+        }
+    }
+
+    function getTextUploadSelectedTags() {
+        const input = document.getElementById('textBookTags');
+        const val = input ? input.value || '' : '';
+        return val.split(',').map(t => t.trim()).filter(t => t.length > 0);
+    }
+
+    function toggleTextUploadTag(tagName) {
+        let tags = getTextUploadSelectedTags();
+        if (tags.includes(tagName)) {
+            tags = tags.filter(t => t !== tagName);
+        } else {
+            tags.push(tagName);
+        }
+        document.getElementById('textBookTags').value = tags.join(', ');
+        const searchInput = document.getElementById('textUploadTagSearch');
+        const searchVal = searchInput ? searchInput.value : '';
+        renderTextUploadModalTaxonomy(searchVal);
+        renderTextUploadSelectedPills();
+    }
+
+    function renderTextUploadModalTaxonomy(filterQuery = '') {
+        if (!textUploadTaxonomyCache || !textUploadTaxonomyCache.nodes) return;
+        const container = document.getElementById('textUploadModalTaxonomyBranches');
+        if (!container) return;
+        
+        const currentTags = getTextUploadSelectedTags();
+        const q = filterQuery.trim().toLowerCase();
+
+        const html = textUploadTaxonomyCache.nodes.map(node => {
+            const matchingTags = (node.tags || []).filter(t => !q || t.toLowerCase().includes(q) || (node.name_sa && node.name_sa.toLowerCase().includes(q)) || (node.name_en && node.name_en.toLowerCase().includes(q)));
+            if (q && matchingTags.length === 0) return '';
+
+            return `
+                <div style="background: var(--t-hover-bg); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--t-border);">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; color: ${node.color || 'var(--t-accent)'};">
+                        ${node.icon || '🏷️'} ${node.name_sa || ''} <span style="font-size: 0.8rem; font-weight: normal; color: var(--t-text-muted);">(${node.name_en || ''})</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${matchingTags.map(t => {
+                            const active = currentTags.includes(t);
+                            const safeTag = t.replace(/'/g, "\\'");
+                            return `
+                                <button type="button" onclick="toggleTextUploadTag('${safeTag}')" style="padding: 5px 11px; border-radius: 12px; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.2s; border: 1px solid ${active ? 'var(--t-accent)' : 'var(--t-border)'}; background: ${active ? 'var(--t-accent)' : 'var(--t-bg-surface)'}; color: ${active ? 'white' : 'var(--t-text-primary)'};">
+                                    ${active ? '✓ ' : ''}${t}
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        container.innerHTML = html || `<div style="text-align: center; padding: 15px; color: var(--t-text-muted);">No matching tags found.</div>`;
+    }
+
+    function renderTextUploadSelectedPills() {
+        const container = document.getElementById('textUploadTagPickerPills');
+        if (!container) return;
+        const tags = getTextUploadSelectedTags();
+        if (tags.length === 0) {
+            container.innerHTML = `<span style="font-size: 0.8rem; color: var(--t-text-muted);">No tags selected. Click 'Choose Tags' to select from taxonomy.</span>`;
+            return;
+        }
+        container.innerHTML = tags.map(t => {
+            const safeTag = t.replace(/'/g, "\\'");
+            return `
+                <span style="background: var(--t-accent-alpha-15); color: var(--t-accent); border: 1px solid var(--t-accent-alpha-30); font-size: 0.8rem; padding: 3px 10px; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    🏷️ ${t} <span onclick="toggleTextUploadTag('${safeTag}')" style="cursor: pointer; font-weight: bold; margin-left: 2px;">&times;</span>
+                </span>
+            `;
+        }).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTextUploadTaxonomy();
+    });
+
+    // Tab switching logic
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.upload-tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        
+        // Find button that calls switchTab with this tabId
+        event.currentTarget.classList.add('active');
+    }
+
+    // Characters & Words Counter
+    function updateCharCount() {
+        const text = document.getElementById('textContent').value;
+        const chars = text.length;
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        
+        document.getElementById('charCountDisplay').textContent = `${chars.toLocaleString()} characters`;
+        document.getElementById('wordCountDisplay').textContent = `${words.toLocaleString()} words`;
+    }
+
+    // Helper to format bytes
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Drag and Drop Logic
+    const uploadZone = document.getElementById('uploadZone');
+    
+    if (uploadZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => uploadZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, () => uploadZone.classList.remove('dragover'), false);
+        });
+
+        uploadZone.addEventListener('drop', handleDrop, false);
+    }
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDrop(e) {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            uploadFile(files[0]);
+        }
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+            uploadFile(file);
+        }
+    }
+
+    // File Upload Submission (ZIP)
+    function uploadFile(file) {
+        if (!file.name.endsWith('.zip')) {
+            alert('Please upload a ZIP file');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('status', document.getElementById('zipPublishStatus').value);
+
+        // Reuse the inherited download overlay
+        const overlay = document.getElementById('downloadOverlay');
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const titleEl = document.getElementById('downloadTitle');
+        const detailEl = document.getElementById('downloadDetail');
+        const iconEl = document.getElementById('downloadIcon');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        if (!overlay) {
+            alert("Upload modal element not found in DOM");
+            return;
+        }
+
+        // Reset overlay to upload state
+        overlay.style.display = 'flex';
+        fill.className = 'download-progress-fill';
+        fill.style.width = '0%';
+        iconEl.textContent = '📤';
+        titleEl.textContent = `Uploading ${file.name}`;
+        detailEl.textContent = 'Sending file to server...';
+        pct.textContent = '0%';
+        stats.textContent = '';
+        cancelBtn.style.display = 'none';
+
+        const xhr = new XMLHttpRequest();
+        let uploadStartTime = Date.now();
+
+        // Phase 1: progress
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                fill.style.width = percent + '%';
+                pct.textContent = percent + '%';
+
+                const elapsed = (Date.now() - uploadStartTime) / 1000;
+                const speed = elapsed > 0 ? e.loaded / elapsed : 0;
+                stats.textContent = `${formatBytes(e.loaded)} / ${formatBytes(e.total)}  •  ${formatBytes(speed)}/s`;
+            }
+        });
+
+        // Phase 2: loading / processing
+        xhr.upload.addEventListener('load', () => {
+            titleEl.textContent = 'Processing on server...';
+            detailEl.textContent = 'Extracting and importing books...';
+            pct.textContent = '';
+            stats.textContent = '';
+            fill.style.width = '100%';
+            fill.classList.add('indeterminate');
+        });
+
+        // Response
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                fill.classList.remove('indeterminate');
+                fill.style.width = '100%';
+
+                if (xhr.status === 200) {
+                    let response;
+                    try { response = JSON.parse(xhr.responseText); } catch { response = {}; }
+
+                    if (response.success) {
+                        fill.classList.add('done');
+                        iconEl.textContent = '✅';
+                        titleEl.textContent = 'Upload Complete!';
+                        detailEl.textContent = response.message || 'Books imported successfully.';
+                        pct.textContent = '100%';
+                        stats.textContent = '';
+                        setTimeout(() => { 
+                            overlay.style.display = 'none'; 
+                            window.location.href = "{{ url_for('admin_manage_books') }}"; 
+                        }, 2000);
+                    } else {
+                        fill.classList.add('error');
+                        iconEl.textContent = '❌';
+                        titleEl.textContent = 'Upload Failed';
+                        detailEl.textContent = response.error || 'Unknown error';
+                        pct.textContent = '';
+                        cancelBtn.textContent = 'Close';
+                        cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                        cancelBtn.style.display = 'inline-block';
+                    }
+                } else {
+                    let msg = 'Upload failed';
+                    try { msg = JSON.parse(xhr.responseText).error || msg; } catch { }
+                    fill.classList.add('error');
+                    iconEl.textContent = '❌';
+                    titleEl.textContent = 'Upload Failed';
+                    detailEl.textContent = msg;
+                    pct.textContent = '';
+                    cancelBtn.textContent = 'Close';
+                    cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+                    cancelBtn.style.display = 'inline-block';
+                }
+            }
+        };
+
+        xhr.open('POST', '{{ url_for("admin_upload") }}', true);
+        xhr.send(formData);
+    }
+
+    // Text Upload Submission (JSON/Fetch)
+    function uploadTextOnly() {
+        const bookName = document.getElementById('textBookName').value.trim();
+        const tags = document.getElementById('textBookTags').value.trim();
+        const levelsRaw = document.getElementById('textLevelsRaw') ? document.getElementById('textLevelsRaw').value.trim() : '';
+        const content = document.getElementById('textContent').value.trim();
+        const charsPerPage = document.getElementById('charsPerPage').value;
+
+        const status = document.getElementById('textPublishStatus').value;
+
+        if (!bookName || !content) {
+            alert('Please provide both a book name and content.');
+            return;
+        }
+
+        const overlay = document.getElementById('downloadOverlay');
+        const titleEl = document.getElementById('downloadTitle');
+        const detailEl = document.getElementById('downloadDetail');
+        const iconEl = document.getElementById('downloadIcon');
+        const fill = document.getElementById('downloadFill');
+        const pct = document.getElementById('downloadPct');
+        const stats = document.getElementById('downloadStats');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+
+        if (!overlay) {
+            alert("Upload modal element not found in DOM");
+            return;
+        }
+
+        overlay.style.display = 'flex';
+        iconEl.textContent = '⚙️';
+        titleEl.textContent = 'Processing Text...';
+        detailEl.textContent = 'Splitting and compressing...';
+        fill.className = 'download-progress-fill indeterminate';
+        fill.style.width = '100%';
+        pct.textContent = '';
+        stats.textContent = '';
+        cancelBtn.style.display = 'none';
+
+        fetch('{{ url_for("admin_upload_text") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                book_name: bookName,
+                tags: tags,
+                levels_raw: levelsRaw,
+                content: content,
+                chars_per_page: charsPerPage,
+                status: status
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            fill.classList.remove('indeterminate');
+            if (data.success) {
+                fill.classList.add('done');
+                iconEl.textContent = '✅';
+                titleEl.textContent = 'Success!';
+                detailEl.textContent = data.message;
+                setTimeout(() => { 
+                    overlay.style.display = 'none'; 
+                    window.location.href = "{{ url_for('admin_manage_books') }}"; 
+                }, 2000);
+            } else {
+                fill.classList.add('error');
+                iconEl.textContent = '❌';
+                titleEl.textContent = 'Failed';
+                detailEl.textContent = data.error || 'Unknown error';
+                cancelBtn.textContent = 'Close';
+                cancelBtn.style.display = 'inline-block';
+                cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+            }
+        })
+        .catch(err => {
+            fill.classList.remove('indeterminate');
+            fill.classList.add('error');
+            iconEl.textContent = '❌';
+            titleEl.textContent = 'Error';
+            detailEl.textContent = 'Connection failed';
+            cancelBtn.textContent = 'Close';
+            cancelBtn.style.display = 'inline-block';
+            cancelBtn.onclick = () => { overlay.style.display = 'none'; };
+        });
+    }
+</script>
+{% endblock %}

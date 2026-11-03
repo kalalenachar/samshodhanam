@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme');
+                if (!t) {
+                    var match = document.cookie.match(new RegExp('(^| )smsdl-theme=([^;]+)'));
+                    if (match) t = match[2];
+                }
+                t = t || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <script>
+        (function() {
+            const currentServerId = "{{ server_startup_id }}";
+            if (currentServerId) {
+                const savedServerId = sessionStorage.getItem('server_startup_id');
+                if (savedServerId && savedServerId !== currentServerId) {
+                    try {
+                        const theme = localStorage.getItem('smsdl-theme');
+                        sessionStorage.clear();
+                        localStorage.clear();
+                        if (theme) {
+                            localStorage.setItem('smsdl-theme', theme);
+                        }
+                        const cookies = document.cookie.split(";");
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i];
+                            const eqPos = cookie.indexOf("=");
+                            const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                            document.cookie = name.trim() + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;";
+                        }
+                    } catch (e) {}
+                    window.location.reload();
+                    return;
+                }
+                try {
+                    sessionStorage.setItem('server_startup_id', currentServerId);
+                } catch (e) {}
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiscript Transliterator</title>
+    <link rel="icon" href="{{ url_for('favicon') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Serif+Telugu:wght@400;600;700&family=Noto+Serif+Kannada:wght@400;600;700&family=Noto+Serif+Tamil:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--t-bg-surface) !important;
+            border: 1.5px solid var(--t-border) !important;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--t-shadow) !important;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--t-text-secondary);
+            margin-bottom: 25px;
+            font-size: 2em;
+        }
+
+        .script-selectors {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .server-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: var(--t-bg-surface, rgba(0, 0, 0, 0.15));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.2));
+            color: var(--t-text-primary);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ef4444;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.online {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .script-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .script-group label {
+            font-weight: 600;
+            color: var(--t-text-secondary);
+            font-size: 0.9em;
+        }
+
+        .script-group select {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 2px solid #cbd5e0;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--t-text-secondary);
+            background: var(--t-bg-surface);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .script-group select:focus {
+            border-color: #667eea;
+        }
+
+        .arrow-label {
+            font-size: 2em;
+            color: #667eea;
+            font-weight: bold;
+            padding-bottom: 4px;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--t-text-secondary);
+        }
+
+
+
+        .converter-section {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .input-section,
+        .output-section {
+            background: var(--t-bg-elevated) !important;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid var(--t-border) !important;
+            transition: all 0.3s;
+        }
+
+        .input-section:hover,
+        .output-section:hover {
+            border-color: var(--t-border-hover) !important;
+            box-shadow: 0 5px 15px var(--t-accent-alpha-15) !important;
+        }
+
+        .swap-button {
+            background: linear-gradient(45deg, #38b2ac, #319795);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3);
+        }
+
+        .swap-button:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--t-text-secondary);
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            border: 2px solid var(--t-input-border) !important;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 18px;
+            font-family: 'Noto Sans', 'Noto Serif Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', serif;
+            resize: vertical;
+            transition: border-color 0.3s;
+            background: var(--t-input-bg) !important;
+            color: var(--t-input-text) !important;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--t-input-focus-border) !important;
+            background: var(--t-input-focus-bg) !important;
+        }
+
+        #outputText {
+            background-color: var(--t-input-bg) !important;
+            border-color: var(--t-input-border) !important;
+            color: var(--t-input-text) !important;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+
+        button:not(.swap-button):not(.theme-toggle-btn) {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .convert-btn {
+            background: var(--t-accent-gradient) !important;
+            color: var(--t-text-on-accent) !important;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background: linear-gradient(45deg, #fc8181, #f56565);
+            color: white;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .copy-btn {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .copy-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .example-section {
+            background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 2px solid #f6ad55;
+        }
+
+        .example-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--t-bg-surface);
+            padding: 12px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .example-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-text,
+        .target-text {
+            font-size: 18px;
+            font-weight: 500;
+            font-family: 'Noto Sans', 'Noto Serif Devanagari', 'Noto Sans Telugu', 'Noto Sans Tamil', serif;
+        }
+
+        .source-text {
+            color: var(--t-text-primary) !important;
+        }
+
+        .target-text {
+            color: var(--t-accent) !important;
+        }
+
+        .arrow {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .file-btn {
+            background: var(--t-hover-bg) !important;
+            color: var(--t-text-primary) !important;
+            padding: 6px 12px !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--t-border) !important;
+        }
+
+        .file-btn:hover {
+            background: var(--t-bg-surface-hover) !important;
+            border-color: var(--t-border-hover) !important;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--t-bg-overlay);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: var(--t-bg-surface);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: modalFadeIn 0.3s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            color: #f56565;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--t-text-primary) !important;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            color: var(--t-text-secondary);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn-primary {
+            background: var(--t-accent-gradient) !important;
+            color: var(--t-text-on-accent) !important;
+        }
+
+        .modal-btn-secondary {
+            background: var(--t-hover-bg) !important;
+            color: var(--t-text-secondary) !important;
+            border: 1px solid var(--t-border) !important;
+        }
+
+        .modal-btn:hover {
+            filter: brightness(0.9);
+            transform: translateY(-1px);
+        }
+
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--t-border);
+            border: 1px solid var(--t-border-hover);
+            color: var(--t-text-primary) !important;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: var(--t-border-hover);
+            transform: translateX(-3px);
+        }
+
+        .navbar-title {
+            font-size: 22px;
+            margin: 0;
+            color: var(--t-text-primary) !important;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        .header-logo {
+            position: relative;
+        }
+
+        .mobile-title {
+            display: none;
+        }
+
+        .desktop-title {
+            display: inline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+                margin-top: 20px !important;
+                border-radius: 12px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .script-selectors {
+                gap: 10px;
+            }
+
+            .arrow-label {
+                display: none;
+            }
+
+            .script-group {
+                width: 100%;
+            }
+
+            .script-group select {
+                width: 100%;
+            }
+
+            .converter-section {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .swap-button {
+                margin: 0 auto;
+                width: 50px;
+                height: 50px;
+                transform: rotate(90deg);
+            }
+
+            .swap-button:hover {
+                transform: rotate(270deg) scale(1.1);
+            }
+
+            textarea {
+                height: 150px;
+                font-size: 16px;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            button:not(.swap-button):not(.theme-toggle-btn) {
+                width: 100%;
+                padding: 14px;
+            }
+
+            .navbar-title {
+                font-size: 16px !important;
+                position: static !important;
+                transform: none !important;
+                text-align: center;
+                flex: 1;
+            }
+
+            .header-brand {
+                padding: 0 10px !important;
+            }
+
+            .back-button {
+                width: 36px;
+                height: 36px;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 18px;
+                flex-shrink: 0;
+                background: var(--t-border-hover);
+                border: 1px solid var(--t-border) !important;
+                overflow: hidden;
+                white-space: nowrap;
+                color: transparent;
+            }
+
+            .back-button::before {
+                content: '←';
+                color: var(--t-text-primary) !important;
+                position: absolute;
+            }
+
+            .header-spacer {
+                width: 36px !important;
+            }
+
+            .desktop-title { display: none; }
+            .mobile-title { display: inline; }
+        }
+
+        @media (max-width: 480px) {
+            .mode-indicator {
+                font-size: 0.9em;
+            }
+
+            .anusvara-toggle {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+        body.osk-active {
+            padding-bottom: 240px !important;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-logo header-brand"
+            style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+            <a href="javascript:void(0)" onclick="handleBack()" class="back-button">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+            </a>
+            <h1 class="navbar-title">
+                <span class="desktop-title">Sanskrit Digital Library - Transliterator</span>
+                <span class="mobile-title">SDL - Transliterator</span>
+            </h1>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="server-status-pill" id="botStatusPill" title="Checking Transliterator Bot status...">
+                    <div class="status-dot" id="botStatusDot"></div>
+                    <span id="botStatusText">Checking Bot...</span>
+                </div>
+                <a id="btnHeaderTelegram" href="https://t.me/TVSM_Translatorator_Bot" target="_blank" class="file-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 0.85rem; background: var(--t-accent, #6366f1); color: white; border-radius: 12px; font-weight: 600;">
+                    💬 Telegram Bot
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" style="margin-top: 40px; margin-bottom: 50px; position: relative; z-index: 10;">
+
+        <div class="script-selectors">
+            <div class="script-group">
+                <label>Input Script</label>
+                <select id="inputScript" onchange="onScriptChange()">
+                    <option value="sa">Sanskrit (Devanagari)</option>
+                    <option value="ka">Kannada</option>
+                    <option value="te">Telugu</option>
+                    <option value="ta">Tamil</option>
+                    <option value="en">English (IAST)</option>
+                </select>
+            </div>
+            <div class="arrow-label">⇄</div>
+            <div class="script-group">
+                <label>Output Script</label>
+                <select id="outputScript" onchange="onScriptChange()">
+                    <option value="ka">Kannada</option>
+                    <option value="sa">Sanskrit (Devanagari)</option>
+                    <option value="te">Telugu</option>
+                    <option value="ta">Tamil</option>
+                    <option value="en">English (IAST)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mode-indicator" id="modeIndicator">Sanskrit → Kannada</div>
+
+
+        <div class="converter-section">
+            <div class="input-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label for="inputText" id="inputLabel" style="margin-bottom: 0;">Input:</label>
+                    <div class="file-input-wrapper">
+                        <button class="file-btn" onclick="document.getElementById('fileUpload').click()"
+                            title="Upload Text File">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                                <path
+                                    d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
+                            </svg>
+                            Upload File
+                        </button>
+                        <input type="file" id="fileUpload" accept=".txt" style="display: none;"
+                            onchange="handleFileUpload(event)">
+                    </div>
+                </div>
+                <textarea id="inputText" placeholder="Type here..." oninput="onTextInput()"></textarea>
+                <div id="fileInfo"
+                    style="display: none; font-size: 0.85em; color: #667eea; margin-top: 8px; font-weight: 500; background: #ebf4ff; padding: 4px 10px; border-radius: 6px; display: inline-block;">
+                </div>
+            </div>
+            <button class="swap-button" onclick="swapScripts()" title="Swap scripts">⇄</button>
+            <div class="output-section">
+                <label for="outputText" id="outputLabel">Output:</label>
+                <textarea id="outputText" readonly placeholder="Output will appear here..."></textarea>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="convert-btn" onclick="convertText()">Convert</button>
+            <button class="clear-btn" onclick="clearText()">Clear All</button>
+            <button class="copy-btn" onclick="copyToClipboard()">Copy Output</button>
+            <button class="download-btn" id="downloadBtn" onclick="downloadOutput()">Download Converted File</button>
+        </div>
+
+
+
+        <!-- Examples section removed by user request -->
+    </div>
+
+    <div id="notification" class="notification">Text copied to clipboard!</div>
+
+    <!-- Error Modal for Non-Text Files -->
+    <div id="errorModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">⚠️</div>
+            <div class="modal-title">Invalid File Type</div>
+            <div class="modal-text">
+                Please upload a <strong>.txt</strong> file for transliteration.
+                <br><br>
+                If you have an image or PDF, please use our <strong>OCR Tool</strong> first to convert it to text.
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Close</button>
+                <button class="modal-btn modal-btn-primary" onclick="window.location.href='/ocr'">Go to OCR
+                    Tool</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkBotStatus() {
+            const dot = document.getElementById('botStatusDot');
+            const text = document.getElementById('botStatusText');
+            const pill = document.getElementById('botStatusPill');
+            const btn = document.getElementById('btnHeaderTelegram');
+
+            try {
+                const res = await fetch('/api/transliterator/status');
+                const data = await res.json();
+                const uname = data.bot_username || 'TVSM_Translatorator_Bot';
+                if (btn) btn.href = 'https://t.me/' + uname;
+
+                if (data.running) {
+                    if (dot) {
+                        dot.className = 'status-dot online';
+                        dot.style.background = '#22c55e';
+                    }
+                    if (text) text.textContent = `Telegram Bot Online (@${uname})`;
+                    if (pill) pill.title = `Transliterator Telegram Bot is active (@${uname})`;
+                } else {
+                    if (dot) {
+                        dot.className = 'status-dot';
+                        dot.style.background = '#ef4444';
+                    }
+                    if (text) text.textContent = 'Telegram Bot Offline';
+                    if (pill) pill.title = 'Transliterator Telegram Bot is offline';
+                }
+            } catch (e) {
+                if (dot) dot.style.background = '#ef4444';
+                if (text) text.textContent = 'Telegram Bot Offline';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', checkBotStatus);
+
+        const SCRIPTS = ['sa', 'ka', 'te', 'ta', 'en'];
+        let fullInputText = ''; // Stores full content of uploaded file
+        let uploadedFileName = '';
+
+        // [sa, ka, te, ta, en]
+        // Tamil column uses:
+        //   Native Tamil chars for vowels, nasals, semi-vowels, Grantha for ज श ष स ह
+        //   Superscript numbers ² ³ ⁴ for aspirated/voiced variants within each varga
+        //     ① base       = native Tamil char (e.g. க)
+        //     ② aspirated  = base + ² (e.g. க²)
+        //     ③ voiced     = base + ³ (e.g. க³)   [ca-varga uses ஜ for ja]
+        //     ④ voiced asp = base + ⁴ (e.g. க⁴)  [ca-varga uses ஜ²]
+        //     ⑤ nasal      = native Tamil nasal (ங ஞ ண ந ம)
+        const PHONEME_TABLE = [
+            // Independent Vowels
+            ['अ', 'ಅ', 'అ', 'அ', 'a'],
+            ['आ', 'ಆ', 'ఆ', 'ஆ', 'ā'],
+            ['इ', 'ಇ', 'ఇ', 'இ', 'i'],
+            ['ई', 'ಈ', 'ఈ', 'ஈ', 'ī'],
+            ['उ', 'ಉ', 'ఉ', 'உ', 'u'],
+            ['ऊ', 'ಊ', 'ఊ', 'ஊ', 'ū'],
+            ['ऋ', 'ಋ', 'ఋ', 'ரு', 'ṛ'],
+            ['ॠ', 'ೠ', 'ౠ', 'ரூ', 'ṝ'],
+            ['ऌ', 'ಌ', 'ఌ', 'லு', 'ḷ'],
+            ['ॡ', 'ೡ', 'ౡ', 'லூ', 'ḹ'],
+            ['ए', 'ಏ', 'ఏ', 'ஏ', 'ē'],
+            ['ऐ', 'ಐ', 'ఐ', 'ஐ', 'ai'],
+            ['ओ', 'ಓ', 'ఓ', 'ஓ', 'ō'],
+            ['औ', 'ಔ', 'ఔ', 'ஔ', 'au'],
+            // Dependent Vowel Signs (14)
+            ['ा', 'ಾ', 'ా', 'ா', 'ā'],
+            ['ि', 'ಿ', 'ి', 'ி', 'i'],
+            ['ी', 'ೀ', 'ీ', 'ீ', 'ī'],
+            ['ु', 'ು', 'ు', 'ு', 'u'],
+            ['ू', 'ೂ', 'ూ', 'ூ', 'ū'],
+            ['ृ', 'ೃ', 'ృ', '்ரு', 'ṛ'],
+            ['ॄ', 'ೄ', 'ౄ', '்ரூ', 'ṝ'],
+            ['ॢ', 'ೢ', 'ౢ', '்லு', 'ḷ'],
+            ['ॣ', 'ೣ', 'ౣ', '்லூ', 'ḹ'],
+            ['े', 'ೇ', 'ే', 'ே', 'ē'],
+            ['ै', 'ೈ', 'ై', 'ை', 'ai'],
+            ['ो', 'ೋ', 'ో', 'ோ', 'ō'],
+            ['ौ', 'ೌ', 'ౌ', 'ௌ', 'au'],
+            // Halant/Virama (27)
+            ['्', '್', '్', '்', ''],
+            // Anusvara, Visarga (28,29)
+            ['ं', 'ಂ', 'ం', 'ம்', 'ṃ'],
+            ['ः', 'ಃ', 'ః', 'ஃ', 'ḥ'],
+            // ── ka-varga ── (30-34)
+            ['क', 'ಕ', 'క', 'க', 'k'],
+            ['ख', 'ಖ', 'ఖ', 'க²', 'kh'],
+            ['ग', 'ಗ', 'గ', 'க³', 'g'],
+            ['घ', 'ಘ', 'ఘ', 'க⁴', 'gh'],
+            ['ङ', 'ಙ', 'ఙ', 'ங', 'ṅ'],
+            // ── ca-varga ── (35-39)
+            ['च', 'ಚ', 'చ', 'ச', 'c'],
+            ['छ', 'ಛ', 'ఛ', 'ச²', 'ch'],
+            ['ज', 'ಜ', 'జ', 'ஜ', 'j'],
+            ['झ', 'ಝ', 'ఝ', 'ஜ²', 'jh'],
+            ['ञ', 'ಞ', 'ఞ', 'ஞ', 'ñ'],
+            // ── ṭa-varga ── (40-44)
+            ['ट', 'ಟ', 'ట', 'ட', 'ṭ'],
+            ['ठ', 'ಠ', 'ఠ', 'ட²', 'ṭh'],
+            ['ड', 'ಡ', 'డ', 'ட³', 'ḍ'],
+            ['ढ', 'ಢ', 'ఢ', 'ட⁴', 'ḍh'],
+            ['ण', 'ಣ', 'ణ', 'ண', 'ṇ'],
+            // ── ta-varga ── (45-49)
+            ['त', 'ತ', 'త', 'த', 't'],
+            ['थ', 'ಥ', 'థ', 'த²', 'th'],
+            ['द', 'ದ', 'ద', 'த³', 'd'],
+            ['ध', 'ಧ', 'ధ', 'த⁴', 'dh'],
+            ['न', 'ನ', 'న', 'ந', 'n'],
+            // ── pa-varga ── (50-54)
+            ['प', 'ಪ', 'ప', 'ப', 'p'],
+            ['फ', 'ಫ', 'ఫ', 'ப²', 'ph'],
+            ['ब', 'ಬ', 'బ', 'ப³', 'b'],
+            ['भ', 'ಭ', 'భ', 'ப⁴', 'bh'],
+            ['म', 'ಮ', 'మ', 'ம', 'm'],
+            // ── avarga / semi-vowels ── (55-58)
+            ['य', 'ಯ', 'య', 'ய', 'y'],
+            ['र', 'ರ', 'ర', 'ர', 'r'],
+            ['ल', 'ಲ', 'ల', 'ல', 'l'],
+            ['व', 'ವ', 'వ', 'வ', 'v'],
+            // ── sibilants & ha ── (59-62)
+            ['श', 'ಶ', 'శ', 'ஶ', 'ś'],
+            ['ष', 'ಷ', 'ష', 'ஷ', 'ṣ'],
+            ['स', 'ಸ', 'స', 'ஸ', 's'],
+            ['ह', 'ಹ', 'హ', 'ஹ', 'h'],
+            // ── special ── (63)
+            ['ळ', 'ಳ', 'ళ', 'ள', 'ḷ'],
+            // Numbers (64-73)
+            ['०', '೦', '౦', '௦', '0'],
+            ['१', '೧', '౧', '௧', '1'],
+            ['२', '೨', '౨', '௨', '2'],
+            ['३', '೩', '౩', '௩', '3'],
+            ['४', '೪', '౪', '௪', '4'],
+            ['५', '೫', '౫', '௫', '5'],
+            ['६', '೬', '౬', '௬', '6'],
+            ['७', '೭', '౭', '௭', '7'],
+            ['८', '೮', '౮', '௮', '8'],
+            ['९', '೯', '౯', '௯', '9'],
+            // Short-e, short-o variants
+            ['ऎ', 'ಎ', 'ఎ', 'எ', 'e'],
+            ['ॆ', 'ೆ', 'ె', 'ெ', 'e'],
+            ['ऒ', 'ಒ', 'ఒ', 'ஒ', 'o'],
+            ['ॊ', 'ೊ', 'ొ', 'ொ', 'o'],
+            // Om (78)
+            ['ॐ', 'ಓಂ', 'ఓం', 'ஓம்', 'oṃ'],
+            // Avagraha (79)
+            ['ऽ', 'ಽ', 'ఽ', 'ऽ', '\''],
+            // Chandrabindu (80)
+            ['ँ', 'ಁ', 'ఁ', 'ஂ', 'm̐'],
+            // Danda & Double Danda (81-82)
+            ['।', '।', '।', '।', '|'],
+            ['॥', '॥', '॥', '॥', '||'],
+        ];
+
+        // Build lookup maps
+        const charToIdx = SCRIPTS.map(() => ({}));
+        const idxToChar = SCRIPTS.map(() => ({}));
+
+        PHONEME_TABLE.forEach((row, rowIdx) => {
+            SCRIPTS.forEach((_, sIdx) => {
+                const ch = row[sIdx];
+                if (ch !== undefined && ch !== null) {
+                    if (ch.length > 0 && charToIdx[sIdx][ch] === undefined) {
+                        charToIdx[sIdx][ch] = rowIdx;
+                    }
+                    if (idxToChar[sIdx][rowIdx] === undefined) {
+                        idxToChar[sIdx][rowIdx] = ch;
+                    }
+                }
+            });
+        });
+
+        // Aliases for alternate Unicode representations & Devanagari OCR/nukta variants
+        if (charToIdx[3]['ௐ'] === undefined) charToIdx[3]['ௐ'] = charToIdx[0]['ॐ'];
+        if (charToIdx[3]['\''] === undefined) charToIdx[3]['\''] = charToIdx[0]['ऽ'];
+        if (charToIdx[3]['’'] === undefined) charToIdx[3]['’'] = charToIdx[0]['ऽ'];
+        if (charToIdx[3]['‘'] === undefined) charToIdx[3]['‘'] = charToIdx[0]['ऽ'];
+        if (charToIdx[4]['’'] === undefined) charToIdx[4]['’'] = charToIdx[0]['ऽ'];
+        if (charToIdx[4]['‘'] === undefined) charToIdx[4]['‘'] = charToIdx[0]['ऽ'];
+        if (charToIdx[4]['.'] === undefined) charToIdx[4]['.'] = charToIdx[0]['।'];
+
+        if (charToIdx[0]['क़'] === undefined) charToIdx[0]['क़'] = charToIdx[0]['क'];
+        if (charToIdx[0]['ख़'] === undefined) charToIdx[0]['ख़'] = charToIdx[0]['ख'];
+        if (charToIdx[0]['ग़'] === undefined) charToIdx[0]['ग़'] = charToIdx[0]['ग'];
+        if (charToIdx[0]['ज़'] === undefined) charToIdx[0]['ज़'] = charToIdx[0]['ज'];
+        if (charToIdx[0]['ड़'] === undefined) charToIdx[0]['ड़'] = charToIdx[0]['ड'];
+        if (charToIdx[0]['ढ़'] === undefined) charToIdx[0]['ढ़'] = charToIdx[0]['ढ'];
+        if (charToIdx[0]['फ़'] === undefined) charToIdx[0]['फ़'] = charToIdx[0]['फ'];
+        if (charToIdx[0]['य़'] === undefined) charToIdx[0]['य़'] = charToIdx[0]['य'];
+        if (charToIdx[0]['ऩ'] === undefined) charToIdx[0]['ऩ'] = charToIdx[0]['न'];
+        if (charToIdx[0]['ऱ'] === undefined) charToIdx[0]['ऱ'] = charToIdx[0]['र'];
+        if (charToIdx[0]['ऴ'] === undefined) charToIdx[0]['ऴ'] = charToIdx[0]['ळ'];
+        if (charToIdx[0]['ऄ'] === undefined) charToIdx[0]['ऄ'] = charToIdx[0]['अ'];
+        if (charToIdx[0]['ऍ'] === undefined) charToIdx[0]['ऍ'] = charToIdx[0]['ए'];
+        if (charToIdx[0]['ॅ'] === undefined) charToIdx[0]['ॅ'] = charToIdx[0]['े'];
+        if (charToIdx[0]['ऑ'] === undefined) charToIdx[0]['ऑ'] = charToIdx[0]['ओ'];
+        if (charToIdx[0]['ॉ'] === undefined) charToIdx[0]['ॉ'] = charToIdx[0]['ो'];
+        if (charToIdx[0]['ॲ'] === undefined) charToIdx[0]['ॲ'] = charToIdx[0]['अ'];
+        if (charToIdx[0]['ऀ'] === undefined) charToIdx[0]['ऀ'] = charToIdx[0]['ँ'];
+        if (charToIdx[0]['ॎ'] === undefined) charToIdx[0]['ॎ'] = charToIdx[0]['े'];
+        if (charToIdx[0]['ॏ'] === undefined) charToIdx[0]['ॏ'] = charToIdx[0]['ौ'];
+        if (charToIdx[0]['॰'] === undefined) charToIdx[0]['॰'] = charToIdx[0]['।'];
+
+        // Automatically build Tamil multi-char tokens from the table to ensure sync
+        const tamilMultiTokens = [];
+        PHONEME_TABLE.forEach(row => {
+            const ch = row[3]; // Tamil index
+            if (ch && ch.length > 1 && !tamilMultiTokens.includes(ch)) {
+                tamilMultiTokens.push(ch);
+            }
+        });
+        tamilMultiTokens.sort((a, b) => b.length - a.length);
+
+        function getChar(sIdx, rIdx, fallback) {
+            if (sIdx === -1 || rIdx === undefined) return fallback;
+            const ch = idxToChar[sIdx][rIdx];
+            return (ch !== undefined) ? ch : fallback;
+        }
+
+        // IAST multi-char sequences, longest first
+        const iastSeq = ['oṃ', 'ā', 'ī', 'ū', 'ē', 'ō', 'ṛ', 'ṝ', 'ḷ', 'ḹ', 'ai', 'au', 'e', 'o', 'i', 'u', 'ṃ', 'ḥ', 'ṅ', 'ñ', 'ṭh', 'ḍh', 'ṭ', 'ḍ', 'ṇ', 'ś', 'ṣ', 'kh', 'gh', 'ch', 'jh', 'th', 'dh', 'ph', 'bh'];
+
+        // Vedic accents regex: Udatta (\u0951), Anudatta (\u0952), Vedic Extensions (\u1CD0-\u1CF9), Devanagari Extended (\uA8E0-\uA8F1)
+        const isVedicAccent = (code) => (code === 0x0951 || code === 0x0952 || (code >= 0x1CD0 && code <= 0x1CF9) || (code >= 0xA8E0 && code <= 0xA8F1));
+
+        function convertScript(text, fromScriptName, toScriptName) {
+            if (!text || fromScriptName === toScriptName) return text;
+            if (typeof text.normalize === 'function') {
+                text = text.normalize('NFD').replace(/\u093C/g, '').normalize('NFC');
+            }
+            const fromIdx = SCRIPTS.indexOf(fromScriptName);
+            const toIdx = SCRIPTS.indexOf(toScriptName);
+            if (fromIdx === -1 || toIdx === -1) return text;
+
+            let result = '';
+            let i = 0;
+
+            // Helper for IAST row selection
+            const findBestIastRow = (seq, lastWasConsonant) => {
+                const matchingRows = [];
+                PHONEME_TABLE.forEach((r, idx) => { if (r[4] === seq) matchingRows.push(idx); });
+                if (matchingRows.length === 0) return -1;
+
+                if (lastWasConsonant) {
+                    const isSign = (idx) => (idx >= 14 && idx <= 26) || idx === 75 || idx === 77;
+                    const sRows = matchingRows.filter(idx => isSign(idx));
+                    if (sRows.length > 0) return sRows.find(idx => idx >= 14 && idx <= 26) || sRows[0];
+                }
+
+                const consonants = matchingRows.filter(idx => idx >= 30 && idx <= 63); // Consonants
+                if (consonants.length > 0) return consonants[0];
+
+                const indVowels = matchingRows.filter(idx => (idx >= 0 && idx <= 13) || idx === 74 || idx === 76);
+                if (indVowels.length > 0) return indVowels.find(idx => idx >= 0 && idx <= 13) || indVowels[0];
+
+                return matchingRows[0];
+            };
+
+            // ── IAST input ──
+            if (fromScriptName === 'en') {
+                let lastWasConsonant = false;
+                while (i < text.length) {
+                    const code = text.charCodeAt(i);
+                    if (isVedicAccent(code)) {
+                        if (toScriptName === 'ta' && result.length > 0 && /[²³⁴]$/.test(result)) {
+                            const lastSup = result.slice(-1);
+                            result = result.slice(0, -1) + text[i] + lastSup;
+                        } else {
+                            result += text[i];
+                        }
+                        i++;
+                        continue;
+                    }
+
+                    let matched = false;
+                    for (const seq of iastSeq) {
+                        if (text.slice(i).startsWith(seq)) {
+                            const rowIdx = findBestIastRow(seq, lastWasConsonant);
+                            if (rowIdx !== -1) {
+                                if (toScriptName === 'en') {
+                                    result += PHONEME_TABLE[rowIdx][4];
+                                } else {
+                                    const isSign = (idx) => (idx >= 14 && idx <= 26) || idx === 75 || idx === 77;
+                                    const isIndVowel = (idx) => (idx >= 0 && idx <= 13) || idx === 74 || idx === 76;
+
+                                    if (isSign(rowIdx)) {
+                                        result += getChar(toIdx, rowIdx, seq);
+                                        lastWasConsonant = false;
+                                    } else if (isIndVowel(rowIdx)) {
+                                        if (lastWasConsonant && rowIdx >= 1) {
+                                            let signRowIdx = rowIdx + 13;
+                                            if (rowIdx === 74) signRowIdx = 75; // Short E
+                                            if (rowIdx === 76) signRowIdx = 77; // Short O
+                                            result += getChar(toIdx, signRowIdx, getChar(toIdx, rowIdx, seq));
+                                        } else {
+                                            result += getChar(toIdx, rowIdx, seq);
+                                        }
+                                        lastWasConsonant = false;
+                                    } else {
+                                        if (lastWasConsonant && rowIdx !== 28 && rowIdx !== 29) result += getChar(toIdx, 27, "");
+                                        result += getChar(toIdx, rowIdx, seq);
+                                        lastWasConsonant = (rowIdx >= 30 && rowIdx <= 63);
+                                    }
+                                }
+                                i += seq.length; matched = true; break;
+                            }
+                        }
+                    }
+                    if (!matched) {
+                        const ch = text[i];
+                        if (ch === 'a') {
+                            if (!lastWasConsonant) result += getChar(toIdx, 0, 'अ');
+                            lastWasConsonant = false;
+                            i++; continue;
+                        }
+
+                        const rowIdx = findBestIastRow(ch, lastWasConsonant);
+                        if (rowIdx !== -1) {
+                            if (toScriptName === 'en') {
+                                result += PHONEME_TABLE[rowIdx][4];
+                            } else {
+                                if (lastWasConsonant && rowIdx !== 28 && rowIdx !== 29) result += getChar(toIdx, 27, "");
+                                result += getChar(toIdx, rowIdx, ch);
+                                lastWasConsonant = (rowIdx >= 30 && rowIdx <= 63);
+                            }
+                        } else {
+                            if (lastWasConsonant) result += getChar(toIdx, 27, "");
+                            result += ch;
+                            lastWasConsonant = false;
+                        }
+                        i++;
+                    }
+                }
+                if (lastWasConsonant && toScriptName !== 'en') result += getChar(toIdx, 27, "");
+                return result;
+            }
+
+            // ── Tamil/Brahmic input ──
+            const isTamil = fromScriptName === 'ta';
+
+            while (i < text.length) {
+                const code = text.charCodeAt(i);
+                if (isVedicAccent(code)) {
+                    if (toScriptName === 'ta' && result.length > 0 && /[²³⁴]$/.test(result)) {
+                        const lastSup = result.slice(-1);
+                        result = result.slice(0, -1) + text[i] + lastSup;
+                    } else {
+                        result += text[i];
+                    }
+                    i++;
+                    continue;
+                }
+
+                let matched = false;
+
+                // ── Tamil/IAST multi-tokens ──
+                if (isTamil) {
+                    for (const tok of tamilMultiTokens) {
+                        if (text.slice(i).startsWith(tok)) {
+                            const rowIdx = charToIdx[3][tok];
+                            if (rowIdx !== undefined) {
+                                let out = (toScriptName === 'en') ? PHONEME_TABLE[rowIdx][4] : getChar(toIdx, rowIdx, tok);
+                                result += out;
+                                if (toScriptName === 'en' && rowIdx >= 30 && rowIdx <= 63) {
+                                    // Consonant implicit 'a'
+                                    let nextTok = text.slice(i + tok.length, i + tok.length + 2);
+                                    let isFollowedByVowel = false;
+                                    const nextRowIdx = charToIdx[fromIdx][text[i + tok.length]];
+                                    if (nextRowIdx !== undefined && ((nextRowIdx >= 14 && nextRowIdx <= 27) || nextRowIdx === 75 || nextRowIdx === 77)) isFollowedByVowel = true;
+                                    if (!isFollowedByVowel) result += 'a';
+                                }
+                                i += tok.length; matched = true; break;
+                            }
+                        }
+                    }
+                }
+
+                if (matched) continue;
+
+                const ch = text[i];
+                const nextCh = i + 1 < text.length ? text[i + 1] : '';
+                const nextNextCh = i + 2 < text.length ? text[i + 2] : '';
+
+                // Handle Tamil superscript after vowel sign/halant/accents: e.g. த + ே + ॒ + ³ -> de॒
+                if (isTamil) {
+                    const rowIdx = charToIdx[fromIdx][ch];
+                    const isConsonant = rowIdx >= 30 && rowIdx <= 63;
+                    if (isConsonant) {
+                        let j = i + 1;
+                        let vowelSign = null;
+                        let vowelRowIdx = null;
+                        let superscript = null;
+                        const accents = [];
+
+                        while (j < text.length) {
+                            const nextCode = text.charCodeAt(j);
+                            const nextChar = text[j];
+                            if (!superscript && /[²³⁴]/.test(nextChar)) {
+                                superscript = nextChar;
+                                j++;
+                                continue;
+                            }
+                            if (isVedicAccent(nextCode)) {
+                                accents.push(nextChar);
+                                j++;
+                                continue;
+                            }
+                            if (vowelSign === null && superscript === null) {
+                                const nRowIdx = charToIdx[fromIdx][nextChar];
+                                if (nRowIdx !== undefined && ((nRowIdx >= 14 && nRowIdx <= 27) || nRowIdx === 75 || nRowIdx === 77)) {
+                                    vowelSign = nextChar;
+                                    vowelRowIdx = nRowIdx;
+                                    j++;
+                                    continue;
+                                }
+                            }
+                            break;
+                        }
+
+                        if (superscript) {
+                            const baseChar = ch + superscript;
+                            const baseRowIdx = charToIdx[fromIdx][baseChar];
+                            if (baseRowIdx !== undefined) {
+                                let out = (toScriptName === 'en') ? PHONEME_TABLE[baseRowIdx][4] : getChar(toIdx, baseRowIdx, baseChar);
+                                result += out;
+                                if (toScriptName === 'en') {
+                                    if (vowelRowIdx !== null && ((vowelRowIdx >= 14 && vowelRowIdx <= 26) || vowelRowIdx === 75 || vowelRowIdx === 77)) {
+                                        result += PHONEME_TABLE[vowelRowIdx][4];
+                                    } else if (vowelRowIdx === null) {
+                                        result += 'a';
+                                    }
+                                } else {
+                                    if (vowelRowIdx !== null) {
+                                        result += getChar(toIdx, vowelRowIdx, vowelSign);
+                                    }
+                                }
+                                if (accents.length > 0) {
+                                    result += accents.join('');
+                                }
+                                i = j;
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                // Special handling for Tamil superscripts (OUTPUT to Tamil)
+                if (toScriptName === 'ta' && result.length > 0) {
+                    const lastChar = result.slice(-1);
+                    if (/[²³⁴]/.test(lastChar)) {
+                        const rowIdx = charToIdx[fromIdx][ch];
+                        const isVowelOrHalant = (rowIdx >= 14 && rowIdx <= 27) || rowIdx === 75 || rowIdx === 77;
+                        if (isVowelOrHalant) {
+                            const superscript = lastChar;
+                            const outVowel = getChar(toIdx, rowIdx, ch);
+                            let preSupIdx = result.length - 1;
+                            while (preSupIdx > 0 && isVedicAccent(result.charCodeAt(preSupIdx - 1))) {
+                                preSupIdx--;
+                            }
+                            const accents = result.slice(preSupIdx, -1);
+                            const base = result.slice(0, preSupIdx);
+                            result = base + outVowel + accents + superscript;
+                            i++; continue;
+                        }
+                    }
+                }
+
+                const rowIdx = charToIdx[fromIdx][ch];
+                if (rowIdx !== undefined) {
+                    let out = (toScriptName === 'en') ? PHONEME_TABLE[rowIdx][4] : getChar(toIdx, rowIdx, ch);
+                    result += out;
+                    // Implicit 'a' for consonants in English output
+                    if (toScriptName === 'en' && rowIdx >= 30 && rowIdx <= 63) {
+                        const nextRowIdx = i + 1 < text.length ? charToIdx[fromIdx][text[i + 1]] : undefined;
+                        const isSignOrHalant = nextRowIdx !== undefined && ((nextRowIdx >= 14 && nextRowIdx <= 27) || nextRowIdx === 75 || nextRowIdx === 77);
+                        if (!isSignOrHalant) result += 'a';
+                    }
+                } else { result += ch; }
+                i++;
+            }
+            return result;
+        }
+
+        // ── UI ──
+        const scriptNames = {
+            sa: 'Sanskrit (Devanagari)', ka: 'Kannada', te: 'Telugu', ta: 'Tamil', en: 'English (IAST)'
+        };
+
+
+        // Keep input and output scripts mutually exclusive
+        function syncScriptFilters() {
+            const inSel = document.getElementById('inputScript');
+            const outSel = document.getElementById('outputScript');
+
+            // Hide whichever script is chosen in input from the output dropdown
+            const inVal = inSel.value;
+            [...outSel.options].forEach(o => { o.hidden = o.disabled = (o.value === inVal); });
+            if (outSel.value === inVal) {
+                const alt = [...outSel.options].find(o => !o.disabled);
+                if (alt) outSel.value = alt.value;
+            }
+
+            // Hide whichever script is now chosen in output from the input dropdown
+            const outVal = outSel.value;
+            [...inSel.options].forEach(o => { o.hidden = o.disabled = (o.value === outVal); });
+            if (inSel.value === outVal) {
+                const alt = [...inSel.options].find(o => !o.disabled);
+                if (alt) inSel.value = alt.value;
+            }
+        }
+
+        function onScriptChange() {
+            syncScriptFilters();
+            updateModeIndicator();
+            if (document.getElementById('inputText').value) convertText();
+        }
+
+        function updateModeIndicator() {
+            const from = document.getElementById('inputScript').value;
+            const to = document.getElementById('outputScript').value;
+            document.getElementById('modeIndicator').textContent =
+                scriptNames[from] + ' → ' + scriptNames[to];
+            document.getElementById('inputLabel').textContent = scriptNames[from] + ':';
+            document.getElementById('outputLabel').textContent = scriptNames[to] + ':';
+        }
+
+        function updateExamples() {
+            // Examples removed — kept for potential future use
+        }
+
+        function convertText() {
+            const input = document.getElementById('inputText').value;
+            const from = document.getElementById('inputScript').value;
+            const to = document.getElementById('outputScript').value;
+            document.getElementById('outputText').value = convertScript(input, from, to);
+        }
+
+        function onTextInput() {
+            // If user types manually, clear the uploaded file state
+            if (fullInputText && document.getElementById('inputText').value !== fullInputText.slice(0, 10000)) {
+                fullInputText = '';
+                uploadedFileName = '';
+                document.getElementById('fileInfo').style.display = 'none';
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.txt')) {
+                showModal();
+                event.target.value = ''; // Reset input
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const content = e.target.result;
+                fullInputText = content;
+                uploadedFileName = file.name;
+
+                const preview = content.slice(0, 10000); // Preview first 10k chars (~1-2 pages)
+                document.getElementById('inputText').value = preview;
+
+                const fileInfo = document.getElementById('fileInfo');
+                fileInfo.textContent = `📄 Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                if (content.length > 10000) {
+                    fileInfo.textContent += ` - Large file (Previewing first 10,000 characters)`;
+                }
+                fileInfo.style.display = 'inline-block';
+
+                convertText();
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadOutput() {
+            const from = document.getElementById('inputScript').value;
+            const to = document.getElementById('outputScript').value;
+
+            let textToConvert = fullInputText || document.getElementById('inputText').value;
+            if (!textToConvert) {
+                alert("No text to convert and download.");
+                return;
+            }
+
+            // Convert entire text
+            const convertedText = convertScript(textToConvert, from, to);
+
+            const blob = new Blob([convertedText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+
+            const baseName = uploadedFileName ? uploadedFileName.replace(/\.[^/.]+$/, "") : "transliterated";
+            a.href = url;
+            a.download = `${baseName}_${to}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function showModal() {
+            document.getElementById('errorModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        function swapScripts() {
+            const inSel = document.getElementById('inputScript');
+            const outSel = document.getElementById('outputScript');
+            const tmp = inSel.value; inSel.value = outSel.value; outSel.value = tmp;
+            const inTxt = document.getElementById('inputText');
+            const outTxt = document.getElementById('outputText');
+            const tmpTxt = inTxt.value;
+            inTxt.value = outTxt.value;
+            outTxt.value = '';
+
+            // Swap full text if it exists
+            // This is complex because we'd need to convert the full text back? 
+            fullInputText = '';
+            uploadedFileName = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            onScriptChange();
+            if (inTxt.value) convertText();
+        }
+
+        function clearText() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            fullInputText = '';
+            uploadedFileName = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('fileUpload').value = '';
+        }
+
+        function copyToClipboard() {
+            document.getElementById('outputText').select();
+            document.execCommand('copy');
+            const n = document.getElementById('notification');
+            n.classList.add('show');
+            setTimeout(() => n.classList.remove('show'), 2000);
+        }
+
+        document.getElementById('inputText').addEventListener('input', convertText);
+
+        // Initialize state
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('inputScript').value = 'sa';
+            document.getElementById('outputScript').value = 'en';
+            syncScriptFilters();
+            updateModeIndicator();
+        });
+
+        function handleBack() {
+            // Try to close tab as requested
+            window.close();
+
+            // Fallback to redirect directly to homepage (bypassing apps popup state)
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 100);
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/theme.js') }}?v=32"></script></body>
+
+</html>

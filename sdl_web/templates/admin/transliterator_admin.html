@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transliterator Telegram Bot Admin — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=35">
+    <script>
+        (function () {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=37">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-android.css') }}?v=1">
+    <script src="{{ url_for('static', filename='js/mobile-android.js') }}?v=1" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-trans-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px 80px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.6));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .metric-icon {
+            font-size: 28px;
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(99, 102, 241, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--t-text-primary);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--t-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-card {
+            background: var(--t-bg-surface, rgba(30, 41, 59, 0.6));
+            border: 1px solid var(--t-border, rgba(255, 255, 255, 0.1));
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-online { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .status-offline { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--t-text-secondary);
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--t-border, #cbd5e1);
+            background: var(--t-bg-main, #ffffff);
+            color: var(--t-text-primary);
+            font-family: inherit;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+    </style>
+</head>
+<body>
+    {% include "admin/admin_header.html" ignore missing %}
+
+    <div class="admin-trans-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h1 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 4px;">🌐 Transliterator Telegram Bot</h1>
+                <p style="color: var(--t-text-secondary); font-size: 0.95rem;">Manage multiscript transliteration bot service & STT cross-bot linking</p>
+            </div>
+            <div id="serviceStatusBadge" class="status-badge status-offline">
+                🔴 Checking Status...
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">🔄</div>
+                <div class="metric-data">
+                    <div class="metric-val" id="valTotalConversions">0</div>
+                    <div class="metric-label">Total Transliterations</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">👥</div>
+                <div class="metric-data">
+                    <div class="metric-val" id="valTotalUsers">0</div>
+                    <div class="metric-label">Unique Telegram Users</div>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🤖</div>
+                <div class="metric-data">
+                    <div class="metric-val" id="valBotUsername">@TVSM_Translatorator_Bot</div>
+                    <div class="metric-label">Bot Username</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Controls -->
+        <div class="panel-card">
+            <div class="panel-title">⚡ Service Operations & Process Control</div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+                <button class="btn btn-success" onclick="controlService('start')">▶️ Start Bot</button>
+                <button class="btn btn-danger" onclick="controlService('stop')">⏹️ Stop Bot</button>
+                <button class="btn btn-secondary" onclick="controlService('restart')">🔄 Restart Bot</button>
+                <button class="btn btn-secondary" onclick="loadBotLogs()">📜 View Terminal Logs</button>
+                <a id="btnTelegramLink" href="#" target="_blank" class="btn btn-primary" style="text-decoration: none;">💬 Open Bot in Telegram</a>
+            </div>
+
+            <!-- Terminal Output Console Box -->
+            <div id="botLogBox" style="display: none; margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 0.85rem; font-weight: 600; color: var(--t-text-secondary);">💻 Bot Terminal Console Output (transliterator_bot.log):</span>
+                    <button class="btn btn-secondary" onclick="loadBotLogs()" style="padding: 4px 10px; font-size: 0.75rem;">🔄 Refresh Logs</button>
+                </div>
+                <pre id="botLogConsole" style="background: #0d1117; color: #38bdf8; padding: 14px; border-radius: 12px; font-size: 0.82rem; max-height: 260px; overflow-y: auto; white-space: pre-wrap; margin: 0; border: 1px solid #30363d; font-family: 'Consolas', 'Courier New', monospace; box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);"></pre>
+            </div>
+        </div>
+
+        <!-- Bot Settings -->
+        <div class="panel-card">
+            <div class="panel-title">⚙️ Telegram Bot Credentials</div>
+            <form id="botConfigForm" onsubmit="saveSettings(event)">
+                <div class="form-group">
+                    <label class="form-label">Telegram Bot Token (from @BotFather)</label>
+                    <input type="password" id="inputBotToken" class="form-input" placeholder="e.g. 123456789:ABCdefGHIjklMNOpqrsTUVwxyZ" required>
+                    <small style="color: var(--t-text-muted); font-size: 0.8rem; margin-top: 4px; display: block;">
+                        💡 Enter your Telegram Bot Token. The bot username is automatically detected from Telegram's API.
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-primary">💾 Save & Verify Token</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function fetchOverview() {
+            try {
+                const res = await fetch('/admin/api/admin/transliterator/overview');
+                const json = await res.json();
+                if (json.success && json.data) {
+                    const d = json.data;
+                    const badge = document.getElementById('serviceStatusBadge');
+                    if (d.running) {
+                        badge.className = 'status-badge status-online';
+                        badge.innerHTML = `🟢 Online (PID: ${d.pid})`;
+                    } else {
+                        badge.className = 'status-badge status-offline';
+                        badge.innerHTML = '🔴 Offline';
+                    }
+
+                    if (d.stats) {
+                        document.getElementById('valTotalConversions').innerText = d.stats.total_conversions || 0;
+                        document.getElementById('valTotalUsers').innerText = d.stats.total_users || 0;
+                    }
+
+                    const uname = d.bot_username || 'TVSM_Translatorator_Bot';
+                    document.getElementById('valBotUsername').innerText = '@' + uname;
+                    document.getElementById('btnTelegramLink').href = 'https://t.me/' + uname;
+                    if (d.bot_token_masked) {
+                        document.getElementById('inputBotToken').placeholder = d.bot_token_masked;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+            const token = document.getElementById('inputBotToken').value.trim();
+            try {
+                const res = await fetch('/admin/api/admin/transliterator/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bot_token: token })
+                });
+                const json = await res.json();
+                alert(json.message || json.error);
+                fetchOverview();
+            } catch (err) {
+                alert('Failed to save settings: ' + err);
+            }
+        }
+
+        async function controlService(action) {
+            try {
+                const res = await fetch(`/admin/api/admin/transliterator/service/${action}`, { method: 'POST' });
+                const json = await res.json();
+                alert(json.message || json.error);
+                fetchOverview();
+            } catch (err) {
+                alert('Action failed: ' + err);
+            }
+        }
+
+        async function loadBotLogs() {
+            try {
+                const box = document.getElementById('botLogBox');
+                const consoleEl = document.getElementById('botLogConsole');
+                box.style.display = 'block';
+                consoleEl.innerText = "Loading terminal logs...";
+                const res = await fetch('/admin/api/admin/transliterator/bot_logs?lines=60');
+                const data = await res.json();
+                if (data.success) {
+                    consoleEl.innerText = data.logs || "No log records found.";
+                    consoleEl.scrollTop = consoleEl.scrollHeight;
+                } else {
+                    consoleEl.innerText = "Error loading logs: " + (data.error || 'Unknown error');
+                }
+            } catch (e) {
+                console.error("Failed to load bot logs", e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchOverview);
+    </script>
+</body>
+</html>

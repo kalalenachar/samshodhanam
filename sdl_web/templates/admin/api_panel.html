@@ -1,0 +1,145 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}API Management - Admin Dashboard{% endblock %}
+
+{% block header_title %}API Management{% endblock %}
+
+{% block content %}
+<div class="api-container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    
+    <div class="card" style="background: var(--t-bg-surface); border-radius: 12px; padding: 25px; box-shadow: var(--t-shadow); margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: var(--t-text-primary);"><span class="emoji">🔑</span> API Access Control</h2>
+            <button onclick="document.getElementById('generateModal').style.display='flex'" class="btn btn-primary" style="padding: 10px 25px;">+ Generate New Key</button>
+        </div>
+        
+        <p style="color: var(--t-text-muted); font-size: 14px; line-height: 1.6;">
+            Manage API keys for third-party integrations and mobile apps. These keys allow programmatic access to the Sanskrit Digital Library backend.
+            <br><strong>Security Note:</strong> Keys are hashed before storage. You can only see the full key once when it is generated.
+        </p>
+
+        {% if session.get('last_generated_key') %}
+        <div class="alert alert-success" style="background: var(--t-accent-alpha-15); border: 1px solid var(--t-border); color: var(--t-text-primary); padding: 20px; border-radius: 8px; margin: 20px 0; position: relative;">
+            <h4 style="margin: 0 0 10px 0;"><span class="emoji">🚀</span> New Key Generated!</h4>
+            <p style="margin-bottom: 15px;">Copy this key now. You will <strong>not</strong> be able to see it again.</p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" value="{{ session.pop('last_generated_key') }}" id="newKeyVal" readonly style="flex: 1; padding: 12px; border: 1px solid var(--t-border); border-radius: 6px; font-family: monospace; font-size: 16px; background: var(--t-bg-surface); color: var(--t-text-primary);">
+                <button onclick="copyKey()" class="btn btn-success" style="background: var(--t-accent); color: var(--t-text-on-accent); border: none; padding: 0 20px;">Copy</button>
+            </div>
+        </div>
+        {% endif %}
+
+        <table class="books-table" style="margin-top: 20px;">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Created At</th>
+                    <th>Last Used</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hash, data in keys.items() %}
+                <tr>
+                    <td data-label="Label"><strong>{{ data.label }}</strong></td>
+                    <td data-label="Created At">{{ data.created_at.split('T')[0] }}</td>
+                    <td data-label="Last Used">{{ data.last_used.split('T')[0] if data.last_used else 'Never' }}</td>
+                    <td data-label="Status">
+                        {% if data.active %}
+                        <span style="background: var(--t-accent-alpha-15); color: var(--t-accent); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Active</span>
+                        {% else %}
+                        <span style="background: #ffebee; color: #c62828; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">Revoked</span>
+                        {% endif %}
+                    </td>
+                    <td class="actions" data-label="Actions">
+                        <form action="{{ url_for('api_v1.delete_key', key_hash=hash) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this API key? This action cannot be undone.')">
+                            <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: #999;">No API keys generated yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- API Suggestions Section -->
+    <div class="card" style="background: var(--t-bg-surface); border-radius: 12px; padding: 25px; box-shadow: var(--t-shadow); margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: var(--t-text-primary);"><span class="emoji">📥</span> API User Suggestions</h2>
+            {% if suggestions %}
+            <form action="{{ url_for('api_v1.clear_suggestions') }}" method="POST" onsubmit="return confirm('Clear all suggestions?')">
+                <button type="submit" class="btn btn-danger" style="background: #ff5252; padding: 6px 15px; font-size: 12px;">Clear All</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <p style="color: var(--t-text-muted); font-size: 14px; margin-bottom: 20px;">
+            Below are suggestions or feedback submitted by external developers using the API.
+        </p>
+
+        <div style="max-height: 400px; overflow-y: auto;">
+            {% for s in suggestions|reverse %}
+            <div style="background: var(--t-bg-surface-hover); border-left: 4px solid var(--t-accent); padding: 15px; margin-bottom: 15px; border-radius: 0 8px 8px 0; border: 1px solid var(--t-border); border-left-width: 4px;">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--t-text-muted); margin-bottom: 8px;">
+                    <span><strong>From:</strong> {{ s.from }}</span>
+                    <span>{{ s.timestamp.split('T')[0] }} {{ s.timestamp.split('T')[1][:5] }}</span>
+                </div>
+                <div style="color: var(--t-text-primary); font-size: 14px; white-space: pre-wrap;">{{ s.content }}</div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 30px; color: #999;">No suggestions yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Documentation Section -->
+    <div class="card" style="background: var(--t-bg-surface); border-radius: 12px; padding: 25px; border: 1px solid var(--t-border);">
+        <h3 style="margin-top: 0;"><span class="emoji">📚</span> API Documentation Quick Start</h3>
+        <p>Use the following endpoints to interact with the SDL backend. Always include your key in the header.</p>
+        
+        <div style="background: #2c3e50; color: #fff; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 14px; margin-bottom: 20px;">
+            GET /api/v1/search?q=Sanskrit&tags=Philosophy<br>
+            Header: X-API-Key: YOUR_KEY_HERE
+        </div>
+
+        <ul style="line-height: 1.8; color: var(--t-text-muted);">
+            <li><code>GET /api/v1/books</code> - Returns a list of all uploaded books.</li>
+            <li><code>GET /api/v1/search?q=...</code> - Search OCR text across the library.</li>
+            <li><code>GET /api/v1/book/{id}/page/{num}</code> - Fetch raw text for a specific page.</li>
+        </ul>
+        <a href="/api/v1/docs" class="btn btn-primary" style="text-decoration: none; display: inline-block; margin-top: 10px;">Full API Documentation</a>
+    </div>
+</div>
+
+<!-- Generate Modal -->
+<div id="generateModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+    <div class="card" style="background: var(--t-bg-surface); width: 400px; padding: 30px; border-radius: 16px;">
+        <h3 style="margin-top: 0;">Generate API Key</h3>
+        <form action="{{ url_for('api_v1.generate_key') }}" method="POST">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--t-text-muted); margin-bottom: 8px;">Key Label (e.g. Mobile App)</label>
+                <input type="text" name="label" required placeholder="My Application" style="width: 100%; padding: 12px; border: 1px solid var(--t-border); background: var(--t-input-bg); color: var(--t-input-text); border-radius: 8px; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="document.getElementById('generateModal').style.display='none'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Generate Key</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function copyKey() {
+    const copyText = document.getElementById("newKeyVal");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    alert("API Key copied to clipboard!");
+}
+</script>
+{% endblock %}

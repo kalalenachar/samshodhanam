@@ -1,0 +1,538 @@
+{% extends "admin/dashboard.html" %}
+
+{% block title %}Review Queue — Sanskrit Digital Library{% endblock %}
+{% block header_title %}Review Queue{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .review-container {
+        max-width: 100%;
+        width: 100%;
+        margin: 24px auto 40px;
+    }
+
+    .review-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid var(--t-border-light, rgba(255, 255, 255, 0.1));
+        padding-bottom: 8px;
+    }
+
+    .review-tab-btn {
+        background: none;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--t-text-muted, #94a3b8);
+        padding: 8px 18px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .review-tab-btn:hover {
+        color: var(--t-accent, #3b82f6);
+        background: var(--t-accent-alpha-08, rgba(59, 130, 246, 0.08));
+    }
+
+    .review-tab-btn.active {
+        color: var(--t-accent, #3b82f6);
+        background: var(--t-accent-alpha-15, rgba(59, 130, 246, 0.15));
+        box-shadow: inset 0 -2px 0 var(--t-accent, #3b82f6);
+    }
+
+    .badge-count {
+        background: var(--t-accent, #3b82f6);
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-pills {
+        display: flex;
+        gap: 8px;
+    }
+
+    .filter-pill {
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 20px;
+        background: var(--t-bg-surface, #ffffff);
+        color: var(--t-text-secondary, #64748b);
+        border: 1px solid var(--t-border, #cbd5e1);
+        transition: all 0.2s;
+    }
+
+    .filter-pill:hover, .filter-pill.active {
+        background: var(--t-accent, #3b82f6);
+        color: #ffffff;
+        border-color: var(--t-accent, #3b82f6);
+    }
+
+    /* Edit Review Card */
+    .edit-card {
+        background: var(--t-bg-surface, #ffffff);
+        border: 1px solid var(--t-border, #e2e8f0);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--t-shadow, 0 4px 16px rgba(0, 0, 0, 0.04));
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .edit-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .edit-meta-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--t-text-primary, #0f172a);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .edit-meta-sub {
+        font-size: 13px;
+        color: var(--t-text-secondary, #64748b);
+        margin-top: 4px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .diff-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 18px;
+    }
+
+    @media (max-width: 768px) {
+        .diff-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .diff-pane {
+        background: var(--t-input-bg, #f8fafc);
+        border: 1px solid var(--t-border, #e2e8f0);
+        border-radius: 10px;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .diff-pane-title {
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--t-border-light, #e2e8f0);
+    }
+
+    .diff-pane-title.original {
+        color: #ef4444;
+    }
+
+    .diff-pane-title.proposed {
+        color: #10b981;
+    }
+
+    .diff-content {
+        font-size: 15px;
+        font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-word;
+        max-height: 320px;
+        overflow-y: auto;
+        color: var(--t-text-primary);
+    }
+
+    .edit-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px;
+        border-top: 1px solid var(--t-border-light, #e2e8f0);
+        padding-top: 14px;
+    }
+
+    .btn-approve {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        border: none;
+        padding: 9px 20px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        transition: all 0.2s;
+    }
+
+    .btn-approve:hover {
+        opacity: 0.95;
+        transform: translateY(-1px);
+    }
+
+    .btn-reject {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-reject:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    .status-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-tag.pending {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-tag.approved {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-tag.rejected {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    /* Community Books Table */
+    .books-table-card {
+        background: var(--t-bg-surface, #ffffff);
+        border: 1px solid var(--t-border, #e2e8f0);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--t-shadow, 0 4px 16px rgba(0, 0, 0, 0.04));
+    }
+
+    .books-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .books-table th {
+        background: var(--t-hover-bg, #f1f5f9);
+        padding: 12px 18px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--t-text-muted);
+        border-bottom: 1px solid var(--t-border);
+    }
+
+    .books-table td {
+        padding: 14px 18px;
+        font-size: 14px;
+        color: var(--t-text-primary);
+        border-bottom: 1px solid var(--t-border-light);
+    }
+
+    .books-table tr:hover {
+        background: var(--t-accent-alpha-05, rgba(59, 130, 246, 0.03));
+    }
+
+    .empty-placeholder {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--t-text-muted);
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-container">
+    <!-- Top Navigation Tabs -->
+    <div class="review-tabs">
+        <button type="button" class="review-tab-btn active" id="tabBtnEdits" onclick="switchReviewTab('edits')">
+            <span>📝 Proposed Page Edits</span>
+            <span class="badge-count" id="pendingCountBadge">{{ pending_count }}</span>
+        </button>
+        <button type="button" class="review-tab-btn" id="tabBtnBooks" onclick="switchReviewTab('books')">
+            <span>📚 Community Uploaded Books</span>
+            <span class="badge-count">{{ community_books | length }}</span>
+        </button>
+    </div>
+
+    <!-- Section 1: Proposed Page Edits -->
+    <div id="sectionEdits">
+        <div class="filter-bar">
+            <div class="filter-pills">
+                <a href="?status=pending" class="filter-pill {% if filter_status == 'pending' %}active{% endif %}">⏳ Pending ({{ pending_count }})</a>
+                <a href="?status=approved" class="filter-pill {% if filter_status == 'approved' %}active{% endif %}">✅ Approved</a>
+                <a href="?status=rejected" class="filter-pill {% if filter_status == 'rejected' %}active{% endif %}">❌ Rejected</a>
+                <a href="?status=all" class="filter-pill {% if filter_status == 'all' %}active{% endif %}">All</a>
+            </div>
+            <div style="font-size: 13px; color: var(--t-text-muted);">
+                Showing <strong>{{ edits | length }}</strong> submissions
+            </div>
+        </div>
+
+        {% if edits %}
+            {% for edit in edits %}
+            <div class="edit-card" id="editCard-{{ edit.edit_id }}">
+                <div class="edit-card-header">
+                    <div>
+                        <div class="edit-meta-title">
+                            <a href="/reader/{{ edit.book_name | urlencode }}?page={{ edit.page_number }}" target="_blank" style="color:inherit; text-decoration:none;">
+                                📖 {{ edit.book_name }}
+                            </a>
+                            <span style="font-size: 13px; font-weight: 600; color: var(--t-accent); background: var(--t-accent-alpha-12); padding: 2px 8px; border-radius: 4px;">
+                                Page {{ edit.page_number }}
+                            </span>
+                            <span class="status-tag {{ edit.status }}">{{ edit.status }}</span>
+                        </div>
+                        <div class="edit-meta-sub">
+                            <span>👤 Contributor: <strong>{{ edit.contributor_name if edit.contributor_name else 'Anonymous Visitor' }}</strong></span>
+                            {% if edit.contributor_email %}
+                            <span>✉️ {{ edit.contributor_email }}</span>
+                            {% endif %}
+                            <span>🕒 Submitted: {{ edit.created_at }}</span>
+                            {% if edit.reviewed_by %}
+                            <span>🛡️ Reviewed by: {{ edit.reviewed_by }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if edit.edit_notes %}
+                <div style="margin-bottom: 14px; font-size: 13px; background: var(--t-accent-alpha-08); border-left: 3px solid var(--t-accent); padding: 8px 12px; border-radius: 4px;">
+                    <strong>Contributor Note:</strong> {{ edit.edit_notes }}
+                </div>
+                {% endif %}
+
+                <!-- Side-by-Side Diff View -->
+                <div class="diff-container">
+                    <div class="diff-pane">
+                        <div class="diff-pane-title original">Original Text</div>
+                        <div class="diff-content">{{ edit.original_text if edit.original_text else '(No original recorded)' }}</div>
+                    </div>
+                    <div class="diff-pane">
+                        <div class="diff-pane-title proposed">Proposed Notepad Edit</div>
+                        <div class="diff-content">{{ edit.edited_text }}</div>
+                    </div>
+                </div>
+
+                {% if edit.status == 'pending' %}
+                <div class="edit-actions" id="actions-{{ edit.edit_id }}">
+                    <button type="button" class="btn-reject" onclick="handleEditAction('{{ edit.edit_id }}', 'reject')">
+                        ❌ Reject
+                    </button>
+                    <button type="button" class="btn-approve" onclick="handleEditAction('{{ edit.edit_id }}', 'approve')">
+                        ✅ Approve &amp; Publish to All
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-placeholder">
+                <div class="empty-icon">✨</div>
+                <h3>No Page Edits Found</h3>
+                <p>There are no page edit suggestions matching status "<strong>{{ filter_status }}</strong>".</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Section 2: Community Uploaded Books -->
+    <div id="sectionBooks" style="display: none;">
+        <div class="books-table-card">
+            <table class="books-table">
+                <thead>
+                    <tr>
+                        <th>Book Title</th>
+                        <th>Author</th>
+                        <th>Tags</th>
+                        <th>Contributor</th>
+                        <th>Verification</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if community_books %}
+                        {% for book in community_books %}
+                        <tr id="bookRow-{{ loop.index }}">
+                            <td>
+                                <strong>{{ book.name }}</strong>
+                            </td>
+                            <td>{{ book.author if book.author else '—' }}</td>
+                            <td>
+                                {% if book.tags %}
+                                    <span style="font-size: 12px; color: var(--t-text-secondary);">{{ book.tags }}</span>
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ book.contributor if book.contributor else 'Anonymous' }}</td>
+                            <td>
+                                <span class="status-tag {% if book.verification == 'verified' %}approved{% else %}pending{% endif %}" id="verifTag-{{ loop.index }}">
+                                    {{ book.verification }}
+                                </span>
+                            </td>
+                            <td style="text-align: right; white-space: nowrap;">
+                                <a href="/reader/{{ book.name | urlencode }}" target="_blank" class="filter-pill" style="font-size: 11px; padding: 4px 10px; margin-right: 6px;">
+                                    👁️ Reader
+                                </a>
+                                {% if book.verification != 'verified' %}
+                                <button type="button" class="btn-approve" style="font-size: 11px; padding: 5px 12px;" onclick="verifyCommunityBook('{{ book.name }}', {{ loop.index }})">
+                                    ✓ Verify Book
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-placeholder">
+                                <div class="empty-icon">📚</div>
+                                <h3>No Community Uploads</h3>
+                                <p>No guest-uploaded books are currently pending verification.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchReviewTab(tab) {
+        const tabEdits = document.getElementById('tabBtnEdits');
+        const tabBooks = document.getElementById('tabBtnBooks');
+        const secEdits = document.getElementById('sectionEdits');
+        const secBooks = document.getElementById('sectionBooks');
+
+        if (tab === 'edits') {
+            tabEdits.classList.add('active');
+            tabBooks.classList.remove('active');
+            secEdits.style.display = 'block';
+            secBooks.style.display = 'none';
+        } else {
+            tabBooks.classList.add('active');
+            tabEdits.classList.remove('active');
+            secBooks.style.display = 'block';
+            secEdits.style.display = 'none';
+        }
+    }
+
+    async function handleEditAction(editId, action) {
+        const card = document.getElementById(`editCard-${editId}`);
+        const actionsDiv = document.getElementById(`actions-${editId}`);
+
+        if (action === 'reject' && !confirm('Are you sure you want to reject this edit?')) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/admin/review-queue/edit/${editId}/action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Failed to update edit');
+            }
+
+            if (actionsDiv) {
+                actionsDiv.innerHTML = `<span class="status-tag ${action === 'approve' ? 'approved' : 'rejected'}" style="font-size: 13px; padding: 6px 14px;">${action === 'approve' ? '✅ Approved & Applied' : '❌ Rejected'}</span>`;
+            }
+
+            // Update badge count
+            const badge = document.getElementById('pendingCountBadge');
+            if (badge) {
+                let current = parseInt(badge.textContent, 10) || 0;
+                if (current > 0) badge.textContent = current - 1;
+            }
+        } catch (err) {
+            alert('Action failed: ' + err.message);
+        }
+    }
+
+    async function verifyCommunityBook(bookName, rowIndex) {
+        if (!confirm(`Certify and verify '${bookName}' as an official library book?`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/admin/verify-book/${encodeURIComponent(bookName)}`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Failed to verify book');
+            }
+
+            const tag = document.getElementById(`verifTag-${rowIndex}`);
+            if (tag) {
+                tag.className = 'status-tag approved';
+                tag.textContent = 'verified';
+            }
+            alert(data.message || 'Book verified successfully!');
+        } catch (err) {
+            alert('Verification failed: ' + err.message);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="sa">
+
+<head>
+    <link rel="stylesheet" href="/sdl/static/css/theme.css?v=35">
+    <script>
+        window.SMSDL_NO_THEME_TOGGLE = true;
+        (function() {
+            var t = localStorage.getItem('smsdl-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article — Loading...</title>
+  <meta name="description" content="Read Research articles — Samshodhana Mandiram">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📜</text></svg>">
+  <link rel="stylesheet" href="style.css?v=100">
+  <link rel="stylesheet" href="/static/css/mobile-android.css?v=100">
+  <script src="/static/js/mobile-android.js" defer></script>
+  <script src="/static/js/script-transliterate.js?v=6"></script>
+  <style>
+    /* Immersive Reader Mode */
+    body.reader-mode nav.navbar {
+      display: none !important;
+    }
+    body.reader-mode footer.footer {
+      display: none !important;
+    }
+    body.reader-mode .container {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      min-height: 100vh;
+      background: var(--t-bg-body-start) !important;
+    }
+    body.reader-mode #articleContainer {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto !important;
+      padding: 80px max(24px, calc((100% - 850px) / 2)) 80px !important;
+      box-sizing: border-box !important;
+      min-height: 100vh;
+    }
+
+    /* Floating back button for non-iframe reader mode */
+    .floating-back-btn-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 120px;
+      z-index: 20000;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 20px;
+      background: transparent;
+    }
+
+    .floating-back-btn-container .back-link {
+      background: rgba(17, 17, 27, 0.85) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      color: #f3f4f6 !important;
+      padding: 10px 18px !important;
+      border-radius: 30px !important;
+      text-decoration: none !important;
+      font-size: 0.9rem !important;
+      font-weight: 600 !important;
+      font-family: system-ui, -apple-system, sans-serif !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6) !important;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateX(-15px) !important;
+      width: auto !important;
+      height: auto !important;
+    }
+
+    .floating-back-btn-container:hover .back-link {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transform: translateX(0) !important;
+      border-color: #6366f1 !important;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4) !important;
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="toast-container" id="toastContainer"></div>
+
+  <nav class="navbar">
+    <div class="navbar-brand-group">
+      <a href="/" class="navbar-home-btn" title="Main Home">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </a>
+      <a href="/" class="navbar-brand"><img src="/static/images/app_articles.png" class="navbar-logo" alt="Articles Logo">Research <span class="highlight">Articles</span></a>
+    </div>
+    <div class="navbar-links">
+      <div id="userMenu" style="display: none;">
+        <a href="#" class="user-avatar-btn" id="userAvatarBtn" title="View Profile">
+          <span id="userAvatarEmoji">👤</span>
+        </a>
+      </div>
+      <a href="/#login" id="userLoginLink" style="display: none;">Login</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Loading -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Article Content -->
+    <div id="articleContainer" style="display: none;">
+      <div class="floating-back-btn-container">
+        <a href="/#articles" class="back-link" id="dynamicBackLink">
+          <span>←</span> Back to Articles
+        </a>
+      </div>
+
+      <div class="story-reader">
+        <!-- Cover Image -->
+        <img class="story-cover-hero" id="articleCover" src="" alt="">
+
+        <!-- Header -->
+        <div class="story-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 260px;">
+            <h1 class="story-title" id="articleTitle"></h1>
+            <div class="story-meta" id="articleMeta"></div>
+          </div>
+
+          <!-- Interactive Script Changer Component & Info Badge -->
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+            <div class="script-picker-wrapper" style="position: relative; display: inline-block;">
+              <button onclick="toggleArticleScriptPicker(event)" class="script-picker-btn" id="articleScriptPickerBtn" title="Change Reading Script (Devanagari, Kannada, Telugu, Tamil, IAST)">
+                <span style="font-size: 13px;">🌐</span>
+                <span id="articleScriptPickerActiveLabel" style="font-size: 12px; font-weight: 700;">संस्कृतम्</span>
+                <span style="font-size: 9px; opacity: 0.8; margin-left: 2px;">▼</span>
+              </button>
+
+              <div id="articleScriptPickerPopover" class="script-picker-popover" style="right: 0; left: auto;">
+                <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px; padding: 6px 10px 4px 10px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px;">Reading Script</div>
+                <div class="script-option-item active" data-script="sa" onclick="changeArticleScript('sa')">
+                  <div class="script-info"><div class="script-name">संस्कृतम् (Devanagari)</div><div class="script-desc">Original Sanskrit</div></div>
+                  <span class="script-check">✓</span>
+                </div>
+                <div class="script-option-item" data-script="ka" onclick="changeArticleScript('ka')">
+                  <div class="script-info"><div class="script-name">ಕನ್ನಡ (Kannada)</div><div class="script-desc">With bindu (ಂ) rule</div></div>
+                  <span class="script-check">✓</span>
+                </div>
+                <div class="script-option-item" data-script="te" onclick="changeArticleScript('te')">
+                  <div class="script-info"><div class="script-name">తెలుగు (Telugu)</div><div class="script-desc">With sunna (ం) rule</div></div>
+                  <span class="script-check">✓</span>
+                </div>
+                <div class="script-option-item" data-script="ta" onclick="changeArticleScript('ta')">
+                  <div class="script-info"><div class="script-name">தமிழ் (Tamil)</div><div class="script-desc">Traditional class nasals</div></div>
+                  <span class="script-check">✓</span>
+                </div>
+                <div class="script-option-item" data-script="en" onclick="changeArticleScript('en')">
+                  <div class="script-info"><div class="script-name">English (IAST)</div><div class="script-desc">Roman with diacritics</div></div>
+                  <span class="script-check">✓</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Transliteration Info Badge (shown when text is transliterated) -->
+            <div class="translit-info-wrapper" id="articleTranslitInfoWrapper" style="display: none; position: relative;">
+              <button class="translit-info-btn" id="articleTranslitInfoBtn" title="Transliteration Details & Reading Guide" aria-label="Transliteration Info" onclick="toggleArticleTranslitInfoPopover(event)">
+                <span class="info-badge-icon">i</span>
+                <span class="info-label" id="articleTranslitInfoLabel">Tamil Guide</span>
+              </button>
+              <div class="translit-info-popover" id="articleTranslitInfoPopover"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="story-summary" id="articleSummary" style="display: none;"></div>
+
+        <!-- Content -->
+        <div class="story-content" id="articleContent"></div>
+
+        <!-- Feedback -->
+        <div class="feedback-section" id="feedbackSection">
+          <span class="feedback-label">लेखः कीदृशः आसीत्?</span>
+          <button class="feedback-btn" id="btnUpvote" onclick="submitVote('up')">
+            👍 <span class="feedback-count" id="upCount">0</span>
+          </button>
+          <button class="feedback-btn" id="btnDownvote" onclick="submitVote('down')">
+            👎 <span class="feedback-count" id="downCount">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="empty-state" id="errorState" style="display: none;">
+      <span class="icon">😔</span>
+      <h3>लेखः न प्राप्तः</h3>
+      <p class="mt-1" style="color: var(--text-secondary);">Article not found or unavailable.</p>
+      <a href="/" class="btn btn-primary mt-2" style="margin-top: 16px; display: inline-flex;">← Back to Portal</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-quote">"ज्ञानं परमं भूषणम्"</div>
+    <div class="footer-links">
+      <a href="/">Portal Home</a> &bull;
+      <a href="/sdl/">Sanskrit Digital Library</a> &bull;
+      <a href="/admin/hub">Admin Hub</a>
+    </div>
+    <div class="footer-copyright">
+      &copy; 2026 Samshodhana Mandiram — Sri Trayee Vidya Gurukulam. All rights reserved.
+    </div>
+    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 0.9em; flex-wrap: wrap;">
+      <a href="mailto:samshodhanamandiram@gmail.com" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        Email
+      </a>
+      <a href="https://t.me/samshodhanamandiram" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+        Telegram
+      </a>
+      <a href="https://wa.me/919894222628" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.1); padding: 8px 16px; border-radius: 20px; transition: all 0.2s ease;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    const API_BASE = '/sdl/api/v1';
+    let currentArticleId = null;
+    let currentVote = null;
+
+    // ── Toast ──
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 3500);
+    }
+
+    // ── Format date ──
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch { return dateStr; }
+    }
+
+    // ── Escape HTML ──
+    function escapeHtml(s) {
+      if (!s) return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ── Get article ID from URL ──
+    function getArticleId() {
+      const params = new URLSearchParams(window.location.search);
+      return parseInt(params.get('id'));
+    }
+
+    // ── Load Article ──
+    async function loadArticle() {
+      const spinner = document.getElementById('loadingSpinner');
+      const container = document.getElementById('articleContainer');
+      const errorState = document.getElementById('errorState');
+
+      const articleId = getArticleId();
+      if (!articleId) {
+        spinner.style.display = 'none';
+        errorState.style.display = 'block';
+        return;
+      }
+
+      currentArticleId = articleId;
+
+      try {
+        const res = await fetch(`${API_BASE}/articles/${articleId}`);
+        const data = await res.json();
+
+        if (!data.success || !data.article) {
+          spinner.style.display = 'none';
+          errorState.style.display = 'block';
+          return;
+        }
+
+        const article = data.article;
+        document.body.classList.add('reader-mode');
+
+        // Update page title
+        document.title = `${article.title} — Research Articles`;
+
+        // Cover image
+        const cover = document.getElementById('articleCover');
+        cover.src = article.cover_image_url;
+        cover.alt = article.title;
+        cover.onerror = function() {
+          this.style.display = 'none';
+        };
+
+        // Title
+        document.getElementById('articleTitle').textContent = article.title;
+
+        // Meta
+        let metaHTML = '';
+        if (article.category) {
+          metaHTML += `<span class="badge badge-category">${escapeHtml(article.category)}</span>`;
+        }
+        if (article.author) {
+          metaHTML += `<span>✍️ ${escapeHtml(article.author)}</span>`;
+        }
+        if (article.published_at) {
+          metaHTML += `<span>📅 ${formatDate(article.published_at)}</span>`;
+        }
+        if (article.reading_time) {
+          metaHTML += `<span>⏱️ ${article.reading_time} min read</span>`;
+        }
+        document.getElementById('articleMeta').innerHTML = metaHTML;
+
+        const isFullHtml = /^\s*<!DOCTYPE\s+html/i.test(article.content_html) || /^\s*<html/i.test(article.content_html);
+
+        if (isFullHtml) {
+          renderFullHtmlArticle(article);
+        } else {
+          // Summary
+          const summaryEl = document.getElementById('articleSummary');
+          if (article.summary && article.summary.trim()) {
+            summaryEl.textContent = article.summary;
+            summaryEl.style.display = 'block';
+          }
+
+          // Content
+          document.getElementById('articleContent').innerHTML = article.content_html;
+
+          // Feedback
+          document.getElementById('upCount').textContent = article.upvotes || 0;
+          document.getElementById('downCount').textContent = article.downvotes || 0;
+          
+          currentVote = null;
+          updateFeedbackButtons();
+
+          // Dynamic back button logic
+          const backLink = document.getElementById('dynamicBackLink');
+          if (backLink) {
+            const params = new URLSearchParams(window.location.search);
+            const ref = params.get('ref');
+            const referrer = document.referrer;
+            if (ref === 'bio-robot' || referrer.includes('id=1')) {
+              backLink.href = 'reader.html?id=1';
+              backLink.innerHTML = '<span>←</span> Back to Main Article';
+            } else {
+              if (referrer.includes('/articles') && !referrer.includes('reader.html') && !referrer.includes('admin')) {
+                backLink.href = './';
+              } else if (referrer.includes('articles/index.html') || referrer.includes('articles/')) {
+                backLink.href = './';
+              } else {
+                backLink.href = '/#articles';
+              }
+              backLink.innerHTML = '<span>←</span> Back to Articles';
+            }
+          }
+
+          spinner.style.display = 'none';
+          container.style.display = 'block';
+          applyActiveScriptToArticle();
+        }
+
+      } catch (err) {
+        console.error('Error loading article:', err);
+        spinner.style.display = 'none';
+        errorState.style.display = 'block';
+      }
+    }
+
+    // ── Update Feedback Button States ──
+    function updateFeedbackButtons() {
+      const upBtn = document.getElementById('btnUpvote');
+      const downBtn = document.getElementById('btnDownvote');
+
+      upBtn.classList.remove('active-up');
+      downBtn.classList.remove('active-down');
+
+      if (currentVote === 'up') {
+        upBtn.classList.add('active-up');
+      } else if (currentVote === 'down') {
+        downBtn.classList.add('active-down');
+      }
+
+      if (window.updateIframeFeedbackUI) {
+        window.updateIframeFeedbackUI();
+      }
+    }
+
+    // ── Submit Vote ──
+    async function submitVote(vote) {
+      if (!currentArticleId) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/articles/${currentArticleId}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ vote })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('upCount').textContent = data.upvotes || 0;
+          document.getElementById('downCount').textContent = data.downvotes || 0;
+          currentVote = data.vote;
+          updateFeedbackButtons();
+
+          if (data.vote === null) {
+            showToast('Vote removed', 'info');
+          } else if (data.vote === 'up') {
+            showToast('👍 धन्यवादः!', 'success');
+          } else {
+            showToast('Feedback recorded', 'info');
+          }
+        } else {
+          showToast(data.error || 'Failed to submit feedback', 'error');
+        }
+      } catch (err) {
+        console.error('Error submitting vote:', err);
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ── Authentication & Session Sync ──
+    async function syncSession() {
+      const token = localStorage.getItem('user_token');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      try {
+        const res = await fetch('/sdl/api/external/session-sync', {
+          method: 'POST',
+          headers: headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+
+        if (data.logged_in) {
+          localStorage.setItem('user_token', data.token);
+          localStorage.setItem('user_profile', JSON.stringify(data.user));
+          
+          if (data.user.role === 'super' || data.user.role === 'admin') {
+            sessionStorage.setItem('isArticlesAdmin', 'true');
+          } else {
+            sessionStorage.removeItem('isArticlesAdmin');
+          }
+        } else {
+          if (token) {
+            localStorage.removeItem('user_token');
+            localStorage.removeItem('user_profile');
+          }
+          sessionStorage.removeItem('isArticlesAdmin');
+        }
+      } catch (err) {
+        console.error('Session sync failed:', err);
+      } finally {
+        updateNavbarAuth();
+      }
+    }
+
+    function updateNavbarAuth() {
+      const token = localStorage.getItem('user_token');
+      const userStr = localStorage.getItem('user_profile');
+      const userMenu = document.getElementById('userMenu');
+      const loginLink = document.getElementById('userLoginLink');
+
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (loginLink) loginLink.style.display = 'none';
+          if (userMenu) userMenu.style.display = 'inline-flex';
+
+          const avatarBtn = document.getElementById('userAvatarBtn');
+          const avatarEmoji = document.getElementById('userAvatarEmoji');
+
+          if (avatarBtn) {
+            avatarBtn.title = `View Profile (${user.display_name || 'User'})`;
+            if (user.role === 'super' || user.role === 'admin') {
+              avatarBtn.href = 'admin-dashboard.html';
+            } else {
+              avatarBtn.href = '/user/quiz-profile';
+            }
+            if (user.profile_pic) {
+              const picUrl = `/sdl/static/uploads/profile_pics/${user.profile_pic}`;
+              avatarBtn.style.background = `url("${picUrl}") no-repeat center/cover`;
+              if (avatarEmoji) avatarEmoji.textContent = '';
+            } else {
+              avatarBtn.style.background = user.avatar_gradient || 'linear-gradient(135deg, var(--t-accent) 0%, var(--t-accent) 100%)';
+              if (avatarEmoji) avatarEmoji.textContent = user.avatar_emoji || '👤';
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          showGuestNavbar();
+        }
+      } else {
+        showGuestNavbar();
+      }
+    }
+
+    function renderFullHtmlArticle(article) {
+      const spinner = document.getElementById('loadingSpinner');
+      spinner.style.display = 'none';
+      
+      // Hide standard article container
+      document.getElementById('articleContainer').style.display = 'none';
+      
+      // Remove any existing full-screen iframe just in case
+      const existing = document.getElementById('fullHtmlArticleIframe');
+      if (existing) existing.remove();
+      
+      // Create full-screen iframe
+      const iframe = document.createElement('iframe');
+      iframe.id = 'fullHtmlArticleIframe';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '0';
+      iframe.style.left = '0';
+      iframe.style.width = '100vw';
+      iframe.style.height = '100vh';
+      iframe.style.border = 'none';
+      iframe.style.zIndex = '9999';
+      iframe.style.backgroundColor = '#07070a'; // Default dark theme background
+      
+      iframe.srcdoc = article.content_html;
+      document.body.appendChild(iframe);
+      
+      // When iframe loads, inject style and elements
+      iframe.onload = function() {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        
+        // 1. Inject styling for the navigation and feedback buttons
+        const style = doc.createElement('style');
+        style.textContent = `
+          .injected-back-btn-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 120px;
+            z-index: 20000;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 20px;
+            background: transparent;
+          }
+          
+          .injected-back-btn {
+            background: rgba(17, 17, 27, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f3f4f6;
+            padding: 10px 18px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: system-ui, -apple-system, sans-serif;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-15px);
+          }
+          
+          .injected-back-btn:hover {
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+            color: #ffffff;
+          }
+          
+          .injected-back-btn-container:hover .injected-back-btn {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0);
+          }
+          
+          .injected-feedback-wrap {
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 4rem;
+          }
+          
+          .injected-feedback {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 28px;
+            background: rgba(17, 17, 27, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+          }
+          
+          .injected-feedback-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            font-family: system-ui, -apple-system, sans-serif;
+          }
+          
+          .injected-feedback-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #9ca3af;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+          
+          .injected-feedback-btn:hover {
+            border-color: #6366f1;
+            background: rgba(99, 102, 241, 0.15);
+            color: #ffffff;
+          }
+          
+          .injected-feedback-btn.active-up {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: #10b981;
+            color: #34d399;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+          }
+          
+          .injected-feedback-btn.active-down {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: #ef4444;
+            color: #f87171;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.25);
+          }
+          
+          .injected-feedback-btn .feedback-count {
+            font-weight: 700;
+          }
+
+          @media (max-width: 1024px) {
+            .injected-back-btn-container {
+              width: 220px;
+              height: 100px;
+              padding: 15px;
+            }
+            .injected-back-btn {
+              padding: 8px 14px;
+              font-size: 0.85rem;
+            }
+          }
+        `;
+        doc.head.appendChild(style);
+        
+        // 2. Create the back button container and button
+        const backBtnContainer = doc.createElement('div');
+        backBtnContainer.className = 'injected-back-btn-container';
+
+        const backBtn = doc.createElement('a');
+        backBtn.className = 'injected-back-btn';
+        
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        const referrer = document.referrer;
+        if (ref === 'bio-robot' || referrer.includes('id=1')) {
+          backBtn.href = 'reader.html?id=1';
+          backBtn.innerHTML = '<span>←</span> Back to Main Article';
+        } else {
+          backBtn.href = '/#articles';
+          backBtn.innerHTML = '<span>←</span> Back to Articles';
+        }
+        
+        backBtn.onclick = function(e) {
+          e.preventDefault();
+          window.location.href = backBtn.href;
+        };
+        backBtnContainer.appendChild(backBtn);
+        doc.body.appendChild(backBtnContainer);
+        
+        // 3. Create the feedback section
+        const feedbackWrap = doc.createElement('div');
+        feedbackWrap.className = 'injected-feedback-wrap';
+        feedbackWrap.innerHTML = `
+          <div class="injected-feedback">
+            <span class="injected-feedback-label">लेखः कीदृशः आसीत्?</span>
+            <button class="injected-feedback-btn" id="injected-btnUpvote">
+              👍 <span class="feedback-count" id="injected-upCount">0</span>
+            </button>
+            <button class="injected-feedback-btn" id="injected-btnDownvote">
+              👎 <span class="feedback-count" id="injected-downCount">0</span>
+            </button>
+          </div>
+        `;
+        
+        const container = doc.querySelector('.article-container') || doc.querySelector('article') || doc.body;
+        container.appendChild(feedbackWrap);
+        
+        const upBtn = doc.getElementById('injected-btnUpvote');
+        const downBtn = doc.getElementById('injected-btnDownvote');
+        
+        window.updateIframeFeedbackUI = function() {
+          const upCount = doc.getElementById('injected-upCount');
+          const downCount = doc.getElementById('injected-downCount');
+          if (upCount && downCount) {
+            upCount.textContent = document.getElementById('upCount').textContent;
+            downCount.textContent = document.getElementById('downCount').textContent;
+          }
+          
+          if (upBtn && downBtn) {
+            upBtn.classList.remove('active-up');
+            downBtn.classList.remove('active-down');
+            if (currentVote === 'up') {
+              upBtn.classList.add('active-up');
+            } else if (currentVote === 'down') {
+              downBtn.classList.add('active-down');
+            }
+          }
+        };
+        
+        window.updateIframeFeedbackUI();
+        
+        upBtn.onclick = async () => {
+          await submitVote('up');
+        };
+        downBtn.onclick = async () => {
+          await submitVote('down');
+        };
+
+        // 4. Intercept hash links inside the iframe to scroll manually (fixing srcdoc browser limitation)
+        doc.querySelectorAll('a[href^="#"]').forEach(anchor => {
+          anchor.addEventListener('click', function(e) {
+            const href = this.getAttribute('href');
+            if (href === '#') return;
+            const targetId = href.substring(1);
+            const targetElement = doc.getElementById(targetId);
+            if (targetElement) {
+              e.preventDefault();
+              targetElement.scrollIntoView({ behavior: 'smooth' });
+              
+              // Also close mobile sidebar if it exists in the iframe document
+              const sidebar = doc.getElementById('sidebar');
+              if (sidebar) {
+                sidebar.classList.remove('open');
+              }
+            }
+          });
+        });
+      };
+    }
+
+    function showGuestNavbar() {
+      const userMenu = document.getElementById('userMenu');
+      const loginLink = document.getElementById('userLoginLink');
+      if (userMenu) userMenu.style.display = 'none';
+      if (loginLink) {
+        loginLink.href = "/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+        loginLink.style.display = 'inline-block';
+      }
+    }
+
+    // ── Script Changer Integration ──
+    let currentArticleScript = 'sa';
+    try { currentArticleScript = localStorage.getItem('smsdl_article_reader_script') || 'sa'; } catch(e) {}
+
+    const articleScriptLabelMap = {
+      sa: 'संस्कृतम्',
+      ka: 'ಕನ್ನಡ',
+      te: 'తెలుగు',
+      ta: 'தமிழ்',
+      en: 'IAST'
+    };
+
+    function toggleArticleScriptPicker(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const popover = document.getElementById('articleScriptPickerPopover');
+      if (!popover) return;
+      popover.style.display = (popover.style.display === 'block') ? 'none' : 'block';
+    }
+
+    function closeArticleScriptPicker() {
+      const popover = document.getElementById('articleScriptPickerPopover');
+      if (popover) popover.style.display = 'none';
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('articleScriptPickerBtn');
+      const popover = document.getElementById('articleScriptPickerPopover');
+      if (popover && popover.style.display === 'block') {
+        if ((!btn || !btn.contains(e.target)) && !popover.contains(e.target)) {
+          popover.style.display = 'none';
+        }
+      }
+    });
+
+    function changeArticleScript(scriptCode, save = true) {
+      if (!scriptCode) scriptCode = 'sa';
+      currentArticleScript = scriptCode;
+      if (save) {
+        try { localStorage.setItem('smsdl_article_reader_script', scriptCode); } catch(e) {}
+      }
+
+      const labelEl = document.getElementById('articleScriptPickerActiveLabel');
+      if (labelEl) labelEl.textContent = articleScriptLabelMap[scriptCode] || 'संस्कृतम्';
+
+      document.querySelectorAll('#articleScriptPickerPopover .script-option-item').forEach(item => {
+        const isMatch = item.getAttribute('data-script') === scriptCode;
+        item.classList.toggle('active', isMatch);
+        const chk = item.querySelector('.script-check');
+        if (chk) chk.style.display = isMatch ? 'inline' : 'none';
+      });
+
+      closeArticleScriptPicker();
+      applyActiveScriptToArticle();
+      updateArticleTranslitInfoButton(scriptCode);
+    }
+
+    function updateArticleTranslitInfoButton(scriptCode) {
+      const wrapper = document.getElementById('articleTranslitInfoWrapper');
+      const label = document.getElementById('articleTranslitInfoLabel');
+      const popover = document.getElementById('articleTranslitInfoPopover');
+      if (!wrapper || !popover) return;
+
+      if (!scriptCode || scriptCode === 'sa') {
+        wrapper.style.display = 'none';
+        popover.classList.remove('show');
+        return;
+      }
+
+      wrapper.style.display = 'inline-flex';
+      const scriptNames = { ta: 'தமிழ் Guide', ka: 'ಕನ್ನಡ Guide', te: 'తెలుగు Guide', en: 'IAST Guide' };
+      if (label) label.textContent = scriptNames[scriptCode] || 'Script Guide';
+
+      if (window.SamshoTranslit && typeof window.SamshoTranslit.getScriptGuideHTML === 'function') {
+        popover.innerHTML = window.SamshoTranslit.getScriptGuideHTML(scriptCode);
+      }
+    }
+
+    function toggleArticleTranslitInfoPopover(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const popover = document.getElementById('articleTranslitInfoPopover');
+      if (popover) popover.classList.toggle('show');
+    }
+
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('articleTranslitInfoWrapper');
+      const popover = document.getElementById('articleTranslitInfoPopover');
+      if (wrapper && popover && !wrapper.contains(e.target)) {
+        popover.classList.remove('show');
+      }
+    });
+
+    function applyActiveScriptToArticle() {
+      if (!window.SamshoTranslit) return;
+      const targets = [
+        document.getElementById('articleTitle'),
+        document.getElementById('articleSummary'),
+        document.getElementById('articleContent')
+      ];
+      targets.forEach(el => {
+        if (el) window.SamshoTranslit.transliterateElement(el, currentArticleScript);
+      });
+    }
+
+    // ── Init ──
+    changeArticleScript(currentArticleScript, false);
+    loadArticle();
+    syncSession();
+  </script>
+
+    <script src="/sdl/static/js/theme.js?v=35"></script></body>
+
+</html>

@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="/static/js/mobile-android.js" defer></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shabda Explorer — Samshodhana Mandiram</title>
+    <link rel="stylesheet" href="/static/css/theme.css?v=35">
+    <script src="/static/js/theme.js?v=35" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('smsdl-theme') || 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--t-bg-body-start) 0%, var(--t-bg-body-mid) 50%, var(--t-bg-body-end) 100%);
+            min-height: 100vh;
+            color: var(--t-text-primary);
+            padding: 30px 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--t-text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-btn:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+            transform: translateX(-3px);
+        }
+        .app-title-block {
+            text-align: center;
+            flex-grow: 1;
+            margin-right: 20px;
+        }
+        .app-title-block h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #3b82f6, #60a5fa, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 4px;
+        }
+        .app-title-block p {
+            color: var(--t-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .glass-panel {
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--t-border);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--t-shadow);
+        }
+
+        .sanskrit-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        .search-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--t-text-secondary);
+        }
+        .search-input-box {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--t-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--t-text-primary);
+            font-size: 16px;
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .search-input-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            right: 0;
+            background: var(--t-bg-overlay);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--t-border);
+            border-radius: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 10000;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: none;
+            text-align: left;
+        }
+        .dropdown-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--t-border);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover {
+            background: var(--t-hover-bg);
+        }
+
+        .parameter-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .parameter-col {
+            flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+        }
+        .parameter-col label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--t-text-secondary);
+            margin-bottom: 8px;
+        }
+        select, input[type="text"] {
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--t-border);
+            background: var(--t-input-bg, rgba(255, 255, 255, 0.03));
+            color: var(--t-text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        select option, select optgroup {
+            background-color: var(--t-select-option-bg, #070a1e);
+            color: var(--t-text-primary);
+        }
+        select:focus, input[type="text"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.15);
+        }
+
+        .gender-pills-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        .gender-pill {
+            flex: 1;
+            padding: 12px 16px;
+            background: var(--t-bg-surface);
+            border: 1px solid var(--t-border);
+            border-radius: 10px;
+            color: var(--t-text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .gender-pill:hover {
+            color: var(--t-text-primary);
+            background: var(--t-hover-bg);
+        }
+        .gender-pill.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+        }
+        .gender-pill.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-derive {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+        }
+        .btn-derive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.35);
+        }
+
+        .output-columns {
+            display: none;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+            margin-top: 30px;
+        }
+        @media (max-width: 900px) {
+            .output-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .conjugation-grid {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--t-border);
+            margin-bottom: 24px;
+        }
+        .conjugation-grid th, .conjugation-grid td {
+            padding: 14px 12px;
+            border: 1px solid var(--t-border);
+            font-size: 14px;
+        }
+        .conjugation-grid th {
+            background: var(--t-hover-bg);
+            color: var(--t-text-secondary);
+            font-weight: 600;
+        }
+        .conjugation-grid td.cell-active {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--t-text-primary);
+            transition: all 0.2s;
+        }
+        .conjugation-grid td.cell-active:hover, .conjugation-grid td.cell-selected {
+            background: rgba(59, 130, 246, 0.12);
+            color: #3b82f6;
+        }
+        .conjugation-grid td.highlighted-cell {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border: 1.5px solid #f59e0b !important;
+            color: #f59e0b !important;
+        }
+
+        .derivation-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--t-border);
+            border-radius: 16px;
+            padding: 24px;
+            height: fit-content;
+        }
+        .derivation-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--t-border);
+            padding-bottom: 10px;
+            color: var(--t-text-primary);
+        }
+        .step-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--t-border);
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .step-row:hover {
+            background: var(--t-hover-bg);
+            border-bottom-color: transparent;
+        }
+        .step-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            max-width: 75%;
+            text-align: left;
+        }
+        .step-code {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--t-text-secondary);
+        }
+        .step-sutra {
+            font-weight: 600;
+            color: #3b82f6;
+        }
+        .step-result {
+            font-weight: 700;
+            color: var(--t-text-primary);
+            white-space: nowrap;
+        }
+
+        /* Sutra Detail Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; opacity: 0; pointer-events: none;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            width: 92%; max-width: 950px; max-height: 85vh;
+            background: var(--t-bg-elevated);
+            border: 1px solid var(--t-glass-border);
+            border-radius: 20px; box-shadow: var(--t-shadow);
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: scale(0.92); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px; border-bottom: 1px solid var(--t-border); background: rgba(0, 0, 0, 0.15);
+        }
+        .modal-title { font-family: 'Outfit', sans-serif; font-size: 1.45rem; font-weight: 800; color: #3b82f6; margin: 0; }
+        .modal-subtitle { font-size: 12.5px; color: var(--t-text-muted); margin-top: 4px; }
+        .modal-close-btn {
+            background: none; border: none; color: var(--t-text-secondary); font-size: 1.4rem;
+            cursor: pointer; width: 38px; height: 38px; border-radius: 50%; display: flex;
+            justify-content: center; align-items: center; transition: all 0.2s ease;
+        }
+        .modal-close-btn:hover { background: var(--t-hover-bg); color: var(--t-text-primary); transform: rotate(90deg); }
+        .modal-body { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+        .modal-sutra-header-info {
+            background: rgba(255, 255, 255, 0.015); border: 1px solid var(--t-border-light);
+            border-radius: 12px; padding: 16px 20px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .modal-sutra-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .modal-sutra-type-tag {
+            background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        }
+        .modal-sutra-padachheda { font-size: 13px; color: var(--t-text-secondary); }
+        .modal-sutra-translation { font-size: 14px; line-height: 1.5; color: var(--t-text-primary); }
+        .modal-sections { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .modal-sections { grid-template-columns: 1fr; } }
+        .modal-card {
+            background: rgba(255, 255, 255, 0.01); border: 1px solid var(--t-border-light);
+            border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+        }
+        .modal-card-title {
+            font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 700;
+            border-bottom: 2px solid var(--t-border); padding-bottom: 8px; margin-bottom: 2px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-card-title-sa { font-size: 11px; color: var(--t-text-muted); font-weight: 500; }
+        .modal-card-content { font-size: 14.5px; line-height: 1.6; color: var(--t-text-secondary); overflow-y: auto; max-height: 42vh; padding-right: 6px; }
+        .modal-card-content p.no-data { color: var(--t-text-muted); font-style: italic; padding: 10px 0; }
+
+        /* Export Toolbar Styles */
+        .export-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-export {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--t-bg-surface);
+            color: var(--t-text-primary);
+            border: 1px solid var(--t-border);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-export:hover {
+            background: var(--t-hover-bg);
+            border-color: #3b82f6;
+            color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .btn-export-json { border-color: rgba(59, 130, 246, 0.4); }
+        .btn-export-excel { border-color: rgba(16, 185, 129, 0.4); }
+        .btn-export-pdf { border-color: rgba(239, 68, 68, 0.4); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top bar -->
+        <div class="header">
+            <a href="/" class="back-btn">
+                <span>←</span> Back to Hub
+            </a>
+            <div class="app-title-block">
+                <div style="font-size: 0.8rem; font-weight: 600; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px;">Samshodhana Mandiram</div>
+                <h1>शब्द Explorer (शब्द-रूपाणि)</h1>
+                <p>Decline nominal stems, pronouns &amp; inspect Paninian derivation steps</p>
+            </div>
+            <div class="sanskrit-toggle-container">
+                <label class="switch">
+                    <input type="checkbox" id="globalSanskrit">
+                    <span class="slider round"></span>
+                </label>
+                <span style="font-size: 13px; font-weight: 600; color: var(--t-text-secondary); white-space: nowrap;">Type in संस्कृत (ITRANS)</span>
+            </div>
+        </div>
+
+        <div class="glass-panel">
+            <!-- Search Group -->
+            <div class="search-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label for="shabda-stem-input" style="margin-bottom: 0;">Nominal Stem / Word (प्रातिपदिकम् / पदम्):</label>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: var(--t-text-secondary); cursor: pointer; margin-bottom: 0;">
+                        <input type="checkbox" id="shabda-exact-toggle" style="width: 13px; height: 13px; cursor: pointer;" onchange="shabda_triggerSearch()" checked>
+                        <span>Exact Match Only</span>
+                    </label>
+                </div>
+                <input type="text" id="shabda-stem-input" class="search-input-box sanskrit-enabled" data-sanskrit-id="globalSanskrit" placeholder="Type nominal stem or inflected word (e.g. राम, हरि, सीता, ज्ञान, तेन...)" oninput="shabda_handleSearch(event)" onkeydown="if(event.key === 'Enter') { document.getElementById('shabda-search-dropdown').style.display = 'none'; shabda_declineStem(); }" autocomplete="off">
+                <div class="autocomplete-dropdown" id="shabda-search-dropdown">
+                    <!-- Dropdown results -->
+                </div>
+            </div>
+
+            <!-- Parameters Panel -->
+            <div class="parameter-row">
+                <div class="parameter-col" style="flex: 2 1 300px;">
+                    <label>Select Gender (लिङ्गम्):</label>
+                    <div class="gender-pills-row" id="shabda-gender-pills">
+                        <!-- Gender pills dynamically rendered -->
+                    </div>
+                </div>
+
+                <div class="parameter-col" style="flex: 1 1 200px;">
+                    <label for="shabda-taddhita-select">Secondary Suffix (तद्धित-प्रत्ययः):</label>
+                    <select id="shabda-taddhita-select">
+                        <option value="None">None (नास्ति)</option>
+                        <option value="matup">मतुँप् (मत्वर्थी) - Possessive</option>
+                        <option value="ini">इन् (इनि)</option>
+                        <option value="tva">त्व (भावार्थे) - Abstract Noun</option>
+                        <option value="tal">तल् (ता) - Abstract Noun</option>
+                        <option value="tarap">तरप् (अतिशयार्थे) - Comparative</option>
+                        <option value="tamap">तमप् (अतिशयार्थे) - Superlative</option>
+                        <option value="kalpap">कल्पप् (ईषदसमाप्तौ)</option>
+                        <option value="deshiya">देशीयर् (ईषदसमाप्तौ)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button class="btn-derive" onclick="shabda_declineStem()">Decline Stem</button>
+            </div>
+
+            <!-- Export Options Toolbar -->
+            <div class="export-toolbar" id="shabda-export-bar" style="display: none;">
+                <span style="font-size: 13px; font-weight: 600; color: var(--t-text-secondary); margin-right: auto;">Export Declension Table:</span>
+                <button class="btn-export btn-export-json" onclick="shabda_exportJSON()">
+                    <span>📥</span> Export JSON
+                </button>
+                <button class="btn-export btn-export-excel" onclick="shabda_exportExcel()">
+                    <span>📊</span> Export Excel
+                </button>
+                <button class="btn-export btn-export-pdf" onclick="shabda_exportPDF()">
+                    <span>📄</span> Export PDF
+                </button>
+            </div>
+
+            <!-- Output Columns -->
+            <div class="output-columns" id="shabda-output-columns">
+                <!-- Left column: Declension Grid -->
+                <div id="shabda-grid-col">
+                    <div class="table-title" id="shabda-grid-title">Declension Table (सुबन्तरूपाणि)</div>
+                    <table class="conjugation-grid" id="shabda-table">
+                        <thead>
+                            <tr>
+                                <th>विभक्तिः</th>
+                                <th id="shabda-header-eka">एकवचनम्</th>
+                                <th id="shabda-header-dvi">द्विवचनम्</th>
+                                <th id="shabda-header-bahu">बहुवचनम्</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shabda-grid-body">
+                            <!-- Declension cells rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Right column: Derivation tree steps -->
+                <div class="derivation-panel" id="shabda-derivation-panel" style="display: none;">
+                    <div class="derivation-title" id="shabda-derivation-panel-title">Derivation History</div>
+                    <div id="shabda-derivation-steps-container">
+                        <!-- Step rows -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sutra Detail Popup Modal -->
+    <div id="sutra-modal" class="modal-backdrop" onclick="shabda_closeSutraModalOnBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modal-sutra-title" class="modal-title">Sutra Details</h2>
+                    <div id="modal-sutra-subtitle" class="modal-subtitle">Loading...</div>
+                </div>
+                <button class="modal-close-btn" onclick="shabda_closeSutraModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-sutra-body">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cleanHTML(text) {
+            if (!text) return '';
+            text = text.replace(/<w>(.*?)<\/w>/gi, '<span style="color:#60a5fa;font-weight:700;">$1</span>');
+            text = text.replace(/<<(.*?)>>/g, '<span style="color:#f472b6;font-weight:600;">$1</span>');
+            text = text.replace(/\[\[(\d+\.\d+\.\d+)\]\]/g, '<span style="color:#3b82f6;font-weight:600;cursor:pointer;" title="Sutra $1">[$1]</span>');
+            return text;
+        }
+
+        let shabda_gridData = null;
+        let shabda_searchTimeout = null;
+        let shabda_selectedLinga = "Pum";
+        let shabda_currentGenders = ["Pum", "Stri", "Napumsaka"];
+
+        const shabda_GENDER_OPTS = [
+            { value: "Pum", label: "Masculine (पुं.)" },
+            { value: "Stri", label: "Feminine (स्त्री.)" },
+            { value: "Napumsaka", label: "Neuter (नपुं.)" }
+        ];
+
+        const shabda_LINGA_LABELS = {
+            "Pum": "पुंल्लिङ्गम्",
+            "Stri": "स्त्रीलिङ्गम्",
+            "Napumsaka": "नपुंसकलिङ्गम्"
+        };
+
+        const shabda_VIBHAKTI_LABELS = {
+            "Prathama": "प्रथमा (Nominative)",
+            "Dvitiya": "द्वितीया (Accusative)",
+            "Trtiya": "तृतीया (Instrumental)",
+            "Caturthi": "चतुर्थी (Dative)",
+            "Panchami": "पञ्चमी (Ablative)",
+            "Sasthi": "षष्ठी (Genitive)",
+            "Saptami": "सप्तमी (Locative)",
+            "Sambodhana": "सम्बोधनम् (Vocative)"
+        };
+
+        function shabda_renderGenderPills() {
+            const container = document.getElementById('shabda-gender-pills');
+            if (!container) return;
+            
+            const input = document.getElementById('shabda-stem-input');
+            const hasQuery = input && input.value.trim().length > 0;
+            
+            container.innerHTML = shabda_GENDER_OPTS.map(opt => {
+                const isAvailable = hasQuery && shabda_currentGenders.includes(opt.value);
+                const isActive = hasQuery && shabda_selectedLinga === opt.value;
+                return `
+                    <div class="gender-pill ${isActive ? 'active' : ''} ${!isAvailable ? 'disabled' : ''}"
+                         onclick="shabda_selectGender('${opt.value}')">
+                        ${opt.label}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function shabda_selectGender(val) {
+            const input = document.getElementById('shabda-stem-input');
+            const hasQuery = input && input.value.trim().length > 0;
+            if (!hasQuery || !shabda_currentGenders.includes(val)) return;
+            shabda_selectedLinga = val;
+            shabda_renderGenderPills();
+            shabda_declineStem();
+        }
+
+        function shabda_triggerSearch() {
+            const input = document.getElementById('shabda-stem-input');
+            if (input) {
+                shabda_handleSearch({ target: input });
+            }
+        }
+
+        function shabda_handleSearch(e) {
+            clearTimeout(shabda_searchTimeout);
+            const query = e.target.value.trim();
+            const dropdown = document.getElementById('shabda-search-dropdown');
+            
+            shabda_currentGenders = ["Pum", "Stri", "Napumsaka"];
+            shabda_renderGenderPills();
+
+            if (!query) {
+                dropdown.style.display = 'none';
+                document.getElementById('shabda-export-bar').style.display = 'none';
+                document.getElementById('shabda-output-columns').style.display = 'none';
+                document.getElementById('shabda-derivation-panel').style.display = 'none';
+                return;
+            }
+
+            shabda_searchTimeout = setTimeout(async () => {
+                try {
+                    const exact = document.getElementById('shabda-exact-toggle').checked;
+                    const res = await fetch(`/apps/api/shabda/search?query=${encodeURIComponent(query)}&exact=${exact}`);
+                    const data = await res.json();
+                    
+                    if (data.length > 0) {
+                        window.shabdaSearchResults = data;
+                        dropdown.innerHTML = data.map((item, index) => {
+                            if (item.is_inflected) {
+                                return `
+                                    <div class="dropdown-item" onclick="shabda_selectStemByIndex(${index})" style="border-left: 4px solid #3b82f6; background: rgba(59, 130, 246, 0.05); font-weight: 500;">
+                                        <span><strong>${item.word}</strong> <span style="font-size:12px; color:var(--t-text-secondary);">(रूप of <strong>${item.stem}</strong> - ${item.lingas.map(l => shabda_LINGA_LABELS[l] || l).join(', ')})</span></span>
+                                        <span style="font-size:13px; color:#3b82f6; font-weight:700;">सुबन्तरूपम्</span>
+                                    </div>
+                                `;
+                            }
+                            return `
+                                <div class="dropdown-item" onclick="shabda_selectStemByIndex(${index})">
+                                    <span><strong>${item.stem}</strong> (${item.stem_slp1})</span>
+                                    <span style="font-size:12px; color:var(--t-text-secondary);">${item.lingas.map(l => shabda_LINGA_LABELS[l] || l).join(', ')}</span>
+                                </div>
+                            `;
+                        }).join('');
+                        dropdown.style.display = 'block';
+                    } else {
+                        dropdown.innerHTML = `<div style="padding:12px 16px; font-size:14px; color:var(--t-text-secondary); text-align:center;">No nominal stems matched.</div>`;
+                        dropdown.style.display = 'block';
+                    }
+                } catch(err) {
+                    console.error(err);
+                }
+            }, 200);
+        }
+
+        function shabda_selectStemByIndex(index) {
+            if (window.shabdaSearchResults && window.shabdaSearchResults[index]) {
+                shabda_selectStem(window.shabdaSearchResults[index]);
+            }
+        }
+
+        function shabda_selectStem(item) {
+            document.getElementById('shabda-stem-input').value = item.stem;
+            document.getElementById('shabda-search-dropdown').style.display = 'none';
+            
+            if (item.is_inflected) {
+                shabda_currentGenders = item.lingas;
+                shabda_selectedLinga = item.lingas[0];
+                window.shabdaHighlightWord = item.highlight;
+            } else {
+                window.shabdaHighlightWord = null;
+                if (item.lingas && item.lingas.length > 0) {
+                    shabda_currentGenders = item.lingas;
+                    if (!shabda_currentGenders.includes(shabda_selectedLinga)) {
+                        shabda_selectedLinga = shabda_currentGenders[0];
+                    }
+                } else {
+                    shabda_currentGenders = ["Pum", "Stri", "Napumsaka"];
+                }
+            }
+            shabda_renderGenderPills();
+            shabda_declineStem();
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('shabda-search-dropdown');
+            const input = document.getElementById('shabda-stem-input');
+            if (dropdown && input && e.target !== dropdown && e.target !== input) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        async function shabda_declineStem() {
+            const stem = document.getElementById('shabda-stem-input').value.trim();
+            const linga = shabda_selectedLinga;
+            const taddhita = document.getElementById('shabda-taddhita-select').value;
+            const container = document.getElementById('shabda-output-columns');
+            
+            if (!stem) {
+                alert("Please enter a noun stem.");
+                return;
+            }
+
+            container.style.display = 'none';
+            document.getElementById('shabda-export-bar').style.display = 'none';
+            document.getElementById('shabda-derivation-panel').style.display = 'none';
+
+            try {
+                const res = await fetch('/apps/api/shabda/decline', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ stem, linga, taddhita })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    shabda_gridData = data.grid;
+                    window.shabda_lastResultData = { stem, linga, taddhita, grid: data.grid };
+                    shabda_renderGrid(data.stem, data.linga);
+                    container.style.display = 'grid';
+                    document.getElementById('shabda-export-bar').style.display = 'flex';
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Connection failed.");
+            }
+        }
+
+        function shabda_renderGrid(stem, linga) {
+            document.getElementById('shabda-grid-title').textContent = `Declension Table (${stem} — ${shabda_LINGA_LABELS[linga] || linga})`;
+            const tbody = document.getElementById('shabda-grid-body');
+            
+            const activeCols = [false, false, false];
+            shabda_gridData.forEach(row => {
+                row.forEach((cell, cIdx) => {
+                    if (cell.word !== "-") {
+                        activeCols[cIdx] = true;
+                    }
+                });
+            });
+
+            document.getElementById('shabda-header-eka').style.display = activeCols[0] ? '' : 'none';
+            document.getElementById('shabda-header-dvi').style.display = activeCols[1] ? '' : 'none';
+            document.getElementById('shabda-header-bahu').style.display = activeCols[2] ? '' : 'none';
+
+            let html = '';
+            shabda_gridData.forEach((row, rIdx) => {
+                const vibName = row[0].vibhakti;
+                const vibLabel = shabda_VIBHAKTI_LABELS[vibName] || vibName;
+                
+                html += `<tr>
+                    <td style="background:var(--t-hover-bg); font-weight:600; color:var(--t-text-secondary); text-align:left; padding-left:16px;">${vibLabel}</td>
+                `;
+                
+                row.forEach((cell, cIdx) => {
+                    if (!activeCols[cIdx]) return;
+                    const isSelectable = cell.word !== "-";
+                    const forms = cell.word.split('/').map(w => w.trim());
+                    const isHighlighted = window.shabdaHighlightWord && forms.some(f => f === window.shabdaHighlightWord.trim() || f.startsWith(window.shabdaHighlightWord.trim()) || window.shabdaHighlightWord.trim().startsWith(f));
+                    html += `
+                        <td class="${isSelectable ? 'cell-active' : ''} ${isHighlighted ? 'highlighted-cell' : ''}" 
+                            onclick="${isSelectable ? `shabda_selectCell(${rIdx}, ${cIdx}, this)` : ''}">
+                            ${cell.word}
+                        </td>
+                    `;
+                });
+                html += '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            setTimeout(() => {
+                if (window.shabdaHighlightWord) {
+                    const highlightedCell = document.querySelector('#shabda-grid-body td.highlighted-cell');
+                    if (highlightedCell) {
+                        highlightedCell.click();
+                        highlightedCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        window.shabdaHighlightWord = null;
+                        return;
+                    }
+                }
+                const firstCell = document.querySelector('#shabda-grid-body td.cell-active');
+                if (firstCell) firstCell.click();
+            }, 200);
+        }
+
+        function shabda_selectCell(rIdx, cIdx, element) {
+            document.querySelectorAll('#shabda-grid-body td').forEach(td => td.classList.remove('cell-selected'));
+            element.classList.add('cell-selected');
+
+            const cell = shabda_gridData[rIdx][cIdx];
+            shabda_showDerivationSteps(cell);
+        }
+
+        function shabda_showDerivationSteps(cell) {
+            const panel = document.getElementById('shabda-derivation-panel');
+            const SHABDA_VIBHAKTI_DEVANAGARI = {
+                "Prathama": "प्रथमा",
+                "Dvitiya": "द्वितीया",
+                "Trtiya": "तृतीया",
+                "Caturthi": "चतुर्थी",
+                "Panchami": "पञ्चमी",
+                "Sasthi": "षष्ठी",
+                "Saptami": "सप्तमी",
+                "Sambodhana": "सम्बोधनम्"
+            };
+            const SHABDA_VACANA_DEVANAGARI = {
+                "Eka": "एकवचनम्",
+                "Dvi": "द्विवचनम्",
+                "Bahu": "बहुवचनम्"
+            };
+            const vibDev = SHABDA_VIBHAKTI_DEVANAGARI[cell.vibhakti] || cell.vibhakti;
+            const vacDev = SHABDA_VACANA_DEVANAGARI[cell.vacana] || cell.vacana;
+            document.getElementById('shabda-derivation-panel-title').textContent = `Derivation steps for "${cell.word}" (${vibDev} ${vacDev})`;
+            
+            const container = document.getElementById('shabda-derivation-steps-container');
+            if (!cell.steps || cell.steps.length === 0) {
+                container.innerHTML = `<p style="color:var(--t-text-secondary); font-size:14px; padding: 20px 0; text-align:center;">No derivation logs available.</p>`;
+            } else {
+                container.innerHTML = cell.steps.map((step, idx) => `
+                    <div class="step-row" onclick="shabda_openSutraModal('${step.code}')">
+                        <div class="step-left">
+                            <span class="step-code">Step ${idx + 1} — Sutra ${step.code}</span>
+                            <span class="step-sutra">${step.sutra || 'Rule Reference'}</span>
+                        </div>
+                        <span class="step-result">${step.result}</span>
+                    </div>
+                `).join('');
+            }
+            
+            panel.style.display = 'block';
+        }
+
+        async function shabda_openSutraModal(sutraRef) {
+            const modal = document.getElementById('sutra-modal');
+            const title = document.getElementById('modal-sutra-title');
+            const subtitle = document.getElementById('modal-sutra-subtitle');
+            const body = document.getElementById('modal-sutra-body');
+            
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+            
+            title.textContent = `Sutra ${sutraRef}`;
+            subtitle.textContent = "Loading rule details...";
+            body.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--t-text-secondary);">
+                    <div style="margin-bottom: 12px; font-weight: 600;">Fetching commentaries from database...</div>
+                </div>
+            `;
+            
+            try {
+                const res = await fetch(`/apps/api/ashtadhyayi/sutra_by_ref/${sutraRef}`);
+                const data = await res.json();
+                
+                if (data.success && data.sutra) {
+                    const s = data.sutra;
+                    title.textContent = `${s.sutra} (${sutraRef})`;
+                    subtitle.textContent = `${s.sutra_slp1 || ''} | ${s.type || 'Sūtra'} Reference`;
+                    
+                    const padRef = s.padachheda || '-';
+                    const engMeaning = s.sutrartha_english || s.sutrartha_sa || '-';
+                    
+                    const kaumudiContent = cleanHTML(s.kaumudi) || '<p class="no-data">Commentary not available in database.</p>';
+                    const kashikaContent = cleanHTML(s.kashika) || '<p class="no-data">Commentary not available in database.</p>';
+                    
+                    body.innerHTML = `
+                        <div class="modal-sutra-header-info">
+                            <div class="modal-sutra-meta">
+                                <span class="modal-sutra-type-tag">${s.type || 'Sutra'}</span>
+                                <span class="modal-sutra-padachheda"><strong>पदच्छेदः:</strong> ${padRef}</span>
+                            </div>
+                            <div class="modal-sutra-translation"><strong>अर्थः:</strong> ${engMeaning}</div>
+                        </div>
+                        <div class="modal-sections">
+                            <div class="modal-card">
+                                <div class="modal-card-title">
+                                    <span>Siddhānta Kaumudī (सिद्धान्तकौमुदी)</span>
+                                    <span class="modal-card-title-sa">भट्टोजिदीक्षितकृता</span>
+                                </div>
+                                <div class="modal-card-content">${kaumudiContent}</div>
+                            </div>
+                            <div class="modal-card">
+                                <div class="modal-card-title">
+                                    <span>Kāśikā Vṛtti (काशिकावृत्तिः)</span>
+                                    <span class="modal-card-title-sa">जयादित्य-वामनकृता</span>
+                                </div>
+                                <div class="modal-card-content">${kashikaContent}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    subtitle.textContent = "Error";
+                    body.innerHTML = `
+                        <p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">
+                            ${data.error || 'Sutra not found in database.'}
+                        </p>
+                    `;
+                }
+            } catch(e) {
+                console.error(e);
+                subtitle.textContent = "Error";
+                body.innerHTML = '<p style="color:#ef4444; font-weight:600; text-align:center; padding:20px;">Failed to load commentary from server.</p>';
+            }
+        }
+        
+        function shabda_closeSutraModal() {
+            const modal = document.getElementById('sutra-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 250);
+        }
+        
+        function shabda_closeSutraModalOnBackdrop(event) {
+            if (event.target === document.getElementById('sutra-modal')) {
+                shabda_closeSutraModal();
+            }
+        }
+
+        /* Export Handlers */
+        function shabda_exportJSON() {
+            if (!window.shabda_lastResultData) return;
+            const res = window.shabda_lastResultData;
+            const exportObj = {
+                app: "Shabda Explorer — Samshodhana Mandiram",
+                timestamp: new Date().toISOString(),
+                stem: res.stem,
+                linga: res.linga,
+                taddhita: res.taddhita,
+                grid: res.grid
+            };
+            const jsonStr = JSON.stringify(exportObj, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `shabda_${res.stem}_${res.linga}_declensions.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function _loadScriptAsync(src) {
+            return new Promise((resolve, reject) => {
+                const existing = document.querySelector(`script[src="${src}"]`);
+                if (existing) {
+                    if (existing.getAttribute('data-loaded') === 'true') return resolve();
+                    existing.addEventListener('load', () => resolve());
+                    existing.addEventListener('error', reject);
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.onload = () => {
+                    s.setAttribute('data-loaded', 'true');
+                    resolve();
+                };
+                s.onerror = () => reject(new Error('Failed to load: ' + src));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function shabda_exportExcel() {
+            if (!window.shabda_lastResultData) return;
+            const res = window.shabda_lastResultData;
+            const grid = res.grid || [];
+
+            if (typeof XLSX === 'undefined') {
+                try {
+                    await _loadScriptAsync("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
+                } catch (e) {
+                    alert("Could not load Excel export library. Please check your internet connection.");
+                    return;
+                }
+            }
+
+            const rows = [];
+            rows.push(["Samshodhana Mandiram — Shabda Explorer"]);
+            rows.push(["Nominal Stem (प्रातिपदिकम्):", res.stem, "Gender (लिङ्गम्):", shabda_LINGA_LABELS[res.linga] || res.linga, "Secondary Suffix:", res.taddhita]);
+            rows.push([]);
+            rows.push(["Vibhakti (विभक्तिः)", "Singular (एकवचनम्)", "Dual (द्विवचनम्)", "Plural (बहुवचनम्)"]);
+
+            grid.forEach(row => {
+                const vibName = row[0].vibhakti;
+                const vibLabel = shabda_VIBHAKTI_LABELS[vibName] || vibName;
+                rows.push([
+                    vibLabel,
+                    row[0] ? row[0].word : '-',
+                    row[1] ? row[1].word : '-',
+                    row[2] ? row[2].word : '-'
+                ]);
+            });
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "Shabda Declensions");
+            XLSX.writeFile(wb, `shabda_${res.stem}_${res.linga}_declensions.xlsx`);
+        }
+
+        async function shabda_exportPDF() {
+            if (!window.shabda_lastResultData) return;
+            const res = window.shabda_lastResultData;
+            const grid = res.grid || [];
+
+            if (typeof html2pdf === 'undefined') {
+                try {
+                    await _loadScriptAsync("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
+                } catch (e) {
+                    alert("Could not load PDF export library. Please check your internet connection.");
+                    return;
+                }
+            }
+
+            let html = `
+                <div style="font-family: 'Noto Sans Devanagari', 'Outfit', 'Inter', sans-serif; padding: 30px; background: #ffffff; color: #1e293b; width: 800px; max-width: 100%; box-sizing: border-box;">
+                    <div style="text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 14px; margin-bottom: 20px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px;">Samshodhana Mandiram — Sri Trayee Vidya Gurukulam</div>
+                        <h1 style="margin: 0; font-size: 24px; color: #1e40af; font-weight: 800;">शब्द Explorer (सुबन्तरूपाणि Report)</h1>
+                    </div>
+
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dbeafe; padding-bottom: 8px; margin-bottom: 8px;">
+                            <span style="font-size: 20px; font-weight: 800; color: #1e40af;">प्रातिपदिकम्: ${res.stem}</span>
+                            <span style="font-size: 13px; font-weight: 700; color: #2563eb; background: #dbeafe; padding: 4px 10px; border-radius: 6px;">लिङ्गम्: ${shabda_LINGA_LABELS[res.linga] || res.linga}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #334155;">
+                            <strong>तद्धित-प्रत्ययः:</strong> ${res.taddhita || 'None'}
+                        </div>
+                    </div>
+
+                    <div style="page-break-inside: avoid;">
+                        <div style="font-size: 15px; font-weight: 800; color: #1e40af; border-bottom: 2px solid #bfdbfe; padding-bottom: 6px; margin-bottom: 12px;">
+                            Declension Table (सुबन्तरूपाणि - ${shabda_LINGA_LABELS[res.linga] || res.linga})
+                        </div>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #1e293b;">
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: left; width: 28%;">विभक्तिः</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center; width: 24%;">एकवचनम् (Singular)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center; width: 24%;">द्विवचनम् (Dual)</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 9px; text-align: center; width: 24%;">बहुवचनम् (Plural)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${grid.map(row => {
+                                    const vibName = row[0].vibhakti;
+                                    const vibLabel = shabda_VIBHAKTI_LABELS[vibName] || vibName;
+                                    return `
+                                        <tr>
+                                            <td style="border: 1px solid #cbd5e1; padding: 8px; font-weight: 700; background: #f8fafc; color: #1e40af;">${vibLabel}</td>
+                                            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[0] ? row[0].word : '-'}</td>
+                                            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[1] ? row[1].word : '-'}</td>
+                                            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-weight: 700; color: #0f172a;">${row[2] ? row[2].word : '-'}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center; font-size: 11px; color: #94a3b8;">
+                        Generated by Samshodhana Mandiram — Shabda Explorer
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin:       10,
+                filename:     `shabda_${res.stem}_${res.linga}_declensions.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const element = document.createElement('div');
+            element.innerHTML = html;
+            
+            html2pdf().set(opt).from(element).save();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            shabda_renderGenderPills();
+        });
+    </script>
+
+    <script src="/static/js/keymanweb.js?v=100"></script>
+    <script src="/static/js/sanskrit_keyboard.js"></script>
+    <footer style="margin-top: 40px; margin-bottom: 20px; text-align: center; font-size: 0.85rem; color: var(--t-text-secondary);">
+        Samshodhana Mandiram — Sri Trayee Vidya Gurukulam
+    </footer>
+</body>
+</html>
